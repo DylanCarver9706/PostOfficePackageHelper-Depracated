@@ -55,6 +55,14 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Routes        **************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+
 // Define a route to create a new route
 app.post("/api/routes", (req, res) => {
   // Extract route data from the request body
@@ -73,6 +81,73 @@ app.post("/api/routes", (req, res) => {
     res.status(201).json({ message: "Route created successfully" });
   });
 });
+
+// ******************************************************************************************************************
+app.get('/api/routes', (req, res) => {
+    const sql = 'SELECT * FROM routes';
+    db.query(sql, (err, results) => {
+      if (err) {
+        console.error('Error retrieving routes:', err);
+        return res.status(500).json({ error: 'An error occurred while retrieving routes.' });
+      }
+      res.status(200).json(results);
+    });
+  });
+  
+// ******************************************************************************************************************
+app.get('/api/routes/:id', (req, res) => {
+    const routeId = req.params.id;
+    const sql = 'SELECT * FROM routes WHERE route_id = ?';
+    db.query(sql, [routeId], (err, results) => {
+      if (err) {
+        console.error('Error retrieving route by ID:', err);
+        return res.status(500).json({ error: 'An error occurred while retrieving the route.' });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Route not found' });
+      }
+      res.status(200).json(results[0]);
+    });
+  });
+  
+// ******************************************************************************************************************
+app.put('/api/routes/:id', (req, res) => {
+    const routeId = req.params.id;
+    const { user_id, route_number } = req.body;
+    const sql = 'UPDATE routes SET user_id=?, route_number=? WHERE route_id=?';
+    db.query(
+      sql,
+      [user_id, route_number, routeId],
+      (err, result) => {
+        if (err) {
+          console.error('Error updating route:', err);
+          return res.status(500).json({ error: 'An error occurred while updating the route.' });
+        }
+        res.status(200).json({ message: 'Route updated successfully' });
+      }
+    );
+  });
+  
+// ******************************************************************************************************************
+app.delete('/api/routes/:id', (req, res) => {
+    const routeId = req.params.id;
+    const sql = 'DELETE FROM routes WHERE route_id=?';
+    db.query(sql, [routeId], (err, result) => {
+      if (err) {
+        console.error('Error deleting route:', err);
+        return res.status(500).json({ error: 'An error occurred while deleting the route.' });
+      }
+      res.status(200).json({ message: 'Route deleted successfully' });
+    });
+  });
+  
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Cases        ***************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
 
 // Define a route to create a new case
 app.post("/api/cases", (req, res) => {
@@ -93,6 +168,65 @@ app.post("/api/cases", (req, res) => {
   });
 });
 
+// ******************************************************************************************************************
+app.get('/api/cases', (req, res) => {
+    const sql = 'SELECT * FROM cases';
+    db.query(sql, (err, results) => {
+      if (err) {
+        console.error('Error retrieving cases:', err);
+        return res.status(500).json({ error: 'An error occurred while retrieving cases.' });
+      }
+      res.status(200).json(results);
+    });
+  });  
+// ******************************************************************************************************************
+app.get('/api/cases/:id', (req, res) => {
+    const caseId = req.params.id;
+    const sql = 'SELECT * FROM cases WHERE case_id = ?';
+    db.query(sql, [caseId], (err, results) => {
+      if (err) {
+        console.error('Error retrieving case by ID:', err);
+        return res.status(500).json({ error: 'An error occurred while retrieving the case.' });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Case not found' });
+      }
+      res.status(200).json(results[0]);
+    });
+  });
+  
+// ******************************************************************************************************************
+app.put('/api/cases/:id', (req, res) => {
+    const caseId = req.params.id;
+    const { route_id, case_number } = req.body;
+    const sql = 'UPDATE cases SET route_id=?, case_number=? WHERE case_id=?';
+    db.query(
+      sql,
+      [route_id, case_number, caseId],
+      (err, result) => {
+        if (err) {
+          console.error('Error updating case:', err);
+          return res.status(500).json({ error: 'An error occurred while updating the case.' });
+        }
+        res.status(200).json({ message: 'Case updated successfully' });
+      }
+    );
+  });
+  
+// ******************************************************************************************************************
+app.delete('/api/cases/:id', (req, res) => {
+    const caseId = req.params.id;
+    const sql = 'DELETE FROM cases WHERE case_id=?';
+    db.query(sql, [caseId], (err, result) => {
+      if (err) {
+        console.error('Error deleting case:', err);
+        return res.status(500).json({ error: 'An error occurred while deleting the case.' });
+      }
+      res.status(200).json({ message: 'Case deleted successfully' });
+    });
+  });
+  
+  
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************
