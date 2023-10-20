@@ -23,7 +23,15 @@ db.connect((err) => {
   console.log("Connected to MySQL database");
 });
 
-app.post("/api/register", async (req, res) => {
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Users        ***************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+
+app.post("/api/users/new", async (req, res) => {
   try {
     const { first_name, last_name, email, password } = req.body;
 
@@ -55,6 +63,69 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
+// ******************************************************************************************************************
+app.get('/api/users', (req, res) => {
+    const sql = 'SELECT * FROM users';
+    db.query(sql, (err, results) => {
+      if (err) {
+        console.error('Error retrieving users:', err);
+        return res.status(500).json({ error: 'An error occurred while retrieving users.' });
+      }
+      res.status(200).json(results);
+    });
+  });
+  
+// ******************************************************************************************************************
+app.get('/api/users/:id', (req, res) => {
+    const userId = req.params.id;
+    const sql = 'SELECT * FROM users WHERE user_id = ?';
+    db.query(sql, [userId], (err, results) => {
+      if (err) {
+        console.error('Error retrieving user by ID:', err);
+        return res.status(500).json({ error: 'An error occurred while retrieving the user.' });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      res.status(200).json(results[0]);
+    });
+  });
+  
+// ******************************************************************************************************************
+app.put('/api/users/:id', (req, res) => {
+    const userId = req.params.id;
+    const { first_name, last_name, email, phone_number, home_post_office, position, password } = req.body;
+  
+    // Hash the password here before saving it to the database
+    // ...
+  
+    const sql = 'UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, home_post_office=?, position=?, password=? WHERE user_id=?';
+    db.query(
+      sql,
+      [first_name, last_name, email, phone_number, home_post_office, position, password, userId],
+      (err, result) => {
+        if (err) {
+          console.error('Error updating user:', err);
+          return res.status(500).json({ error: 'An error occurred while updating the user.' });
+        }
+        res.status(200).json({ message: 'User updated successfully' });
+      }
+    );
+  });
+  
+// ******************************************************************************************************************
+app.delete('/api/users/:id', (req, res) => {
+    const userId = req.params.id;
+    const sql = 'DELETE FROM users WHERE user_id=?';
+    db.query(sql, [userId], (err, result) => {
+      if (err) {
+        console.error('Error deleting user:', err);
+        return res.status(500).json({ error: 'An error occurred while deleting the user.' });
+      }
+      res.status(200).json({ message: 'User deleted successfully' });
+    });
+  });
+  
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************
