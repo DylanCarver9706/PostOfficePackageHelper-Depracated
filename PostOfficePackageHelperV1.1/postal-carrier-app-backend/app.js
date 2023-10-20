@@ -93,6 +93,14 @@ app.post("/api/cases", (req, res) => {
   });
 });
 
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Case_Rows        ***********************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+
 // Define a route to create a new row
 app.post("/api/case_rows", (req, res) => {
   // Extract row data from the request body
@@ -111,6 +119,70 @@ app.post("/api/case_rows", (req, res) => {
     }
     console.log("Case row created successfully");
     res.status(201).json({ message: "Case row created successfully" });
+  });
+});
+
+// ******************************************************************************************************************
+app.get("/api/case_rows", (req, res) => {
+  const sql = "SELECT * FROM case_rows";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error retrieving case rows:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving case rows." });
+    }
+    res.status(200).json(results);
+  });
+});
+
+// ******************************************************************************************************************
+app.get("/api/case_rows/:id", (req, res) => {
+  const caseRowId = req.params.id;
+  const sql = "SELECT * FROM case_rows WHERE case_row_id = ?";
+  db.query(sql, [caseRowId], (err, results) => {
+    if (err) {
+      console.error("Error retrieving case row by ID:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving the case row." });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Case row not found" });
+    }
+    res.status(200).json(results[0]);
+  });
+});
+
+// ******************************************************************************************************************
+app.put("/api/case_rows/:id", (req, res) => {
+  const caseRowId = req.params.id;
+  const { case_id, case_row_number } = req.body;
+  const sql =
+    "UPDATE case_rows SET case_id=?, case_row_number=? WHERE case_row_id=?";
+  db.query(sql, [case_id, case_row_number, caseRowId], (err, result) => {
+    if (err) {
+      console.error("Error updating case row:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while updating the case row." });
+    }
+    res.status(200).json({ message: "Case row updated successfully" });
+  });
+});
+
+// ******************************************************************************************************************
+app.delete("/api/case_rows/:id", (req, res) => {
+  const caseRowId = req.params.id;
+  const sql = "DELETE FROM case_rows WHERE case_row_id=?";
+  db.query(sql, [caseRowId], (err, result) => {
+    if (err) {
+      console.error("Error deleting case row:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting the case row." });
+    }
+    res.status(200).json({ message: "Case row deleted successfully" });
   });
 });
 
