@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
+const cors = require('cors'); // Import the cors middleware
+
+// Use the cors middleware
+app.use(cors());
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
@@ -514,6 +518,9 @@ app.delete("/api/addresses/:id", (req, res) => {
 // Define other routes and middleware as needed
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const server = app.listen(PORT, () => {
+  const address = server.address();
+  const ip = address.address;
+  const port = address.port;
+  console.log(`Server is running at http://${ip}:${port}`);
 });
