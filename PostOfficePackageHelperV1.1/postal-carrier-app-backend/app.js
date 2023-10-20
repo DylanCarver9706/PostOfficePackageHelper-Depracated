@@ -114,6 +114,14 @@ app.post("/api/case_rows", (req, res) => {
   });
 });
 
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Addresses        ***********************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+
 // Define a route to create a new address
 app.post("/api/addresses", (req, res) => {
   // Extract address data from the request body
@@ -154,6 +162,77 @@ app.post("/api/addresses", (req, res) => {
     }
   );
 });
+
+// ******************************************************************************************************************
+app.get("/api/addresses", (req, res) => {
+  const sql = "SELECT * FROM addresses";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error retrieving addresses:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving addresses." });
+    }
+    res.status(200).json(results);
+  });
+});
+
+// ******************************************************************************************************************
+app.get("/api/addresses/:id", (req, res) => {
+  const addressId = req.params.id;
+  const sql = "SELECT * FROM addresses WHERE address_id = ?";
+  db.query(sql, [addressId], (err, results) => {
+    if (err) {
+      console.error("Error retrieving address by ID:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving the address." });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Address not found" });
+    }
+    res.status(200).json(results[0]);
+  });
+});
+
+// ******************************************************************************************************************
+app.put("/api/addresses/:id", (req, res) => {
+  const addressId = req.params.id;
+  const { case_row_id, number, address1, address2, city, state, zip_code } =
+    req.body;
+  const sql =
+    "UPDATE addresses SET case_row_id=?, number=?, address1=?, address2=?, city=?, state=?, zip_code=? WHERE address_id=?";
+  db.query(
+    sql,
+    [case_row_id, number, address1, address2, city, state, zip_code, addressId],
+    (err, result) => {
+      if (err) {
+        console.error("Error updating address:", err);
+        return res
+          .status(500)
+          .json({ error: "An error occurred while updating the address." });
+      }
+      res.status(200).json({ message: "Address updated successfully" });
+    }
+  );
+});
+
+// ******************************************************************************************************************
+app.delete("/api/addresses/:id", (req, res) => {
+  const addressId = req.params.id;
+  const sql = "DELETE FROM addresses WHERE address_id=?";
+  db.query(sql, [addressId], (err, result) => {
+    if (err) {
+      console.error("Error deleting address:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting the address." });
+    }
+    res.status(200).json({ message: "Address deleted successfully" });
+  });
+});
+
+// ******************************************************************************************************************
 
 // Define other routes and middleware as needed
 
