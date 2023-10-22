@@ -2,7 +2,8 @@ const express = require("express");
 const app = express();
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
-const cors = require('cors'); // Import the cors middleware
+const cors = require("cors");
+const session = require('express-session');
 
 // Use the cors middleware
 app.use(cors());
@@ -10,12 +11,20 @@ app.use(cors());
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Database        ************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+
 // Create the MySQL database connection
 const db = mysql.createConnection({
   host: "localhost", // Replace with your MySQL host
   user: "root", // Replace with your MySQL username
-  password: "admin", // Replace with your MySQL password
-  database: "PostOfficePackageHelperV1.1", // Replace with your MySQL database name
+  password: "Dtc+Kem2016", // Replace with your MySQL password
+  database: "PostOfficePackageHelperV1.2", // Replace with your MySQL database name
 });
 
 // Connect to the MySQL database
@@ -26,6 +35,77 @@ db.connect((err) => {
   }
   console.log("Connected to MySQL database");
 });
+
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Auth        ****************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+
+app.use(
+  session({
+    secret: 'Dtc+Kem2016', // Replace with a secret key
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+// Login route
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  // Query the database to get the hashed password for the provided email
+  const sql = 'SELECT password FROM users WHERE email = ?';
+  db.query(sql, [email], async (err, results) => {
+    if (err) {
+      console.error('Error querying database:', err);
+      return res.status(500).json({ error: 'An error occurred' });
+    }
+
+    if (results.length === 0) {
+      // User not found
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const hashedPassword = results[0].password;
+    const passwordMatch = await bcrypt.compare(password, hashedPassword);
+
+    if (passwordMatch) {
+      // Passwords match, set user data in the session
+      req.session.user = { email };
+      res.status(200).json({ message: 'Login successful' });
+    } else {
+      // Passwords do not match
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
+  });
+});
+
+// Define a route to check user authentication status
+app.get('/api/check-auth', (req, res) => {
+  if (req.session.user) {
+    // User is authenticated, send back user data
+    res.status(200).json({ isAuthenticated: true, user: req.session.user });
+  } else {
+    // User is not authenticated
+    res.status(401).json({ isAuthenticated: false });
+  }
+});
+
+// Logout route
+app.get('/api/logout', (req, res) => {
+  // Destroy the user's session
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error destroying session:', err);
+      return res.status(500).json({ error: 'An error occurred' });
+    }
+    res.status(200).json({ message: 'Logout successful' });
+  });
+});
+
 
 // ******************************************************************************************************************
 // ******************************************************************************************************************
@@ -68,68 +148,190 @@ app.post("/api/users/new", async (req, res) => {
 });
 
 // ******************************************************************************************************************
-app.get('/api/users', (req, res) => {
-    const sql = 'SELECT * FROM users';
-    db.query(sql, (err, results) => {
-      if (err) {
-        console.error('Error retrieving users:', err);
-        return res.status(500).json({ error: 'An error occurred while retrieving users.' });
-      }
-      res.status(200).json(results);
-    });
+app.get("/api/users", (req, res) => {
+  const sql = "SELECT * FROM users";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error retrieving users:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving users." });
+    }
+    res.status(200).json(results);
   });
-  
+});
+
 // ******************************************************************************************************************
-app.get('/api/users/:id', (req, res) => {
-    const userId = req.params.id;
-    const sql = 'SELECT * FROM users WHERE user_id = ?';
-    db.query(sql, [userId], (err, results) => {
-      if (err) {
-        console.error('Error retrieving user by ID:', err);
-        return res.status(500).json({ error: 'An error occurred while retrieving the user.' });
-      }
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      res.status(200).json(results[0]);
-    });
+app.get("/api/users/:id", (req, res) => {
+  const userId = req.params.id;
+  const sql = "SELECT * FROM users WHERE user_id = ?";
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error("Error retrieving user by ID:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving the user." });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json(results[0]);
   });
-  
+});
+
 // ******************************************************************************************************************
-app.put('/api/users/:id', (req, res) => {
-    const userId = req.params.id;
-    const { first_name, last_name, email, phone_number, home_post_office, position, password } = req.body;
-  
-    // Hash the password here before saving it to the database
-    // ...
-  
-    const sql = 'UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, home_post_office=?, position=?, password=? WHERE user_id=?';
-    db.query(
-      sql,
-      [first_name, last_name, email, phone_number, home_post_office, position, password, userId],
-      (err, result) => {
-        if (err) {
-          console.error('Error updating user:', err);
-          return res.status(500).json({ error: 'An error occurred while updating the user.' });
-        }
-        res.status(200).json({ message: 'User updated successfully' });
-      }
-    );
-  });
-  
-// ******************************************************************************************************************
-app.delete('/api/users/:id', (req, res) => {
-    const userId = req.params.id;
-    const sql = 'DELETE FROM users WHERE user_id=?';
-    db.query(sql, [userId], (err, result) => {
+app.put("/api/users/:id", (req, res) => {
+  const userId = req.params.id;
+  const {
+    first_name,
+    last_name,
+    email,
+    phone_number,
+    home_post_office,
+    position,
+    password,
+  } = req.body;
+
+  // Hash the password here before saving it to the database
+  // ...
+
+  const sql =
+    "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, home_post_office=?, position=?, password=? WHERE user_id=?";
+  db.query(
+    sql,
+    [
+      first_name,
+      last_name,
+      email,
+      phone_number,
+      home_post_office,
+      position,
+      password,
+      userId,
+    ],
+    (err, result) => {
       if (err) {
-        console.error('Error deleting user:', err);
-        return res.status(500).json({ error: 'An error occurred while deleting the user.' });
+        console.error("Error updating user:", err);
+        return res
+          .status(500)
+          .json({ error: "An error occurred while updating the user." });
       }
-      res.status(200).json({ message: 'User deleted successfully' });
-    });
+      res.status(200).json({ message: "User updated successfully" });
+    }
+  );
+});
+
+// ******************************************************************************************************************
+app.delete("/api/users/:id", (req, res) => {
+  const userId = req.params.id;
+  const sql = "DELETE FROM users WHERE user_id=?";
+  db.query(sql, [userId], (err, result) => {
+    if (err) {
+      console.error("Error deleting user:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting the user." });
+    }
+    res.status(200).json({ message: "User deleted successfully" });
   });
-  
+});
+
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Offices        *************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+
+// Create a new office
+app.post("/api/offices", (req, res) => {
+  // Extract office data from the request body
+  const { city, state, phone_number } = req.body;
+
+  // Insert the office data into the database
+  const sql =
+    "INSERT INTO offices (city, state, phone_number) VALUES (?, ?, ?)";
+  db.query(sql, [city, state, phone_number], (err, result) => {
+    if (err) {
+      console.error("Error creating office:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while creating the office." });
+    }
+    console.log("Office created successfully");
+    res.status(201).json({ message: "Office created successfully" });
+  });
+});
+
+// ******************************************************************************************************************
+// Get all offices
+app.get("/api/offices", (req, res) => {
+  const sql = "SELECT * FROM offices";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error retrieving offices:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving offices." });
+    }
+    res.status(200).json(results);
+  });
+});
+
+// ******************************************************************************************************************
+// Get an office by ID
+app.get("/api/offices/:id", (req, res) => {
+  const officeId = req.params.id;
+  const sql = "SELECT * FROM offices WHERE office_id = ?";
+  db.query(sql, [officeId], (err, results) => {
+    if (err) {
+      console.error("Error retrieving office by ID:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving the office." });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Office not found" });
+    }
+    res.status(200).json(results[0]);
+  });
+});
+
+// ******************************************************************************************************************
+// Update an office by ID
+app.put("/api/offices/:id", (req, res) => {
+  const officeId = req.params.id;
+  const { city, state, phone_number } = req.body;
+  const sql =
+    "UPDATE offices SET city=?, state=?, phone_number=? WHERE office_id=?";
+  db.query(sql, [city, state, phone_number, officeId], (err, result) => {
+    if (err) {
+      console.error("Error updating office:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while updating the office." });
+    }
+    res.status(200).json({ message: "Office updated successfully" });
+  });
+});
+
+// ******************************************************************************************************************
+// Delete an office by ID
+app.delete("/api/offices/:id", (req, res) => {
+  const officeId = req.params.id;
+  const sql = "DELETE FROM offices WHERE office_id=?";
+  db.query(sql, [officeId], (err, result) => {
+    if (err) {
+      console.error("Error deleting office:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting the office." });
+    }
+    res.status(200).json({ message: "Office deleted successfully" });
+  });
+});
+
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************
@@ -138,14 +340,14 @@ app.delete('/api/users/:id', (req, res) => {
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 
-// Define a route to create a new route
+// Create a new route
 app.post("/api/routes", (req, res) => {
   // Extract route data from the request body
-  const { user_id, route_number } = req.body;
+  const { route_number, office_id } = req.body;
 
   // Insert the route data into the database
-  const sql = "INSERT INTO routes (user_id, route_number) VALUES (?, ?)";
-  db.query(sql, [user_id, route_number], (err, result) => {
+  const sql = "INSERT INTO routes (route_number, office_id) VALUES (?, ?)";
+  db.query(sql, [route_number, office_id], (err, result) => {
     if (err) {
       console.error("Error creating route:", err);
       return res
@@ -157,241 +359,66 @@ app.post("/api/routes", (req, res) => {
   });
 });
 
-// ******************************************************************************************************************
-app.get('/api/routes', (req, res) => {
-    const sql = 'SELECT * FROM routes';
-    db.query(sql, (err, results) => {
-      if (err) {
-        console.error('Error retrieving routes:', err);
-        return res.status(500).json({ error: 'An error occurred while retrieving routes.' });
-      }
-      res.status(200).json(results);
-    });
-  });
-  
-// ******************************************************************************************************************
-app.get('/api/routes/:id', (req, res) => {
-    const routeId = req.params.id;
-    const sql = 'SELECT * FROM routes WHERE route_id = ?';
-    db.query(sql, [routeId], (err, results) => {
-      if (err) {
-        console.error('Error retrieving route by ID:', err);
-        return res.status(500).json({ error: 'An error occurred while retrieving the route.' });
-      }
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Route not found' });
-      }
-      res.status(200).json(results[0]);
-    });
-  });
-  
-// ******************************************************************************************************************
-app.put('/api/routes/:id', (req, res) => {
-    const routeId = req.params.id;
-    const { user_id, route_number } = req.body;
-    const sql = 'UPDATE routes SET user_id=?, route_number=? WHERE route_id=?';
-    db.query(
-      sql,
-      [user_id, route_number, routeId],
-      (err, result) => {
-        if (err) {
-          console.error('Error updating route:', err);
-          return res.status(500).json({ error: 'An error occurred while updating the route.' });
-        }
-        res.status(200).json({ message: 'Route updated successfully' });
-      }
-    );
-  });
-  
-// ******************************************************************************************************************
-app.delete('/api/routes/:id', (req, res) => {
-    const routeId = req.params.id;
-    const sql = 'DELETE FROM routes WHERE route_id=?';
-    db.query(sql, [routeId], (err, result) => {
-      if (err) {
-        console.error('Error deleting route:', err);
-        return res.status(500).json({ error: 'An error occurred while deleting the route.' });
-      }
-      res.status(200).json({ message: 'Route deleted successfully' });
-    });
-  });
-  
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-// ******        Cases        ***************************************************************************************
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-
-// Define a route to create a new case
-app.post("/api/cases", (req, res) => {
-  // Extract case data from the request body
-  const { route_id, case_number } = req.body;
-
-  // Insert the case data into the database
-  const sql = "INSERT INTO cases (route_id, case_number) VALUES (?, ?)";
-  db.query(sql, [route_id, case_number], (err, result) => {
-    if (err) {
-      console.error("Error creating case:", err);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while creating the case." });
-    }
-    console.log("Case created successfully");
-    res.status(201).json({ message: "Case created successfully" });
-  });
-});
-
-// ******************************************************************************************************************
-app.get('/api/cases', (req, res) => {
-    const sql = 'SELECT * FROM cases';
-    db.query(sql, (err, results) => {
-      if (err) {
-        console.error('Error retrieving cases:', err);
-        return res.status(500).json({ error: 'An error occurred while retrieving cases.' });
-      }
-      res.status(200).json(results);
-    });
-  });  
-// ******************************************************************************************************************
-app.get('/api/cases/:id', (req, res) => {
-    const caseId = req.params.id;
-    const sql = 'SELECT * FROM cases WHERE case_id = ?';
-    db.query(sql, [caseId], (err, results) => {
-      if (err) {
-        console.error('Error retrieving case by ID:', err);
-        return res.status(500).json({ error: 'An error occurred while retrieving the case.' });
-      }
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Case not found' });
-      }
-      res.status(200).json(results[0]);
-    });
-  });
-  
-// ******************************************************************************************************************
-app.put('/api/cases/:id', (req, res) => {
-    const caseId = req.params.id;
-    const { route_id, case_number } = req.body;
-    const sql = 'UPDATE cases SET route_id=?, case_number=? WHERE case_id=?';
-    db.query(
-      sql,
-      [route_id, case_number, caseId],
-      (err, result) => {
-        if (err) {
-          console.error('Error updating case:', err);
-          return res.status(500).json({ error: 'An error occurred while updating the case.' });
-        }
-        res.status(200).json({ message: 'Case updated successfully' });
-      }
-    );
-  });
-  
-// ******************************************************************************************************************
-app.delete('/api/cases/:id', (req, res) => {
-    const caseId = req.params.id;
-    const sql = 'DELETE FROM cases WHERE case_id=?';
-    db.query(sql, [caseId], (err, result) => {
-      if (err) {
-        console.error('Error deleting case:', err);
-        return res.status(500).json({ error: 'An error occurred while deleting the case.' });
-      }
-      res.status(200).json({ message: 'Case deleted successfully' });
-    });
-  });
-  
-  
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-// ******        Case_Rows        ***********************************************************************************
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-
-// Define a route to create a new row
-app.post("/api/case_rows", (req, res) => {
-  // Extract row data from the request body
-  const { case_id, case_row_number } = req.body;
-
-  // Insert the row data into the database
-  const sql =
-    "INSERT INTO `case_rows` (case_id, case_row_number) VALUES (?, ?)";
-
-  db.query(sql, [case_id, case_row_number], (err, result) => {
-    if (err) {
-      console.error("Error creating case row:", err);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while creating the case row." });
-    }
-    console.log("Case row created successfully");
-    res.status(201).json({ message: "Case row created successfully" });
-  });
-});
-
-// ******************************************************************************************************************
-app.get("/api/case_rows", (req, res) => {
-  const sql = "SELECT * FROM case_rows";
+// Get all routes
+app.get("/api/routes", (req, res) => {
+  const sql = "SELECT * FROM routes";
   db.query(sql, (err, results) => {
     if (err) {
-      console.error("Error retrieving case rows:", err);
+      console.error("Error retrieving routes:", err);
       return res
         .status(500)
-        .json({ error: "An error occurred while retrieving case rows." });
+        .json({ error: "An error occurred while retrieving routes." });
     }
     res.status(200).json(results);
   });
 });
 
-// ******************************************************************************************************************
-app.get("/api/case_rows/:id", (req, res) => {
-  const caseRowId = req.params.id;
-  const sql = "SELECT * FROM case_rows WHERE case_row_id = ?";
-  db.query(sql, [caseRowId], (err, results) => {
+// Get a route by ID
+app.get("/api/routes/:id", (req, res) => {
+  const routeId = req.params.id;
+  const sql = "SELECT * FROM routes WHERE route_id = ?";
+  db.query(sql, [routeId], (err, results) => {
     if (err) {
-      console.error("Error retrieving case row by ID:", err);
+      console.error("Error retrieving route by ID:", err);
       return res
         .status(500)
-        .json({ error: "An error occurred while retrieving the case row." });
+        .json({ error: "An error occurred while retrieving the route." });
     }
     if (results.length === 0) {
-      return res.status(404).json({ error: "Case row not found" });
+      return res.status(404).json({ error: "Route not found" });
     }
     res.status(200).json(results[0]);
   });
 });
 
-// ******************************************************************************************************************
-app.put("/api/case_rows/:id", (req, res) => {
-  const caseRowId = req.params.id;
-  const { case_id, case_row_number } = req.body;
-  const sql =
-    "UPDATE case_rows SET case_id=?, case_row_number=? WHERE case_row_id=?";
-  db.query(sql, [case_id, case_row_number, caseRowId], (err, result) => {
+// Update a route by ID
+app.put("/api/routes/:id", (req, res) => {
+  const routeId = req.params.id;
+  const { route_number, office_id } = req.body;
+  const sql = "UPDATE routes SET route_number=?, office_id=? WHERE route_id=?";
+  db.query(sql, [route_number, office_id, routeId], (err, result) => {
     if (err) {
-      console.error("Error updating case row:", err);
+      console.error("Error updating route:", err);
       return res
         .status(500)
-        .json({ error: "An error occurred while updating the case row." });
+        .json({ error: "An error occurred while updating the route." });
     }
-    res.status(200).json({ message: "Case row updated successfully" });
+    res.status(200).json({ message: "Route updated successfully" });
   });
 });
 
-// ******************************************************************************************************************
-app.delete("/api/case_rows/:id", (req, res) => {
-  const caseRowId = req.params.id;
-  const sql = "DELETE FROM case_rows WHERE case_row_id=?";
-  db.query(sql, [caseRowId], (err, result) => {
+// Delete a route by ID
+app.delete("/api/routes/:id", (req, res) => {
+  const routeId = req.params.id;
+  const sql = "DELETE FROM routes WHERE route_id=?";
+  db.query(sql, [routeId], (err, result) => {
     if (err) {
-      console.error("Error deleting case row:", err);
+      console.error("Error deleting route:", err);
       return res
         .status(500)
-        .json({ error: "An error occurred while deleting the case row." });
+        .json({ error: "An error occurred while deleting the route." });
     }
-    res.status(200).json({ message: "Case row deleted successfully" });
+    res.status(200).json({ message: "Route deleted successfully" });
   });
 });
 
@@ -403,33 +430,35 @@ app.delete("/api/case_rows/:id", (req, res) => {
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 
-// Define a route to create a new address
+// Create a new address
 app.post("/api/addresses", (req, res) => {
   // Extract address data from the request body
   const {
-    case_row_id,
-    number,
+    case_number,
+    case_row_number,
+    address_number,
     address1,
     address2,
     city,
     state,
     zip_code,
-    /* additional address data */
+    route_id,
   } = req.body;
 
   // Insert the address data into the database
-  const sql =
-    "INSERT INTO addresses (case_row_id, number, address1, address2, city, state, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?)";
+  const sql = `INSERT INTO addresses (case_number, case_row_number, address_number, address1, address2, city, state, zip_code, route_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   db.query(
     sql,
     [
-      case_row_id,
-      number,
+      case_number,
+      case_row_number,
+      address_number,
       address1,
       address2,
       city,
       state,
-      zip_code /* additional values */,
+      zip_code,
+      route_id,
     ],
     (err, result) => {
       if (err) {
@@ -444,7 +473,7 @@ app.post("/api/addresses", (req, res) => {
   );
 });
 
-// ******************************************************************************************************************
+// Get all addresses
 app.get("/api/addresses", (req, res) => {
   const sql = "SELECT * FROM addresses";
   db.query(sql, (err, results) => {
@@ -458,7 +487,7 @@ app.get("/api/addresses", (req, res) => {
   });
 });
 
-// ******************************************************************************************************************
+// Get an address by ID
 app.get("/api/addresses/:id", (req, res) => {
   const addressId = req.params.id;
   const sql = "SELECT * FROM addresses WHERE address_id = ?";
@@ -476,16 +505,35 @@ app.get("/api/addresses/:id", (req, res) => {
   });
 });
 
-// ******************************************************************************************************************
+// Update an address by ID
 app.put("/api/addresses/:id", (req, res) => {
   const addressId = req.params.id;
-  const { case_row_id, number, address1, address2, city, state, zip_code } =
-    req.body;
-  const sql =
-    "UPDATE addresses SET case_row_id=?, number=?, address1=?, address2=?, city=?, state=?, zip_code=? WHERE address_id=?";
+  const {
+    case_number,
+    case_row_number,
+    address_number,
+    address1,
+    address2,
+    city,
+    state,
+    zip_code,
+    route_id,
+  } = req.body;
+  const sql = `UPDATE addresses SET case_number=?, case_row_number=?, address_number=?, address1=?, address2=?, city=?, state=?, zip_code=?, route_id=? WHERE address_id=?`;
   db.query(
     sql,
-    [case_row_id, number, address1, address2, city, state, zip_code, addressId],
+    [
+      case_number,
+      case_row_number,
+      address_number,
+      address1,
+      address2,
+      city,
+      state,
+      zip_code,
+      route_id,
+      addressId,
+    ],
     (err, result) => {
       if (err) {
         console.error("Error updating address:", err);
@@ -498,7 +546,7 @@ app.put("/api/addresses/:id", (req, res) => {
   );
 });
 
-// ******************************************************************************************************************
+// Delete an address by ID
 app.delete("/api/addresses/:id", (req, res) => {
   const addressId = req.params.id;
   const sql = "DELETE FROM addresses WHERE address_id=?";
@@ -513,14 +561,9 @@ app.delete("/api/addresses/:id", (req, res) => {
   });
 });
 
-// ******************************************************************************************************************
-
 // Define other routes and middleware as needed
 
 const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-  const address = server.address();
-  const ip = address.address;
-  const port = address.port;
-  console.log(`Server is running at http://${ip}:${port}`);
+app.listen(3000, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

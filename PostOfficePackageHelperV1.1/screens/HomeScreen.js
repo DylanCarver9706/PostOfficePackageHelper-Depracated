@@ -1,37 +1,39 @@
-import React, {useEffect, useState} from 'react';
-import { View, Text, Button } from 'react-native';
+import React from 'react';
+import { View, Text, Button, LogBox } from 'react-native';
 
-export function HomeScreen({ navigation }) {
+// Import the necessary modules for handling authentication and navigation
+import AsyncStorage from '@react-native-async-storage/async-storage'; // For storing user data
+import { useNavigation } from '@react-navigation/native'; // For navigation
 
-  const [isLoading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
+// Define the HomeScreen component
+export function HomeScreen({ setUser }) {
+  const navigation = useNavigation();
 
-  // let getUsers = () => {
-  //   fetch('http://localhost:3000/api/users')
-  //   .then(res => {
-  //     console.log(res.status);
-  //     console.log(res.headers);
-  //     return res.json();
-  //   })
-  //   .then(
-  //     (result) => {
-  //       console.log(result);
-  //     },
-  //     (error) => {
-  //       console.log(error);
-  //     }
-  //   )
-  // }
-
-  const getUsers = async () => {
+  // Define the handleLogout function
+  const handleLogout = async () => {
+    // Perform any necessary cleanup (e.g., clearing user data from AsyncStorage)
     try {
-      const response = await fetch('http://162.192.102.233/api/users');
-      const json = await response.json();
-      setData(json);
+      await AsyncStorage.clear(); // Clear user data from AsyncStorage
+  
+      // Send a request to the /api/logout endpoint
+      const response = await fetch('https://4beb-71-85-245-93.ngrok-free.app/api/logout', {
+        method: 'GET', // You can adjust the HTTP method as needed
+      });
+  
+      if (response.ok) {
+        // Set the user state to null upon successful logout
+        setUser(null);
+  
+        // Force a full app reload if the logout was successful
+        LogBox.ignoreAllLogs(); // Ignore warnings to prevent errors during reload
+        navigation.replace('HaveAccountScreen');
+      } else {
+        // Handle the case where logout fails
+        console.error('Logout failed');
+      }
     } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+      console.error('Error logging out:', error);
+      // Handle any errors that occur during the logout process
     }
   };
 
@@ -40,19 +42,15 @@ export function HomeScreen({ navigation }) {
       <Text>Home Screen</Text>
       <Button
         title="Case Builder"
-        onPress={() => navigation.navigate('Case Builder')}
+        onPress={() => navigation.navigate('Select Office Route')}
       />
       <Button
         title="Package Helper"
         onPress={() => navigation.navigate('Package Helper')}
       />
       <Button
-        title="Sign Up"
-        onPress={() => navigation.navigate('Sign Up')}
-      />
-      <Button
-        title="Get Users"
-        onPress={getUsers}
+        title="Logout"
+        onPress={handleLogout} // Call the handleLogout function when the button is pressed
       />
     </View>
   );
