@@ -57,7 +57,7 @@ app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
   // Query the database to get the hashed password for the provided email
-  const sql = 'SELECT password FROM users WHERE email = ?';
+  const sql = 'SELECT user_id, password FROM users WHERE email = ?';
   db.query(sql, [email], async (err, results) => {
     if (err) {
       console.error('Error querying database:', err);
@@ -69,13 +69,16 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    const user_id = results[0].user_id;
     const hashedPassword = results[0].password;
+
+    // Compare the provided password with the hashed password
     const passwordMatch = await bcrypt.compare(password, hashedPassword);
 
     if (passwordMatch) {
       // Passwords match, set user data in the session
-      req.session.user = { email };
-      res.status(200).json({ message: 'Login successful' });
+      req.session.user = { email, user_id };
+      res.status(200).json({ message: 'Login successful', user: { email, user_id } }); // Return user data in the response
     } else {
       // Passwords do not match
       res.status(401).json({ message: 'Invalid credentials' });
@@ -83,27 +86,57 @@ app.post('/api/login', async (req, res) => {
   });
 });
 
+
+
 // Define a route to check user authentication status
+// Updated /api/check-auth endpoint with user_id query parameter
 app.get('/api/check-auth', (req, res) => {
-  if (req.session.user) {
-    // User is authenticated, send back user data
-    res.status(200).json({ isAuthenticated: true, user: req.session.user });
+  const user_id = parseInt(req.query.user_id, 10); // Parse user_id to an integer
+
+  if (req.session.user && req.session.user.user_id === user_id) {
+    // User is authenticated, send back user data from the database
+    const sql = 'SELECT * FROM users WHERE user_id = ?'; // Assuming user_id is the unique identifier
+    db.query(sql, [user_id], (err, results) => {
+      if (err) {
+        console.error('Error querying database:', err);
+        return res.status(500).json({ error: 'An error occurred' });
+      }
+
+      if (results.length === 0) {
+        // User not found in the database
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const userData = results[0];
+      // Include user data in the response
+      res.status(200).json({ isAuthenticated: true, user: userData });
+    });
   } else {
-    // User is not authenticated
+    // User is not authenticated or the provided user_id doesn't match the session user_id
     res.status(401).json({ isAuthenticated: false });
   }
 });
 
-// Logout route
+
+
+// Logout route with user identifier as a query parameter
 app.get('/api/logout', (req, res) => {
-  // Destroy the user's session
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Error destroying session:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(200).json({ message: 'Logout successful' });
-  });
+  const userId = req.query.userId; // Get the user ID from the query parameter
+
+  // Check if the user is authenticated and the user ID matches
+  if (req.session.user && req.session.user.id === userId) {
+    // Destroy the user's session
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        return res.status(500).json({ error: 'An error occurred' });
+      }
+      res.status(200).json({ message: 'Logout successful' });
+    });
+  } else {
+    // Unauthorized logout request
+    res.status(401).json({ message: 'Unauthorized' });
+  }
 });
 
 
