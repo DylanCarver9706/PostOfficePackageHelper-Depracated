@@ -50,8 +50,10 @@ export default function App() {
         {/* <Stack.Screen name="Sign Up" component={SignupScreen} /> */}
         <Stack.Screen
           name="Select Office Route"
-          component={SelectOfficeRouteScreen}
-        />
+          options={{ title: 'Select Office Route' }}
+        >
+          {(props) => <SelectOfficeRouteScreen {...props} user={user} />}
+        </Stack.Screen>
         <Stack.Screen name="Addresses" component={AddressesScreen} />
         <Stack.Screen name="HaveAccountScreen" component={HaveAccountScreen} />
         <Stack.Screen name="Login Screen">
