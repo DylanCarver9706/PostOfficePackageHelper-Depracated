@@ -1,15 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Fake data for cases and case rows
 const mockCases = [
   { id: 1, caseNumber: 'Case 1', rows: [1, 2, 3, 4, 5] },
-  { id: 2, caseNumber: 'Case 2', rows: [6, 7, 8, 9, 10] },
+  { id: 2, caseNumber: 'Case 2', rows: [1, 2, 3, 4, 5] },
   // Add more cases as needed
 ];
 
 export function CaseBuilderScreen({ route }) {
+
+  useEffect(() => {
+    // Retrieve user information from AsyncStorage
+    const getUserInfo = async () => {
+      try {
+        const email = await AsyncStorage.getItem("userEmail");
+        const id = await AsyncStorage.getItem("userId");
+        const selectedOffice = await AsyncStorage.getItem("selectedOffice");
+        const selectedRoute = await AsyncStorage.getItem("selectedRoute");
+
+        console.log("Email in CaseBuilder: ", email);
+        console.log("Id in CaseBuilder: ", id);
+        console.log("selectedOffice in CaseBuilder: ", selectedOffice)
+        console.log("selectedRoute in CaseBuilder: ", selectedRoute)
+        // if (email && id) {
+          // setUserEmail(email);
+          // setUserId(id);
+        // }
+      } catch (error) {
+        console.error("Error retrieving user information:", error);
+      }
+    };
+
+    getUserInfo();
+  }, []);
+
   const { postOffice, route: selectedRoute } = route.params;
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
 

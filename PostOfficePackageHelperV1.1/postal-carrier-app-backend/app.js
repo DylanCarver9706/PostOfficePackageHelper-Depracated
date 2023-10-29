@@ -57,7 +57,7 @@ app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
   // Query the database to get the hashed password for the provided email
-  const sql = 'SELECT user_id, password FROM users WHERE email = ?';
+  const sql = 'SELECT user_id, password, first_name, last_name FROM users WHERE email = ?';
   db.query(sql, [email], async (err, results) => {
     if (err) {
       console.error('Error querying database:', err);
@@ -68,17 +68,19 @@ app.post('/api/login', async (req, res) => {
       // User not found
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-
+    console.log(results[0])
     const user_id = results[0].user_id;
     const hashedPassword = results[0].password;
+    const firstName = results[0].first_name
+    const lastName = results[0].last_name
 
     // Compare the provided password with the hashed password
     const passwordMatch = await bcrypt.compare(password, hashedPassword);
 
     if (passwordMatch) {
       // Passwords match, set user data in the session
-      req.session.user = { email, user_id };
-      res.status(200).json({ message: 'Login successful', user: { email, user_id } }); // Return user data in the response
+      req.session.user = { email, user_id, firstName, lastName };
+      res.status(200).json({ message: 'Login successful', user: { email, user_id, firstName, lastName } }); // Return user data in the response
     } else {
       // Passwords do not match
       res.status(401).json({ message: 'Invalid credentials' });
@@ -150,17 +152,34 @@ app.get('/api/logout', (req, res) => {
 
 app.post("/api/users/new", async (req, res) => {
   try {
-    const { first_name, last_name, email, password } = req.body;
+    const {
+      first_name,
+      last_name,
+      email,
+      password,
+      phone_number,
+      home_post_office,
+      position,
+      subscription_status
+    } = req.body;
 
     // Hash the user's password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert the user's information into the database
     const sql =
-      "INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)";
+      "INSERT INTO users (first_name, last_name, email, password, phone_number, home_post_office, position) VALUES (?, ?, ?, ?, ?, ?, ?)";
     db.query(
       sql,
-      [first_name, last_name, email, hashedPassword],
+      [
+        first_name,
+        last_name,
+        email,
+        hashedPassword,
+        phone_number,
+        home_post_office,
+        position,
+      ],
       (err, result) => {
         if (err) {
           console.error("Error registering user:", err);
@@ -280,12 +299,12 @@ app.delete("/api/users/:id", (req, res) => {
 // Create a new office
 app.post("/api/offices", (req, res) => {
   // Extract office data from the request body
-  const { city, state, phone_number } = req.body;
+  const { user_id, city, state, phone_number } = req.body;
 
   // Insert the office data into the database
   const sql =
-    "INSERT INTO offices (city, state, phone_number) VALUES (?, ?, ?)";
-  db.query(sql, [city, state, phone_number], (err, result) => {
+    "INSERT INTO offices (user_id, city, state, phone_number) VALUES (?, ?, ?, ?)";
+  db.query(sql, [user_id, city, state, phone_number], (err, result) => {
     if (err) {
       console.error("Error creating office:", err);
       return res
@@ -406,6 +425,22 @@ app.get("/api/routes", (req, res) => {
   });
 });
 
+// Get all routes by officeId
+app.get("/api/routesByOfficeId", (req, res) => {
+  const officeId = req.query.office_id; // Get the office_id from the query parameter
+
+  const sql = "SELECT * FROM routes WHERE office_id = ?";
+  db.query(sql, [officeId], (err, results) => {
+    if (err) {
+      console.error("Error retrieving routes:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving routes." });
+    }
+    res.status(200).json(results);
+  });
+});
+
 // Get a route by ID
 app.get("/api/routes/:id", (req, res) => {
   const routeId = req.params.id;
@@ -510,6 +545,22 @@ app.post("/api/addresses", (req, res) => {
 app.get("/api/addresses", (req, res) => {
   const sql = "SELECT * FROM addresses";
   db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error retrieving addresses:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving addresses." });
+    }
+    res.status(200).json(results);
+  });
+});
+
+// Get all addresses by routeId
+app.get("/api/addressesByRouteId", (req, res) => {
+  const routeId = req.query.route_id; // Get the route_id from the query parameter
+
+  const sql = "SELECT * FROM addresses WHERE route_id = ?";
+  db.query(sql, [routeId], (err, results) => {
     if (err) {
       console.error("Error retrieving addresses:", err);
       return res

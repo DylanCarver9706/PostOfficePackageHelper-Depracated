@@ -1,60 +1,91 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export function SelectOfficeRouteScreen({ user }) {
+export function SelectOfficeRouteScreen() {
   const [selectedPostOffice, setSelectedPostOffice] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [offices, setOffices] = useState([]);
+  const [userId, setUserId] = useState(null);
 
   // Initialize the navigation object
   const navigation = useNavigation();
 
-  const handlePostOfficeSelection = async (postOffice) => {
-    setSelectedPostOffice(postOffice);
-
-    try {
-      const response = await fetch(
-        `https://4beb-71-85-245-93.ngrok-free.app/api/routes?office_id=${postOffice.office_id}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        // Update the selectedPostOffice with routes
-        setSelectedPostOffice({ ...postOffice, routes: data });
-      } else {
-        console.error("Failed to fetch routes");
+  useEffect(() => {
+    // Retrieve user information from AsyncStorage
+    const getUserInfo = async () => {
+      try {
+        const id = await AsyncStorage.getItem("userId");
+        setUserId(id);
+      } catch (error) {
+        console.error("Error retrieving user information:", error);
       }
-    } catch (error) {
-      console.error("Error fetching routes:", error);
-    }
-  };
+    };
 
-  const handleRouteSelection = (route) => {
-    setSelectedRoute(route);
-  };
+    getUserInfo();
+  }, []);
 
   useEffect(() => {
-    if (user) {
-      // Fetch the list of offices using user.user_id
+    if (userId) {
+      // Fetch the list of offices using userId
       const fetchOffices = async () => {
         try {
           const response = await fetch(
-            `https://4beb-71-85-245-93.ngrok-free.app/api/offices?user_id=${user.user_id}`
+            `https://ff4b-71-85-245-93.ngrok-free.app/api/offices?user_id=${userId}`
           );
           if (response.ok) {
             const data = await response.json();
             setOffices(data); // Update the state with the fetched offices
           } else {
-            console.error('Failed to fetch offices');
+            console.error("Failed to fetch offices");
           }
         } catch (error) {
-          console.error('Error fetching offices:', error);
+          console.error("Error fetching offices:", error);
         }
       };
 
       fetchOffices();
     }
-  }, [user]);
+  }, [userId]);
+
+  const handlePostOfficeSelection = async (postOffice) => {
+    try {
+      setSelectedPostOffice(postOffice);
+
+      // Save the selected office to AsyncStorage
+      await AsyncStorage.setItem(
+        "selectedOffice",
+        postOffice.office_id.toString()
+      );
+
+      // Fetch the routes for the selected office
+      const response = await fetch(
+        `https://ff4b-71-85-245-93.ngrok-free.app/api/routesByOfficeId?office_id=${postOffice.office_id}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update the selectedPostOffice with routes
+        setSelectedPostOffice({ ...postOffice, routes: data });
+
+        // Log the selected office ID from AsyncStorage
+        const selectedOfficeId = await AsyncStorage.getItem("selectedOffice");
+        console.log("Selected office ID: ", selectedOfficeId);
+      } else {
+        console.error("Failed to fetch routes");
+      }
+    } catch (error) {
+      console.error("Error handling post office selection:", error);
+    }
+  };
+
+  const handleRouteSelection = async (route) => {
+    setSelectedRoute(route);
+    await AsyncStorage.setItem("selectedRoute", route.route_id.toString()); // Save route_id as a string
+    const theSelectedRoute = await AsyncStorage.getItem("selectedRoute");
+    console.log("Selected route: ", theSelectedRoute);
+  };
 
   // Use useEffect to navigate when both office and route are selected
   useEffect(() => {
@@ -62,7 +93,6 @@ export function SelectOfficeRouteScreen({ user }) {
       navigation.navigate("Case Builder", {
         postOffice: selectedPostOffice.name,
         route: selectedRoute.name,
-        user: user,
       });
     }
   }, [selectedPostOffice, selectedRoute, navigation]);

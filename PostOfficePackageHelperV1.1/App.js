@@ -8,7 +8,8 @@ import { PackageHelperScreen } from "./screens/PackageHelperScreen";
 import { SelectOfficeRouteScreen } from "./screens/SelectOfficeRouteScreen";
 import { AddressesScreen } from "./screens/AddressesScreen";
 import { HaveAccountScreen } from "./screens/HaveAccountScreen";
-import { LoginScreen } from './screens/LoginScreen';
+import { LoginScreen } from "./screens/LoginScreen";
+import { SignUpScreen } from "./screens/SignupScreen";
 
 const Stack = createStackNavigator();
 
@@ -23,11 +24,12 @@ export default function App() {
     const checkUserAuthentication = async () => {
       try {
         const response = await fetch(
-          "https://4beb-71-85-245-93.ngrok-free.app/api/check-auth"
+          "https://ff4b-71-85-245-93.ngrok-free.app/api/check-auth?user_id=1"
         );
         const data = await response.json();
         if (data.isAuthenticated) {
           setUser(true);
+          navigation.navigate("Home")
         } else {
           setUser(null);
         }
@@ -42,7 +44,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName={user ? "Home" : "HaveAccountScreen"}>
-      <Stack.Screen name="Home">
+        <Stack.Screen name="Home">
           {(props) => <HomeScreen {...props} setUser={setUser} />}
         </Stack.Screen>
         <Stack.Screen name="Case Builder" component={CaseBuilderScreen} />
@@ -50,11 +52,12 @@ export default function App() {
         {/* <Stack.Screen name="Sign Up" component={SignupScreen} /> */}
         <Stack.Screen
           name="Select Office Route"
-          options={{ title: 'Select Office Route' }}
+          options={{ title: "Select Office Route" }}
         >
           {(props) => <SelectOfficeRouteScreen {...props} user={user} />}
         </Stack.Screen>
         <Stack.Screen name="Addresses" component={AddressesScreen} />
+        <Stack.Screen name="Signup Screen" component={SignUpScreen} />
         <Stack.Screen name="HaveAccountScreen" component={HaveAccountScreen} />
         <Stack.Screen name="Login Screen">
           {(props) => <LoginScreen {...props} setUser={setUser} />}
