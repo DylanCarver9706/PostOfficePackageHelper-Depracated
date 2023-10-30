@@ -555,6 +555,25 @@ app.get("/api/addresses", (req, res) => {
   });
 });
 
+// Get addresses by case_number and case_row_number
+app.get("/api/addressesByCaseAndRow", (req, res) => {
+  const { case_number, case_row_number } = req.query;
+
+  if (!case_number || !case_row_number) {
+    return res.status(400).json({ error: "Both case_number and case_row_number are required." });
+  }
+
+  const sql = "SELECT * FROM addresses WHERE case_number = ? AND case_row_number = ?";
+  db.query(sql, [case_number, case_row_number], (err, results) => {
+    if (err) {
+      console.error("Error retrieving addresses:", err);
+      return res.status(500).json({ error: "An error occurred while retrieving addresses." });
+    }
+    res.status(200).json(results);
+  });
+});
+
+
 // Get all addresses by routeId
 app.get("/api/addressesByRouteId", (req, res) => {
   const routeId = req.query.route_id; // Get the route_id from the query parameter
