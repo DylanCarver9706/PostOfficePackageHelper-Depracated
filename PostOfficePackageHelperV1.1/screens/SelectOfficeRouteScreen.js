@@ -90,12 +90,9 @@ export function SelectOfficeRouteScreen() {
   // Use useEffect to navigate when both office and route are selected
   useEffect(() => {
     if (selectedPostOffice && selectedRoute) {
-      navigation.navigate("Case Builder", {
-        postOffice: selectedPostOffice.name,
-        route: selectedRoute.name,
-      });
+      navigation.navigate("Case Builder");
     }
-  }, [selectedPostOffice, selectedRoute, navigation]);
+  }, [selectedPostOffice, selectedRoute]);
 
   return (
     <View style={{ flex: 1, flexDirection: "row", padding: 16 }}>

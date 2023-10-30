@@ -3,44 +3,55 @@ import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Fake data for cases and case rows
-const mockCases = [
-  { id: 1, caseNumber: 'Case 1', rows: [1, 2, 3, 4, 5] },
-  { id: 2, caseNumber: 'Case 2', rows: [1, 2, 3, 4, 5] },
-  // Add more cases as needed
-];
-
 export function CaseBuilderScreen({ route }) {
+  // const { postOffice, route: selectedRoute } = route.params;
+  const [selectedPostOffice, setSelectedPostOffice] = useState(null);
+  const [selectedRoute, setSelectedRoute] = useState(null);
+  const [cases, setCases] = useState([]);
+  const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
+  const navigation = useNavigation();
 
   useEffect(() => {
-    // Retrieve user information from AsyncStorage
-    const getUserInfo = async () => {
+    const fetchAddressesByRouteId = async () => {
       try {
-        const email = await AsyncStorage.getItem("userEmail");
-        const id = await AsyncStorage.getItem("userId");
-        const selectedOffice = await AsyncStorage.getItem("selectedOffice");
-        const selectedRoute = await AsyncStorage.getItem("selectedRoute");
+        const selectedOfficeId = await AsyncStorage.getItem("selectedOffice");
+        setSelectedPostOffice(selectedOfficeId);
 
-        console.log("Email in CaseBuilder: ", email);
-        console.log("Id in CaseBuilder: ", id);
-        console.log("selectedOffice in CaseBuilder: ", selectedOffice)
-        console.log("selectedRoute in CaseBuilder: ", selectedRoute)
-        // if (email && id) {
-          // setUserEmail(email);
-          // setUserId(id);
-        // }
+        const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
+        setSelectedRoute(selectedRouteId);
+        const response = await fetch(
+          `https://ff4b-71-85-245-93.ngrok-free.app/api/addressesByRouteId?route_id=${selectedRouteId}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const casesData = {};
+
+          data.forEach((address) => {
+            const { case_number, case_row_number } = address;
+            if (!(case_number in casesData)) {
+              casesData[case_number] = [];
+            }
+            casesData[case_number].push(parseInt(case_row_number));
+          });
+
+          const casesArray = Object.entries(casesData).map(([caseNumber, rows]) => ({
+            id: parseInt(caseNumber),
+            caseNumber,
+            rows: [1, 2, 3, 4, 5], // Ensure each case has 5 rows
+          }));
+
+          setCases(casesArray);
+        } else {
+          console.error("Failed to fetch addresses");
+        }
       } catch (error) {
-        console.error("Error retrieving user information:", error);
+        console.error("Error fetching addresses:", error);
       }
     };
 
-    getUserInfo();
+    fetchAddressesByRouteId();
   }, []);
-
-  const { postOffice, route: selectedRoute } = route.params;
-  const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
-
-  const navigation = useNavigation();
 
   const handlePrevCase = () => {
     if (currentCaseIndex > 0) {
@@ -49,30 +60,40 @@ export function CaseBuilderScreen({ route }) {
   };
 
   const handleNextCase = () => {
-    if (currentCaseIndex < mockCases.length - 1) {
+    if (currentCaseIndex < cases.length - 1) {
       setCurrentCaseIndex(currentCaseIndex + 1);
     }
   };
 
-  const handleRowPress = (caseRowNumber) => {
-    // Navigate to AddressesScreen with the selected case row number
+  const handleRowPress = (caseNumber, rowNumber) => {
+    // Set selectedCase and selectedRow in AsyncStorage
+    AsyncStorage.setItem("selectedCase", caseNumber.toString());
+    AsyncStorage.setItem("selectedRow", rowNumber.toString());
+  
+    // Log the selectedCase and selectedRow
+    console.log("Selected Case: ", caseNumber);
+    console.log("Selected Row: ", rowNumber);
+  
+    // Navigate to AddressesScreen with the selected case number and row number
     navigation.navigate('Addresses', {
-      caseRowNumber,
+      caseNumber,
+      rowNumber,
     });
   };
+  
 
   return (
     <View style={styles.container}>
-      <Text>Post Office: {postOffice}</Text>
+      <Text>Post Office: {selectedPostOffice}</Text>
       <Text>Route: {selectedRoute}</Text>
       <View style={styles.caseContainer}>
-        <Text style={styles.caseTitle}>Case: {mockCases[currentCaseIndex].caseNumber}</Text>
+        <Text style={styles.caseTitle}>Case: {cases[currentCaseIndex]?.caseNumber}</Text>
         <TouchableOpacity style={styles.case}>
-          {mockCases[currentCaseIndex].rows.map((rowNumber) => (
+          {cases[currentCaseIndex]?.rows.map((rowNumber) => (
             <TouchableOpacity
               key={rowNumber}
               style={styles.row}
-              onPress={() => handleRowPress(rowNumber)}
+              onPress={() => handleRowPress(cases[currentCaseIndex]?.caseNumber, rowNumber)}
             >
               <Text>Row {rowNumber}</Text>
             </TouchableOpacity>
