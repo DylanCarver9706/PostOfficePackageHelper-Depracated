@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from "react";
+import { View, Text, Button, StyleSheet, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function CaseBuilderScreen({ route }) {
@@ -16,7 +16,7 @@ export function CaseBuilderScreen({ route }) {
       const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
       setSelectedRoute(selectedRouteId);
       const response = await fetch(
-        `https://ff4b-71-85-245-93.ngrok-free.app/api/addressesByRouteId?route_id=${selectedRouteId}`
+        `https://cb66-71-85-245-93.ngrok-free.app/api/addressesByRouteId?route_id=${selectedRouteId}`
       );
 
       if (response.ok) {
@@ -31,11 +31,13 @@ export function CaseBuilderScreen({ route }) {
           casesData[case_number].push(parseInt(case_row_number));
         });
 
-        const casesArray = Object.entries(casesData).map(([caseNumber, rows]) => ({
-          id: parseInt(caseNumber),
-          caseNumber,
-          rows: [1, 2, 3, 4, 5], // Ensure each case has 5 rows
-        }));
+        const casesArray = Object.entries(casesData).map(
+          ([caseNumber, rows]) => ({
+            id: parseInt(caseNumber),
+            caseNumber,
+            rows: [1, 2, 3, 4, 5], // Ensure each case has 5 rows
+          })
+        );
 
         setCases(casesArray);
       } else {
@@ -67,19 +69,25 @@ export function CaseBuilderScreen({ route }) {
       };
       // console.log(newCaseData)
       // Send a POST request to add the new case
-      const response = await fetch('https://ff4b-71-85-245-93.ngrok-free.app/api/addresses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newCaseData),
-      });
+      const response = await fetch(
+        "https://cb66-71-85-245-93.ngrok-free.app/api/addresses",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newCaseData),
+        }
+      );
 
       if (response.ok) {
         // After adding the new case, fetch the updated list of cases
         fetchCases();
       } else {
-        console.error("Failed to add a new case. Response status:", response.status);
+        console.error(
+          "Failed to add a new case. Response status:",
+          response.status
+        );
         const responseText = await response.text();
         console.error("Response data:", responseText);
       }
@@ -93,7 +101,7 @@ export function CaseBuilderScreen({ route }) {
       setCurrentCaseIndex(currentCaseIndex - 1);
     }
   };
-  
+
   const handleNextCase = () => {
     if (currentCaseIndex < cases.length - 1) {
       setCurrentCaseIndex(currentCaseIndex + 1);
@@ -104,13 +112,13 @@ export function CaseBuilderScreen({ route }) {
     // Set selectedCase and selectedRow in AsyncStorage
     AsyncStorage.setItem("selectedCase", caseNumber.toString());
     AsyncStorage.setItem("selectedRow", rowNumber.toString());
-  
+
     // Log the selectedCase and selectedRow
     console.log("Selected Case: ", caseNumber);
     console.log("Selected Row: ", rowNumber);
-  
+
     // Navigate to AddressesScreen with the selected case number and row number
-    navigation.navigate('Addresses', {
+    navigation.navigate("Addresses", {
       caseNumber,
       rowNumber,
     });

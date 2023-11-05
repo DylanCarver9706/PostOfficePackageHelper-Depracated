@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button } from 'react-native';
+import React, { useState } from "react";
+import { View, Text, TextInput, Button } from "react-native";
 
 export function SignUpScreen() {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [homePostOffice, setHomePostOffice] = useState('');
-  const [position, setPosition] = useState('');
-  const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [homePostOffice, setHomePostOffice] = useState("");
+  const [position, setPosition] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = () => {
     // Create an object with the user's data
@@ -23,10 +23,10 @@ export function SignUpScreen() {
     };
 
     // Send a POST request to the API to create a new user
-    fetch('https://ff4b-71-85-245-93.ngrok-free.app/api/users/new', {
-      method: 'POST',
+    fetch("https://cb66-71-85-245-93.ngrok-free.app/api/users/new", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(userData),
     })
@@ -40,12 +40,12 @@ export function SignUpScreen() {
         }
       })
       .catch((error) => {
-        console.error('Error creating user:', error);
+        console.error("Error creating user:", error);
       });
   };
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Text>Sign Up Screen</Text>
       <TextInput
         placeholder="First Name"

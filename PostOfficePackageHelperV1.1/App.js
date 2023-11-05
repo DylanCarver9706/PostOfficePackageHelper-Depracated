@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { HomeScreen } from "./screens/HomeScreen";
 import { CaseBuilderScreen } from "./screens/CaseBuilderScreen";
-import { PackageHelperScreen } from "./screens/PackageHelperScreen";
+import { ScanLabelScreen } from "./screens/ScanLabelScreen";
 // import { SignupScreen } from './screens/SignupScreen';
 import { SelectOfficeRouteScreen } from "./screens/SelectOfficeRouteScreen";
 import { AddressesScreen } from "./screens/AddressesScreen";
@@ -24,12 +24,12 @@ export default function App() {
     const checkUserAuthentication = async () => {
       try {
         const response = await fetch(
-          "https://ff4b-71-85-245-93.ngrok-free.app/api/check-auth?user_id=1"
+          "https://cb66-71-85-245-93.ngrok-free.app/api/check-auth?user_id=1"
         );
         const data = await response.json();
         if (data.isAuthenticated) {
           setUser(true);
-          navigation.navigate("Home")
+          navigation.navigate("Home");
         } else {
           setUser(null);
         }
@@ -48,7 +48,7 @@ export default function App() {
           {(props) => <HomeScreen {...props} setUser={setUser} />}
         </Stack.Screen>
         <Stack.Screen name="Case Builder" component={CaseBuilderScreen} />
-        <Stack.Screen name="Package Helper" component={PackageHelperScreen} />
+        <Stack.Screen name="Scan Label" component={ScanLabelScreen} />
         {/* <Stack.Screen name="Sign Up" component={SignupScreen} /> */}
         <Stack.Screen
           name="Select Office Route"

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "studious-legend-362319",
+  "private_key_id": "32eba54af545fc43e20c63d9a01adedde202b1f7",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC/LEC0E8bDXQvV\nz93EnjQxPrywO4ZlxK3ePJk2S1wQ5zgSrSJ9Fz1NuHOHqYvNXFYGvSFuBcdGhx3g\n3Ge1vk+/0abhfDrg3djdB4ICzM+sDm9p20Ny/zz3g7zngnnMAU+/0c+0jR0JXyCa\ngBT4GM4IFSqNDmnY7G7J3nnQ3ZF5uy62GjRabOG6UjIg/WmNNr+0L9PEv7jGKSQa\nS9+Umn6FR5VwOwC6ofWDFZm5cAwwUEFi/whgtxtM/IjlRKg32ZlOwvvENt9f8jcs\n0T4gst7QAQf0AHLzAPiVGne3q0m8zdugR4KmybIoVIsqBRGcigCdW/M5NKQU90aY\npAvqrl17AgMBAAECggEAPwkO7rHErL9d+yrWw5GswP4gRnXiK2VONUTC+jGgElzD\nUvkusZN7nchvo7BmjhjfrsonHzmdiyZbVj0mnzk435V4EsqdOW89JihnGJhC88cw\nunVXiLAbgLu6CpYtpfRawPOkKrMK+3+X5wnLoEDBks2z4Z36jdHr9/k5LoMYiEv7\ntJBU7MFfK+R9/ywJJCOQO1B+aYbNi5Aur8IjpFaTNXGPnbjFHX6teHtsdGAyVXHC\nijfFW+PHNSHteAGBZ6EF8rKsfhu6lev9PUwm0a7d5UpneS2nl/DA0hJK3TeowLG+\nylMc+Woi3EMObfmxavA64NvPgW+pSbJeb9sLh0q7VQKBgQDkYKiu9+KO8w3u9wzV\nYjYPiNOQhymoB+S3jPG84zat9AWaVfGTWsFm9N+Fz8Nn89KPVhboQq32lJQCdlPh\nUncFJsqndVRW6wsZHR+8+NarFNMOIpWGEdLeJBhnDyhLAG+OSCJuTfvIaYvMGF3O\nHfIx5mPKiHtc5ax6NZC8I9xy3wKBgQDWS5w79t5dQnCuwk4RmqSclpx+EhzF0Jdi\nExK4Hu1joyeiG3wUWYwve/yHDXwoHIcUB0CQzn1ktIJX+8SN8phNZkIbouqarlEQ\n4mqzoVnn5iHIU+UjUdlxsCe+e+ETVTtFk/i11ACPZGIoeV0EHozvNwX904VyREhW\nsB7K2nPk5QKBgElmA3DQfIEi/rxprDc8bFGL0SsnNa0qdEjFxL/HasB3qAFVU+Hf\nDj+PvfMcthnH1El7Cru1CoIweG1eKFFHlrcSI5m0bNnOiu+UW6n5c8ziUX6+gL3p\nJpN8mFcvGO0aA8B/0IkRCTX9Lg/3WNaw6zE8caAbQ0K1Ejzo0E6XW/eTAoGAPtYi\n9M5Zu7zsr8HYBH90/1mGf80t1K9qhF6VYZnoAAxqZbVrd8gePBo+HRfOLTDYRv4t\nZ4i06h+oDMaNhxX4pNF0Vwg5hKvSp4HMyelpJH+trkEzclzgxt5heRB4GiQm4isW\nhbKpi2JjCf00Ui3nI4nd3uT0P2JYV9sC3Hab/yUCgYEAqDji0KvJ5zVEkp1m5a3J\nbKEX/6aH9rnQ/7mRFDiwlovjuDqQ7WujgyNnlzo4r3uDQLJ1A6rWq0U42GmI2i8W\n+jbxxFpR2miKbelEnfuBJias0/+Z8l0/AFbE1EnSHPT84fpHcDA1xmsiOmYvWsww\niDuvBdW9S1W5669PIkCykLs=\n-----END PRIVATE KEY-----\n",
+  "client_email": "usps-package-helper-v1-2@studious-legend-362319.iam.gserviceaccount.com",
+  "client_id": "116767467015726097397",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/usps-package-helper-v1-2%40studious-legend-362319.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

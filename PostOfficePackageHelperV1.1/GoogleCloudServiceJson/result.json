@@ -1,0 +1,346 @@
+{
+  faceAnnotations: [],
+  landmarkAnnotations: [],
+  logoAnnotations: [],
+  labelAnnotations: [],
+  textAnnotations: [
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: 'en',
+      description: 'It was the best of\n' +
+        'times, it was the worst\n' +
+        'of times, it was the age\n' +
+        'of wisdom, it was the\n' +
+        'age of foolishness...',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'It',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'was',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'the',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'best',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'of',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'times',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: ',',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'it',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'was',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'the',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'worst',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'of',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'times',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: ',',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'it',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'was',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'the',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'age',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'of',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'wisdom',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: ',',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'it',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'was',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'the',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'age',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'of',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: 'foolishness',
+      score: 0,
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    },
+    {
+      locations: [],
+      properties: [],
+      mid: '',
+      locale: '',
+      description: '...',
+      confidence: 0,
+      topicality: 0,
+      boundingPoly: [Object]
+    }
+  ],
+  localizedObjectAnnotations: [],
+  safeSearchAnnotation: null,
+  imagePropertiesAnnotation: null,
+  error: null,
+  cropHintsAnnotation: null,
+  fullTextAnnotation: {
+    pages: [ [Object] ],
+    text: 'It was the best of\n' +
+      'times, it was the worst\n' +
+      'of times, it was the age\n' +
+      'of wisdom, it was the\n' +
+      'age of foolishness...'
+  },
+  webDetection: null,
+  productSearchResults: null,
+  context: null
+}

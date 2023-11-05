@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet } from "react-native";
 import Toast from "react-native-toast-message";
 import { LogBox } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function LoginScreen({ setUser, navigation }) {
   const [email, setEmail] = useState("kristencarver14@gmail.com");
@@ -11,7 +11,7 @@ export function LoginScreen({ setUser, navigation }) {
   const handleLogin = async () => {
     try {
       const response = await fetch(
-        "https://ff4b-71-85-245-93.ngrok-free.app/api/login",
+        "https://cb66-71-85-245-93.ngrok-free.app/api/login",
         {
           method: "POST",
           headers: {
@@ -20,29 +20,29 @@ export function LoginScreen({ setUser, navigation }) {
           body: JSON.stringify({ email, password }),
         }
       );
-  
+
       if (response.ok) {
         const responseData = await response.json();
         // console.log(responseData);
         const { email, user_id } = responseData.user;
-  
+
         // Save user information to AsyncStorage
-        await AsyncStorage.setItem('userEmail', email);
-        await AsyncStorage.setItem('userId', user_id.toString());
-  
+        await AsyncStorage.setItem("userEmail", email);
+        await AsyncStorage.setItem("userId", user_id.toString());
+
         // Login successful
         setUser(true);
 
         // Display user info in console log
         console.log("User Email:", email);
         console.log("User ID:", user_id);
-  
+
         // Show a success toast
         Toast.show({
           text1: "Login Successful",
           type: "success",
         });
-  
+
         // Force a full app reload
         LogBox.ignoreAllLogs(); // Ignore warnings to prevent errors during reload
         setTimeout(() => {
@@ -55,7 +55,7 @@ export function LoginScreen({ setUser, navigation }) {
       } else {
         // Login failed
         setUser(null);
-  
+
         // Show an error toast
         Toast.show({
           text1: "Login Failed",
@@ -64,7 +64,7 @@ export function LoginScreen({ setUser, navigation }) {
       }
     } catch (error) {
       console.error("Error during login:", error);
-  
+
       // Show an error toast
       Toast.show({
         text1: "An error occurred",

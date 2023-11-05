@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function AddressesScreen() {
@@ -13,7 +13,7 @@ export function AddressesScreen() {
 
         if (selectedCase && selectedRow) {
           const response = await fetch(
-            `https://ff4b-71-85-245-93.ngrok-free.app/api/addressesByCaseAndRow?case_number=${selectedCase}&case_row_number=${selectedRow}`
+            `https://cb66-71-85-245-93.ngrok-free.app/api/addressesByCaseAndRow?case_number=${selectedCase}&case_row_number=${selectedRow}`
           );
 
           if (response.ok) {
@@ -32,7 +32,7 @@ export function AddressesScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       {addresses.length > 0 ? (
         <FlatList
           data={addresses}
@@ -52,15 +52,11 @@ export function AddressesScreen() {
 
 // Function to format the address
 function formatAddress(addressData) {
-  const {
-    address1,
-    address2,
-    city,
-    state,
-    zip_code,
-  } = addressData;
+  const { address1, address2, city, state, zip_code } = addressData;
 
   // Create a formatted address string
-  const formattedAddress = `${address1}${address2 ? `, ${address2}` : ''}, ${city}, ${state}, ${zip_code}`;
+  const formattedAddress = `${address1}${
+    address2 ? `, ${address2}` : ""
+  }, ${city}, ${state}, ${zip_code}`;
   return formattedAddress;
 }
