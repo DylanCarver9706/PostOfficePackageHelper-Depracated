@@ -28,7 +28,7 @@ export function HomeScreen({ setUser }) {
     try {
       await AsyncStorage.clear();
       const response = await fetch(
-        `https://cb66-71-85-245-93.ngrok-free.app/api/logout?user_id=${user_id}`,
+        `https://5165-71-85-245-93.ngrok-free.app/api/logout?user_id=${user_id}`,
         {
           method: "GET",
         }

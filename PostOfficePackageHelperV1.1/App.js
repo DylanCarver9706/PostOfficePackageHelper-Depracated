@@ -25,7 +25,7 @@ export default function App() {
     const checkUserAuthentication = async () => {
       try {
         const response = await fetch(
-          "https://cb66-71-85-245-93.ngrok-free.app/api/check-auth?user_id=1"
+          "https://5165-71-85-245-93.ngrok-free.app/api/check-auth?user_id=1"
         );
         const data = await response.json();
         if (data.isAuthenticated) {

@@ -11,7 +11,7 @@ export function LoginScreen({ setUser, navigation }) {
   const handleLogin = async () => {
     try {
       const response = await fetch(
-        "https://cb66-71-85-245-93.ngrok-free.app/api/login",
+        "https://5165-71-85-245-93.ngrok-free.app/api/login",
         {
           method: "POST",
           headers: {

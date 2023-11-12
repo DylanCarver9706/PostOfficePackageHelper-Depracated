@@ -3,13 +3,18 @@ import { Text, View, StyleSheet, Button, Image, Alert } from "react-native";
 import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as FileSystem from "expo-file-system"; // Import FileSystem
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeModules } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 export function ScanLabelScreen() {
   NativeModules.ActualModuleName;
   const [hasPermission, setHasPermission] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [recognizedText, setRecognizedText] = useState(null);
+
+  // Initialize the navigation object
+  const navigation = useNavigation();
 
   const askForCameraPermission = async () => {
     const { status } = await Camera.requestCameraPermissionsAsync();
@@ -23,7 +28,7 @@ export function ScanLabelScreen() {
   const takePicture = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync();
-
+      navigation.navigate("Package Helper");
       // Create a FormData object to send as multipart/form-data
       const formData = new FormData();
       formData.append("imageUri", {
@@ -33,12 +38,13 @@ export function ScanLabelScreen() {
       });
 
       // Send a POST request to your server with the FormData
-      fetch("https://cb66-71-85-245-93.ngrok-free.app/api/recognize-text", {
+      fetch("https://5165-71-85-245-93.ngrok-free.app/api/recognize-text", {
         method: "POST",
         body: formData,
       })
         .then((response) => response.json())
-        .then((data) => {
+        .then(async (data) => {
+          // Note the async keyword here
           // Handle the response from the server
           fullExtractedText = data.text;
           console.log(fullExtractedText);
@@ -63,8 +69,20 @@ export function ScanLabelScreen() {
 
           console.log("Formatted Data:", formattedData);
 
-          // Update the recognizedText state
-          // setRecognizedText(formattedData);
+          // Store recognizedText in AsyncStorage only if it's not null
+          if (formattedData) {
+            await AsyncStorage.setItem(
+              "lastScannedData",
+              JSON.stringify(formattedData)
+            ); // Convert object to string
+            console.log("Data set");
+            const lastScannedData = await AsyncStorage.getItem(
+              "lastScannedData"
+            );
+            console.log("Data got");
+            console.log("lastScannedData: ", lastScannedData);
+            // navigation.navigate("Package Helper");
+          }
         })
         .catch((error) => {
           console.error("Error:", error);
@@ -112,7 +130,9 @@ export function ScanLabelScreen() {
       {recognizedText !== null && (
         <View style={styles.textRecognitionContainer}>
           <Text style={styles.textRecognitionText}>Recognized Text:</Text>
-          <Text>{recognizedText}</Text>
+          <Text>Customer Name: {recognizedText.customerName}</Text>
+          <Text>Address: {recognizedText.addressOneAndTwo}</Text>
+          <Text>City, State, Zip: {recognizedText.cityStateZip}</Text>
         </View>
       )}
     </View>

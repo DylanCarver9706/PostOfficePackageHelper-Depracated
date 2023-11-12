@@ -13,7 +13,7 @@ export function AddressesScreen() {
 
         if (selectedCase && selectedRow) {
           const response = await fetch(
-            `https://cb66-71-85-245-93.ngrok-free.app/api/addressesByCaseAndRow?case_number=${selectedCase}&case_row_number=${selectedRow}`
+            `https://5165-71-85-245-93.ngrok-free.app/api/addressesByCaseAndRow?case_number=${selectedCase}&case_row_number=${selectedRow}`
           );
 
           if (response.ok) {
