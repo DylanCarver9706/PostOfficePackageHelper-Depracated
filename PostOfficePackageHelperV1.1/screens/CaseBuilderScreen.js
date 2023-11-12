@@ -28,7 +28,7 @@ export function CaseBuilderScreen({ route }) {
           if (!(case_number in casesData)) {
             casesData[case_number] = [];
           }
-          casesData[case_number].push(parseInt(case_row_number));
+          casesData[case_number].push(case_row_number); // <-- Remove parseInt here
         });
 
         const casesArray = Object.entries(casesData).map(

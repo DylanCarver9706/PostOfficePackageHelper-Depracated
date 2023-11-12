@@ -2,19 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Text, View, StyleSheet, Button, Image, Alert } from "react-native";
 import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
-import * as FileSystem from "expo-file-system"; // Import FileSystem
+import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NativeModules } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 export function ScanLabelScreen() {
-  NativeModules.ActualModuleName;
+  const navigation = useNavigation();
   const [hasPermission, setHasPermission] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [recognizedText, setRecognizedText] = useState(null);
-
-  // Initialize the navigation object
-  const navigation = useNavigation();
 
   const askForCameraPermission = async () => {
     const { status } = await Camera.requestCameraPermissionsAsync();
@@ -29,7 +25,7 @@ export function ScanLabelScreen() {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync();
       navigation.navigate("Package Helper");
-      // Create a FormData object to send as multipart/form-data
+
       const formData = new FormData();
       formData.append("imageUri", {
         uri: photo.uri,
@@ -37,51 +33,45 @@ export function ScanLabelScreen() {
         name: "image.jpg",
       });
 
-      // Send a POST request to your server with the FormData
       fetch("https://5165-71-85-245-93.ngrok-free.app/api/recognize-text", {
         method: "POST",
         body: formData,
       })
         .then((response) => response.json())
         .then(async (data) => {
-          // Note the async keyword here
-          // Handle the response from the server
-          fullExtractedText = data.text;
-          console.log(fullExtractedText);
+          const fullExtractedText = data.text;
 
-          // Extract text between "TO:" and "USPS TRACKING #"
           const startIndex = fullExtractedText.indexOf("TO:") + "TO:".length;
           const endIndex = fullExtractedText.indexOf("USPS TRACKING #");
           const extractedText = data.text
             .substring(startIndex, endIndex)
             .trim();
-          console.log("Extracted Text:", extractedText);
 
-          // Split the extracted text into lines
           const lines = extractedText.split("\n");
 
-          // Create an object with formatted lines
           const formattedData = {
             customerName: lines[0].trim(),
             addressOneAndTwo: lines[1].trim(),
             cityStateZip: lines[2].trim(),
           };
 
-          console.log("Formatted Data:", formattedData);
-
-          // Store recognizedText in AsyncStorage only if it's not null
           if (formattedData) {
             await AsyncStorage.setItem(
               "lastScannedData",
               JSON.stringify(formattedData)
-            ); // Convert object to string
-            console.log("Data set");
-            const lastScannedData = await AsyncStorage.getItem(
-              "lastScannedData"
             );
-            console.log("Data got");
-            console.log("lastScannedData: ", lastScannedData);
-            // navigation.navigate("Package Helper");
+
+            // Make the API request to addressesByFormattedData
+            const response = await fetch(
+              `https://5165-71-85-245-93.ngrok-free.app/api/addressesByFormattedData?fullAddress=${formattedData.addressOneAndTwo} ${formattedData.cityStateZip}`
+            );
+
+            if (response.ok) {
+              const addressData = await response.json();
+              console.log("Address Data:", addressData);
+            } else {
+              console.error("Error fetching address:", response.status);
+            }
           }
         })
         .catch((error) => {
@@ -92,7 +82,6 @@ export function ScanLabelScreen() {
 
   const cameraRef = React.useRef(null);
 
-  // Function to convert image to base64
   const convertImageToBase64 = async (imageUri) => {
     const base64 = await FileSystem.readAsStringAsync(imageUri, {
       encoding: FileSystem.EncodingType.Base64,

@@ -20,6 +20,36 @@ app.use(cors());
 // Use body-parser middleware with a higher limit
 app.use(bodyParser.json({ limit: "1000mb" }));
 
+const PORT = process.env.PORT || 3000;
+app.listen(3000, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Database        ************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+
+// Create the MySQL database connection
+const db = mysql.createConnection({
+  host: "localhost", // Replace with your MySQL host
+  user: "root", // Replace with your MySQL username
+  password: "Dtc+Kem2016", // Replace with your MySQL password
+  database: "PostOfficePackageHelperV1.3", // Replace with your MySQL database name
+});
+
+// Connect to the MySQL database
+db.connect((err) => {
+  if (err) {
+    console.error("Error connecting to MySQL:", err);
+    return;
+  }
+  console.log("Connected to MySQL database");
+});
+
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************
@@ -145,31 +175,6 @@ fetch(url)
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************
-// ******        Database        ************************************************************************************
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-
-// Create the MySQL database connection
-const db = mysql.createConnection({
-  host: "localhost", // Replace with your MySQL host
-  user: "root", // Replace with your MySQL username
-  password: "Dtc+Kem2016", // Replace with your MySQL password
-  database: "PostOfficePackageHelperV1.2", // Replace with your MySQL database name
-});
-
-// Connect to the MySQL database
-db.connect((err) => {
-  if (err) {
-    console.error("Error connecting to MySQL:", err);
-    return;
-  }
-  console.log("Connected to MySQL database");
-});
-
-// ******************************************************************************************************************
-// ******************************************************************************************************************
-// ******************************************************************************************************************
 // ******        Auth        ****************************************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************
@@ -290,7 +295,6 @@ app.post("/api/users/new", async (req, res) => {
       phone_number,
       home_post_office,
       position,
-      subscription_status,
     } = req.body;
 
     // Hash the user's password
@@ -715,15 +719,17 @@ app.get("/api/addressesByFormattedData", (req, res) => {
     return res.status(400).json({ error: "fullAddress is required." });
   }
 
-  console.log("fullAddress", fullAddress.toUpperCase())
+  const uppercasedFullAddress = fullAddress.toUpperCase();
+
+  console.log("fullAddress", uppercasedFullAddress);
 
   const sql = `
     SELECT *
     FROM addresses
-    WHERE UPPER(CONCAT(address_number, " ", address1, " ", address2, " ", city, " ", state, " ", zip_code)) = ?
+    WHERE BINARY UPPER(CONCAT(address_number, " ", address1, " ", address2, " ", city, " ", state, " ", zip_code)) = ?
   `;
 
-  db.query(sql, [fullAddress], (err, results) => {
+  db.query(sql, [uppercasedFullAddress], (err, results) => {
     if (err) {
       console.error("Error retrieving addresses:", err);
       return res
@@ -735,7 +741,6 @@ app.get("/api/addressesByFormattedData", (req, res) => {
     res.status(200).json(results);
   });
 });
-
 
 // Get all addresses by routeId
 app.get("/api/addressesByRouteId", (req, res) => {
@@ -827,9 +832,160 @@ app.delete("/api/addresses/:id", (req, res) => {
   });
 });
 
-// Define other routes and middleware as needed
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        Deliveries        **********************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
 
-const PORT = process.env.PORT || 3000;
-app.listen(3000, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+// Create a new delivery
+app.post("/api/deliveries", (req, res) => {
+  const { route_id, address_id, delivery_date, scanned, out_for_delivery, delivered } =
+    req.body;
+
+  const sql =
+    "INSERT INTO deliveries (route_id, address_id, delivery_date, scanned, out_for_delivery, delivered) VALUES (?, ?, ?, ?, ?, ?)";
+
+  db.query(
+    sql,
+    [route_id, address_id, delivery_date, scanned, out_for_delivery, delivered],
+    (err, result) => {
+      if (err) {
+        console.error("Error creating delivery:", err);
+        res
+          .status(500)
+          .json({ error: "An error occurred while creating the delivery." });
+      } else {
+        res.status(201).json({
+          message: "Delivery created successfully",
+          id: result.insertId,
+        });
+      }
+    }
+  );
+});
+
+// Get all deliveries
+app.get("/api/deliveries", (req, res) => {
+  const sql = "SELECT * FROM deliveries";
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error retrieving deliveries:", err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while retrieving deliveries." });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+// Get a specific delivery by ID
+app.get("/api/deliveries/:id", (req, res) => {
+  const deliveryId = req.params.id;
+  const sql = "SELECT * FROM deliveries WHERE delivery_id = ?";
+
+  db.query(sql, [deliveryId], (err, result) => {
+    if (err) {
+      console.error("Error retrieving delivery:", err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while retrieving the delivery." });
+    } else {
+      if (result.length === 0) {
+        res.status(404).json({ error: "Delivery not found" });
+      } else {
+        res.status(200).json(result[0]);
+      }
+    }
+  });
+});
+
+app.get("/api/deliveriesByRouteAndDate", (req, res) => {
+  const { route_id, deliveryDate } = req.query;
+
+  if (!route_id || !deliveryDate) {
+    return res
+      .status(400)
+      .json({ error: "route_id and deliveryDate are required." });
+  }
+
+  // Extract the date part from the delivery_date field
+  const formattedDeliveryDate = deliveryDate.substring(0, 10);
+
+  const sql = `
+    SELECT *
+    FROM deliveries
+    WHERE route_id = ? AND DATE(delivery_date) = ?
+  `;
+
+  db.query(sql, [route_id, formattedDeliveryDate], (err, results) => {
+    if (err) {
+      console.error("Error retrieving deliveries:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving deliveries." });
+    }
+
+    // Format the delivery_date field in the response to YYYY-MM-DD
+    const formattedResults = results.map((result) => ({
+      ...result,
+      delivery_date: new Date(result.delivery_date).toISOString().split('T')[0],
+    }));
+
+    res.status(200).json(formattedResults);
+  });
+});
+
+// Update a specific delivery by ID
+app.put("/api/deliveries/:id", (req, res) => {
+  const deliveryId = req.params.id;
+  const { route_id, address_id, scanned, out_for_delivery, delivered } =
+    req.body;
+
+  const sql =
+    "UPDATE deliveries SET route_id = ?, address_id = ?, scanned = ?, out_for_delivery = ?, delivered = ? WHERE delivery_id = ?";
+
+  db.query(
+    sql,
+    [route_id, address_id, scanned, out_for_delivery, delivered, deliveryId],
+    (err, result) => {
+      if (err) {
+        console.error("Error updating delivery:", err);
+        res
+          .status(500)
+          .json({ error: "An error occurred while updating the delivery." });
+      } else {
+        if (result.affectedRows === 0) {
+          res.status(404).json({ error: "Delivery not found" });
+        } else {
+          res.status(200).json({ message: "Delivery updated successfully" });
+        }
+      }
+    }
+  );
+});
+
+// Delete a specific delivery by ID
+app.delete("/api/deliveries/:id", (req, res) => {
+  const deliveryId = req.params.id;
+  const sql = "DELETE FROM deliveries WHERE delivery_id = ?";
+
+  db.query(sql, [deliveryId], (err, result) => {
+    if (err) {
+      console.error("Error deleting delivery:", err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while deleting the delivery." });
+    } else {
+      if (result.affectedRows === 0) {
+        res.status(404).json({ error: "Delivery not found" });
+      } else {
+        res.status(200).json({ message: "Delivery deleted successfully" });
+      }
+    }
+  });
 });
