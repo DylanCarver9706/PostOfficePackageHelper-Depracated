@@ -8,6 +8,7 @@ export function SelectOfficeRouteScreen() {
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [offices, setOffices] = useState([]);
   const [userId, setUserId] = useState(null);
+  const [nextScreen, setNextScreen] = useState(null);
 
   // Initialize the navigation object
   const navigation = useNavigation();
@@ -87,12 +88,25 @@ export function SelectOfficeRouteScreen() {
     console.log("Selected route: ", theSelectedRoute);
   };
 
+  const handleNextScreen = async () => {
+    usersNextScreen = await AsyncStorage.getItem('selectedScreen');
+    setNextScreen(usersNextScreen);
+  };
+
   // Use useEffect to navigate when both office and route are selected
   useEffect(() => {
     if (selectedPostOffice && selectedRoute) {
-      navigation.navigate("Case Builder");
+      handleNextScreen();
     }
   }, [selectedPostOffice, selectedRoute]);
+
+  // Use another useEffect to navigate based on the nextScreen value
+  useEffect(() => {
+    if (nextScreen) {
+      console.log("The next Screen: ", nextScreen);
+      navigation.navigate(nextScreen);
+    }
+  }, [nextScreen]);
 
   return (
     <View style={{ flex: 1, flexDirection: "row", padding: 16 }}>

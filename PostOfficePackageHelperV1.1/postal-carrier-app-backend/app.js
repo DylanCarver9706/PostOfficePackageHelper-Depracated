@@ -32,9 +32,9 @@ const CREDENTIALS = JSON.parse(
   JSON.stringify({
     type: "service_account",
     project_id: "studious-legend-362319",
-    private_key_id: "32eba54af545fc43e20c63d9a01adedde202b1f7",
+    private_key_id: "2ae6613eb96946711109a6a8ac81ecc195ae4fe3",
     private_key:
-      "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC/LEC0E8bDXQvV\nz93EnjQxPrywO4ZlxK3ePJk2S1wQ5zgSrSJ9Fz1NuHOHqYvNXFYGvSFuBcdGhx3g\n3Ge1vk+/0abhfDrg3djdB4ICzM+sDm9p20Ny/zz3g7zngnnMAU+/0c+0jR0JXyCa\ngBT4GM4IFSqNDmnY7G7J3nnQ3ZF5uy62GjRabOG6UjIg/WmNNr+0L9PEv7jGKSQa\nS9+Umn6FR5VwOwC6ofWDFZm5cAwwUEFi/whgtxtM/IjlRKg32ZlOwvvENt9f8jcs\n0T4gst7QAQf0AHLzAPiVGne3q0m8zdugR4KmybIoVIsqBRGcigCdW/M5NKQU90aY\npAvqrl17AgMBAAECggEAPwkO7rHErL9d+yrWw5GswP4gRnXiK2VONUTC+jGgElzD\nUvkusZN7nchvo7BmjhjfrsonHzmdiyZbVj0mnzk435V4EsqdOW89JihnGJhC88cw\nunVXiLAbgLu6CpYtpfRawPOkKrMK+3+X5wnLoEDBks2z4Z36jdHr9/k5LoMYiEv7\ntJBU7MFfK+R9/ywJJCOQO1B+aYbNi5Aur8IjpFaTNXGPnbjFHX6teHtsdGAyVXHC\nijfFW+PHNSHteAGBZ6EF8rKsfhu6lev9PUwm0a7d5UpneS2nl/DA0hJK3TeowLG+\nylMc+Woi3EMObfmxavA64NvPgW+pSbJeb9sLh0q7VQKBgQDkYKiu9+KO8w3u9wzV\nYjYPiNOQhymoB+S3jPG84zat9AWaVfGTWsFm9N+Fz8Nn89KPVhboQq32lJQCdlPh\nUncFJsqndVRW6wsZHR+8+NarFNMOIpWGEdLeJBhnDyhLAG+OSCJuTfvIaYvMGF3O\nHfIx5mPKiHtc5ax6NZC8I9xy3wKBgQDWS5w79t5dQnCuwk4RmqSclpx+EhzF0Jdi\nExK4Hu1joyeiG3wUWYwve/yHDXwoHIcUB0CQzn1ktIJX+8SN8phNZkIbouqarlEQ\n4mqzoVnn5iHIU+UjUdlxsCe+e+ETVTtFk/i11ACPZGIoeV0EHozvNwX904VyREhW\nsB7K2nPk5QKBgElmA3DQfIEi/rxprDc8bFGL0SsnNa0qdEjFxL/HasB3qAFVU+Hf\nDj+PvfMcthnH1El7Cru1CoIweG1eKFFHlrcSI5m0bNnOiu+UW6n5c8ziUX6+gL3p\nJpN8mFcvGO0aA8B/0IkRCTX9Lg/3WNaw6zE8caAbQ0K1Ejzo0E6XW/eTAoGAPtYi\n9M5Zu7zsr8HYBH90/1mGf80t1K9qhF6VYZnoAAxqZbVrd8gePBo+HRfOLTDYRv4t\nZ4i06h+oDMaNhxX4pNF0Vwg5hKvSp4HMyelpJH+trkEzclzgxt5heRB4GiQm4isW\nhbKpi2JjCf00Ui3nI4nd3uT0P2JYV9sC3Hab/yUCgYEAqDji0KvJ5zVEkp1m5a3J\nbKEX/6aH9rnQ/7mRFDiwlovjuDqQ7WujgyNnlzo4r3uDQLJ1A6rWq0U42GmI2i8W\n+jbxxFpR2miKbelEnfuBJias0/+Z8l0/AFbE1EnSHPT84fpHcDA1xmsiOmYvWsww\niDuvBdW9S1W5669PIkCykLs=\n-----END PRIVATE KEY-----\n",
+      "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCFn6MPUNeHRb6P\nEP1UymoWHpK2xF9fUH8b/xB6fW3riLgRREDbsIPeIibik+s1aCDPhLKNLgaRavP2\ngw7bSXW45IRZaQugIomAwU13544dG4ocU+NFfEjJy10BW+ZweoYusMPsCwZelxzv\nfoCOzQWgaQ23pBth4w40gdGIsprM7QnXb88TBq7KVqBBQK6biu0aWNhMB/4ltsmm\nCSf9tIVUTUt4wQlInv0vLzr36RKBtVbQK+LDBcf+de7oxD2Kp1EhPJ2GLCt6IzWE\ndF0Ttc6w8ofnOA/fR9kDGW2RbdPy4dZxxchKt+zOFB5EaHmCwS5XdLDMHqE/h8FC\nZYkcyliVAgMBAAECggEABeMoNIsLy/Z7NGN7veojLXFQZoQVbaYmy4175OG0351I\n+t3Ge8d1r+pSS0ZYJSS+2VXP5h+Cg5KySAizNV8xtCFBYY0ayYXsCAO8TY2iuc6W\nUbQyfcPBkz6GDQLHDuqfEdyQ7Uv5Dl7bFAQ/VstatZwbUh2FZVUzMYYMvNidsGyq\n5s7sc7+I5ZUmPJLsvYrMZ8eXlzoVGkVN0QKxofoov7WKpNpjYCK6ZMMNNJf8YMar\n89QUB5Q0IAhX8fROqLbRwMAM3zl80z9lvxtzWUUhcXxeLs4tvb7kqoDCgEa6/9YR\n8SuoSifjRoEMvwKgXmAeVepQqQV4Ti1qrWXOkgYouwKBgQC8fY32cxLqy84ENVQz\nq16ahzEfKo09n0nZPzY7P5XUwocTrFQJn7bTsbaqqgCj6cT6gRKl/Uiqxr7GzPV4\n4HNBhqMi3RrJZU2TnskpLcp3ZPdq2K2d1d78Ex1JDDezNU5wo8+YS9fpFGolM7xg\nZGqjUd/Xvy7RCM8tw6i2EiRV8wKBgQC1e2kSJgxxqjc8zt5PuGdfmcKqHonWypFH\n98di8/QofbY6bFyqUwhMSg3d3gEri3phftaUQ5FulbIa6p/bq3JNQmb6Ql67muj1\n2xnaEWhrJVe/BQW4ZMKBDXhlgOQYRI0qvKofWC6pCaYjcDZqVD5GwIw9x9D5yAME\ndjpSl1QRVwKBgQCYfkeFFHJAjSQemXqG1uURxcBDA60DJsSbQx2/72BrofmgO/I9\nWv6R5BvxlNoxwmX/eL86lWDd8S7VLWqHIad9YszG3vTV7ORHQtZiP06nK4NT6PsF\nT8s4SsqNl5nUnZLZZF4GS43hXwfFE0cbAQKZIRsks+LPcP4Ue1AaBTFqawKBgQCH\n9b7Ps+WauhTL34c5XkNDoePuoxZM7lFNA1pCzdTbCOMefdQmXjJXRRuCXjGuN74l\nkGqdhMlNeaSG+cNtRNJLAzY2wsZJ8lIY7l49utDphH5qQw74B7SYDklmcdtwOtsv\na0xgUyYRyYLIBeceXaKSSupF1o6+spNgIlqrSWfX3QKBgDlLAHBoPuflj9ZOeF+F\nxdIq4g1qOgs3mEItW82wZbuPdbZXdOd9giZgcCmX6F4uN1t55un/buyDIVVWLcAe\nLxVsgIokxP4fY/xWUDtCIGtcZGxMiMamGpJal1cGX1WQCkKn5YkyU+0SN15F2BcW\n1d98i13Uj0c7kxACdyc3f+CM\n-----END PRIVATE KEY-----\n",
     client_email:
       "usps-package-helper-v1-2@studious-legend-362319.iam.gserviceaccount.com",
     client_id: "116767467015726097397",
@@ -707,6 +707,35 @@ app.get("/api/addressesByCaseAndRow", (req, res) => {
     res.status(200).json(results);
   });
 });
+
+app.get("/api/addressesByFormattedData", (req, res) => {
+  const { fullAddress } = req.query;
+
+  if (!fullAddress) {
+    return res.status(400).json({ error: "fullAddress is required." });
+  }
+
+  console.log("fullAddress", fullAddress.toUpperCase())
+
+  const sql = `
+    SELECT *
+    FROM addresses
+    WHERE UPPER(CONCAT(address_number, " ", address1, " ", address2, " ", city, " ", state, " ", zip_code)) = ?
+  `;
+
+  db.query(sql, [fullAddress], (err, results) => {
+    if (err) {
+      console.error("Error retrieving addresses:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving addresses." });
+    }
+    console.log("SQL Query:", sql);
+    console.log("Results:", results);
+    res.status(200).json(results);
+  });
+});
+
 
 // Get all addresses by routeId
 app.get("/api/addressesByRouteId", (req, res) => {

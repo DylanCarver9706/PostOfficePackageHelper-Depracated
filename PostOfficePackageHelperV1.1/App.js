@@ -10,6 +10,7 @@ import { AddressesScreen } from "./screens/AddressesScreen";
 import { HaveAccountScreen } from "./screens/HaveAccountScreen";
 import { LoginScreen } from "./screens/LoginScreen";
 import { SignUpScreen } from "./screens/SignupScreen";
+import { PackageHelperScreen } from "./screens/PackageHelperScreen";
 
 const Stack = createStackNavigator();
 
@@ -48,6 +49,7 @@ export default function App() {
           {(props) => <HomeScreen {...props} setUser={setUser} />}
         </Stack.Screen>
         <Stack.Screen name="Case Builder" component={CaseBuilderScreen} />
+        <Stack.Screen name="Package Helper" component={PackageHelperScreen} />
         <Stack.Screen name="Scan Label" component={ScanLabelScreen} />
         {/* <Stack.Screen name="Sign Up" component={SignupScreen} /> */}
         <Stack.Screen
