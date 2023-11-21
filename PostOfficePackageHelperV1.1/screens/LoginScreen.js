@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet } from "react-native";
 import Toast from "react-native-toast-message";
 import { LogBox } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import API_BASE_URL from "../apiConfig";
 
 export function LoginScreen({ setUser, navigation }) {
   const [email, setEmail] = useState("kristencarver14@gmail.com");
@@ -11,7 +12,7 @@ export function LoginScreen({ setUser, navigation }) {
   const handleLogin = async () => {
     try {
       const response = await fetch(
-        "https://a961-71-85-245-93.ngrok-free.app/api/login",
+        `${API_BASE_URL}/login`,
         {
           method: "POST",
           headers: {

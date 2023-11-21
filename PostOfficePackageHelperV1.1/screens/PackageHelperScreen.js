@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, StyleSheet, Button } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import API_BASE_URL from "../apiConfig";
 
 export function PackageHelperScreen() {
   const navigation = useNavigation();
@@ -21,7 +22,7 @@ export function PackageHelperScreen() {
 
         // Make the API request to get deliveries for the current route and date
         const response = await fetch(
-          `https://a961-71-85-245-93.ngrok-free.app/api/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${currentDate}`
+          `${API_BASE_URL}/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${currentDate}`
         );
 
         if (response.ok) {

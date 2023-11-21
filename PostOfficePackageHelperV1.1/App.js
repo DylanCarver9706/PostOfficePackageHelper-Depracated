@@ -10,6 +10,7 @@ import { HaveAccountScreen } from "./screens/HaveAccountScreen";
 import { LoginScreen } from "./screens/LoginScreen";
 import { SignUpScreen } from "./screens/SignUpScreen";
 import { PackageHelperScreen } from "./screens/PackageHelperScreen";
+import API_BASE_URL from "./apiConfig";
 
 const Stack = createStackNavigator();
 
@@ -24,7 +25,7 @@ export default function App() {
   //   const checkUserAuthentication = async () => {
   //     try {
   //       const response = await fetch(
-  //         "https://a961-71-85-245-93.ngrok-free.app/api/check-auth?user_id=1"
+  //         `${API_BASE_URL}/check-auth?user_id=1`
   //       );
   //       const data = await response.json();
   //       if (data.isAuthenticated) {

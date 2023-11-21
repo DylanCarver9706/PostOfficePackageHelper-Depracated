@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Button, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import API_BASE_URL from "../apiConfig";
 
 export function CaseBuilderScreen({ route }) {
   const [selectedPostOffice, setSelectedPostOffice] = useState(null);
@@ -16,7 +17,7 @@ export function CaseBuilderScreen({ route }) {
       const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
       setSelectedRoute(selectedRouteId);
       const response = await fetch(
-        `https://a961-71-85-245-93.ngrok-free.app/api/addressesByRouteId?route_id=${selectedRouteId}`
+        `${API_BASE_URL}/addressesByRouteId?route_id=${selectedRouteId}`
       );
 
       if (response.ok) {
@@ -70,7 +71,7 @@ export function CaseBuilderScreen({ route }) {
       // console.log(newCaseData)
       // Send a POST request to add the new case
       const response = await fetch(
-        "https://a961-71-85-245-93.ngrok-free.app/api/addresses",
+        `${API_BASE_URL}/addresses`,
         {
           method: "POST",
           headers: {

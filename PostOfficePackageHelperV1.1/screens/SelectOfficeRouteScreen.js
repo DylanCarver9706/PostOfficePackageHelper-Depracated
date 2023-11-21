@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import API_BASE_URL from "../apiConfig";
 
 export function SelectOfficeRouteScreen() {
   const [selectedPostOffice, setSelectedPostOffice] = useState(null);
@@ -33,7 +34,7 @@ export function SelectOfficeRouteScreen() {
       const fetchOffices = async () => {
         try {
           const response = await fetch(
-            `https://a961-71-85-245-93.ngrok-free.app/api/offices?user_id=${userId}`
+            `${API_BASE_URL}/offices?user_id=${userId}`
           );
           if (response.ok) {
             const data = await response.json();
@@ -62,7 +63,7 @@ export function SelectOfficeRouteScreen() {
 
       // Fetch the routes for the selected office
       const response = await fetch(
-        `https://a961-71-85-245-93.ngrok-free.app/api/routesByOfficeId?office_id=${postOffice.office_id}`
+        `${API_BASE_URL}/routesByOfficeId?office_id=${postOffice.office_id}`
       );
 
       if (response.ok) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import API_BASE_URL from "../apiConfig";
 
 export function AddressesScreen() {
   const [addresses, setAddresses] = useState([]);
@@ -13,7 +14,7 @@ export function AddressesScreen() {
 
         if (selectedCase && selectedRow) {
           const response = await fetch(
-            `https://a961-71-85-245-93.ngrok-free.app/api/addressesByCaseAndRow?case_number=${selectedCase}&case_row_number=${selectedRow}`
+            `${API_BASE_URL}/addressesByCaseAndRow?case_number=${selectedCase}&case_row_number=${selectedRow}`
           );
 
           if (response.ok) {

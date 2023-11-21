@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button } from "react-native";
+import API_BASE_URL from "../apiConfig";
 
 export function SignUpScreen() {
   const [firstName, setFirstName] = useState("");
@@ -23,7 +24,7 @@ export function SignUpScreen() {
     };
 
     // Send a POST request to the API to create a new user
-    fetch("https://a961-71-85-245-93.ngrok-free.app/api/users/new", {
+    fetch(`${API_BASE_URL}/users/new`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

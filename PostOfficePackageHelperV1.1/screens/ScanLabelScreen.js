@@ -5,6 +5,7 @@ import * as MediaLibrary from "expo-media-library";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import API_BASE_URL from "../apiConfig";
 
 export function ScanLabelScreen() {
   const navigation = useNavigation();
@@ -33,7 +34,7 @@ export function ScanLabelScreen() {
         name: "image.jpg",
       });
 
-      fetch("https://a961-71-85-245-93.ngrok-free.app/api/recognize-text", {
+      fetch(`${API_BASE_URL}/recognize-text`, {
         method: "POST",
         body: formData,
       })
@@ -67,7 +68,7 @@ export function ScanLabelScreen() {
 
               // Make the API request to addressesByFormattedData
               const response = await fetch(
-                `https://a961-71-85-245-93.ngrok-free.app/api/addressesByFormattedData?fullAddress=${formattedData.addressOneAndTwo} ${formattedData.cityStateZip}`
+                `${API_BASE_URL}/addressesByFormattedData?fullAddress=${formattedData.addressOneAndTwo} ${formattedData.cityStateZip}`
               );
 
               if (response.ok) {

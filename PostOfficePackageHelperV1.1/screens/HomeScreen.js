@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Button, LogBox } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import API_BASE_URL from "../apiConfig";
 
 export function HomeScreen({ setUser }) {
   const [user_id, setUserId] = useState([]);
@@ -28,7 +29,7 @@ export function HomeScreen({ setUser }) {
     try {
       await AsyncStorage.clear();
       const response = await fetch(
-        `https://a961-71-85-245-93.ngrok-free.app/api/logout?user_id=${user_id}`,
+        `${API_BASE_URL}/logout?user_id=${user_id}`,
         {
           method: "GET",
         }

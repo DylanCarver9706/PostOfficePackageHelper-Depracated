@@ -10,6 +10,7 @@ const vision = require("@google-cloud/vision");
 const bodyParser = require("body-parser");
 const multer = require("multer");
 const upload = multer();
+require('dotenv').config({ path: 'C:/Users/Dylan/PostOfficePackageHelper/PostOfficePackageHelperV1.1/PostOfficePackageHelperV1.1/.env' })
 
 // Use the cors middleware
 app.use(cors());
@@ -20,8 +21,9 @@ app.use(cors());
 // Use body-parser middleware with a higher limit
 app.use(bodyParser.json({ limit: "1000mb" }));
 
-const PORT = process.env.PORT || 3000;
-app.listen(3000, () => {
+const PORT = process.env.PORT;
+// console.log(PORT)
+app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
@@ -35,10 +37,10 @@ app.listen(3000, () => {
 
 // Create the MySQL database connection
 const db = mysql.createConnection({
-  host: "localhost", // Replace with your MySQL host
-  user: "root", // Replace with your MySQL username
-  password: "Dtc+Kem2016", // Replace with your MySQL password
-  database: "PostOfficePackageHelperV1.3", // Replace with your MySQL database name
+  host: process.env.MYSQL_CREDENTIALS_HOST,
+  user: process.env.MYSQL_CREDENTIALS_USER,
+  password: process.env.MYSQL_CREDENTIALS_PASSWORD,
+  database: process.env.MYSQL_CREDENTIALS_DATABASE
 });
 
 // Connect to the MySQL database
@@ -58,29 +60,10 @@ db.connect((err) => {
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 
-const CREDENTIALS = JSON.parse(
-  JSON.stringify({
-    type: "service_account",
-    project_id: "studious-legend-362319",
-    private_key_id: "2ae6613eb96946711109a6a8ac81ecc195ae4fe3",
-    private_key:
-      "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCFn6MPUNeHRb6P\nEP1UymoWHpK2xF9fUH8b/xB6fW3riLgRREDbsIPeIibik+s1aCDPhLKNLgaRavP2\ngw7bSXW45IRZaQugIomAwU13544dG4ocU+NFfEjJy10BW+ZweoYusMPsCwZelxzv\nfoCOzQWgaQ23pBth4w40gdGIsprM7QnXb88TBq7KVqBBQK6biu0aWNhMB/4ltsmm\nCSf9tIVUTUt4wQlInv0vLzr36RKBtVbQK+LDBcf+de7oxD2Kp1EhPJ2GLCt6IzWE\ndF0Ttc6w8ofnOA/fR9kDGW2RbdPy4dZxxchKt+zOFB5EaHmCwS5XdLDMHqE/h8FC\nZYkcyliVAgMBAAECggEABeMoNIsLy/Z7NGN7veojLXFQZoQVbaYmy4175OG0351I\n+t3Ge8d1r+pSS0ZYJSS+2VXP5h+Cg5KySAizNV8xtCFBYY0ayYXsCAO8TY2iuc6W\nUbQyfcPBkz6GDQLHDuqfEdyQ7Uv5Dl7bFAQ/VstatZwbUh2FZVUzMYYMvNidsGyq\n5s7sc7+I5ZUmPJLsvYrMZ8eXlzoVGkVN0QKxofoov7WKpNpjYCK6ZMMNNJf8YMar\n89QUB5Q0IAhX8fROqLbRwMAM3zl80z9lvxtzWUUhcXxeLs4tvb7kqoDCgEa6/9YR\n8SuoSifjRoEMvwKgXmAeVepQqQV4Ti1qrWXOkgYouwKBgQC8fY32cxLqy84ENVQz\nq16ahzEfKo09n0nZPzY7P5XUwocTrFQJn7bTsbaqqgCj6cT6gRKl/Uiqxr7GzPV4\n4HNBhqMi3RrJZU2TnskpLcp3ZPdq2K2d1d78Ex1JDDezNU5wo8+YS9fpFGolM7xg\nZGqjUd/Xvy7RCM8tw6i2EiRV8wKBgQC1e2kSJgxxqjc8zt5PuGdfmcKqHonWypFH\n98di8/QofbY6bFyqUwhMSg3d3gEri3phftaUQ5FulbIa6p/bq3JNQmb6Ql67muj1\n2xnaEWhrJVe/BQW4ZMKBDXhlgOQYRI0qvKofWC6pCaYjcDZqVD5GwIw9x9D5yAME\ndjpSl1QRVwKBgQCYfkeFFHJAjSQemXqG1uURxcBDA60DJsSbQx2/72BrofmgO/I9\nWv6R5BvxlNoxwmX/eL86lWDd8S7VLWqHIad9YszG3vTV7ORHQtZiP06nK4NT6PsF\nT8s4SsqNl5nUnZLZZF4GS43hXwfFE0cbAQKZIRsks+LPcP4Ue1AaBTFqawKBgQCH\n9b7Ps+WauhTL34c5XkNDoePuoxZM7lFNA1pCzdTbCOMefdQmXjJXRRuCXjGuN74l\nkGqdhMlNeaSG+cNtRNJLAzY2wsZJ8lIY7l49utDphH5qQw74B7SYDklmcdtwOtsv\na0xgUyYRyYLIBeceXaKSSupF1o6+spNgIlqrSWfX3QKBgDlLAHBoPuflj9ZOeF+F\nxdIq4g1qOgs3mEItW82wZbuPdbZXdOd9giZgcCmX6F4uN1t55un/buyDIVVWLcAe\nLxVsgIokxP4fY/xWUDtCIGtcZGxMiMamGpJal1cGX1WQCkKn5YkyU+0SN15F2BcW\n1d98i13Uj0c7kxACdyc3f+CM\n-----END PRIVATE KEY-----\n",
-    client_email:
-      "usps-package-helper-v1-2@studious-legend-362319.iam.gserviceaccount.com",
-    client_id: "116767467015726097397",
-    auth_uri: "https://accounts.google.com/o/oauth2/auth",
-    token_uri: "https://oauth2.googleapis.com/token",
-    auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-    client_x509_cert_url:
-      "https://www.googleapis.com/robot/v1/metadata/x509/usps-package-helper-v1-2%40studious-legend-362319.iam.gserviceaccount.com",
-    universe_domain: "googleapis.com",
-  })
-);
-
 const CONFIG = {
   credentials: {
-    private_key: CREDENTIALS.private_key,
-    client_email: CREDENTIALS.client_email,
+    private_key: process.env.GOOGLE_VISION_CREDENTIALS_PRIVATE_KEY,
+    client_email: process.env.GOOGLE_VISION_CREDENTIALS_CLIENT_EMAIL
   },
 };
 
@@ -129,48 +112,48 @@ app.post("/api/recognize-text", upload.single("imageUri"), async (req, res) => {
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 
-let root = xmlbuilder2
-  .create({ version: "1.0" })
-  .ele("AddressValidateRequest", { USERID: "177PERSO17Q97" })
-  .ele("Address")
-  .ele("Address1")
-  .txt("185 Berry St")
-  .up()
-  .ele("Address2")
-  .txt("Suite 6100")
-  .up()
-  .ele("City")
-  .txt("San Francisco")
-  .up()
-  .ele("State")
-  .txt("CA")
-  .up()
-  .ele("Zip5")
-  .txt("94556")
-  .up()
-  .ele("Zip4")
-  .up()
-  .up();
+// let root = xmlbuilder2
+//   .create({ version: "1.0" })
+//   .ele("AddressValidateRequest", { USERID: "177PERSO17Q97" })
+//   .ele("Address")
+//   .ele("Address1")
+//   .txt("185 Berry St")
+//   .up()
+//   .ele("Address2")
+//   .txt("Suite 6100")
+//   .up()
+//   .ele("City")
+//   .txt("San Francisco")
+//   .up()
+//   .ele("State")
+//   .txt("CA")
+//   .up()
+//   .ele("Zip5")
+//   .txt("94556")
+//   .up()
+//   .ele("Zip4")
+//   .up()
+//   .up();
 
-let xml = root.end({ prettyPrint: true });
-let url =
-  "https://secure.shippingapis.com/ShippingAPI.dll?API=Verify&xml=" +
-  encodeURIComponent(xml);
+// let xml = root.end({ prettyPrint: true });
+// let url =
+//   "https://secure.shippingapis.com/ShippingAPI.dll?API=Verify&xml=" +
+//   encodeURIComponent(xml);
 
-fetch(url)
-  .then((response) => {
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return response.text();
-  })
-  .then((data) => {
-    const obj = xmlbuilder2.convert(data, { format: "object" });
-    console.log(obj);
-  })
-  .catch((error) => {
-    console.error("Fetch Error:", error);
-  });
+// fetch(url)
+//   .then((response) => {
+//     if (!response.ok) {
+//       throw new Error("Network response was not ok");
+//     }
+//     return response.text();
+//   })
+//   .then((data) => {
+//     const obj = xmlbuilder2.convert(data, { format: "object" });
+//     console.log(obj);
+//   })
+//   .catch((error) => {
+//     console.error("Fetch Error:", error);
+//   });
 
 // ******************************************************************************************************************
 // ******************************************************************************************************************
@@ -180,9 +163,11 @@ fetch(url)
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 
+const sessionSecretKey = process.env.SESSION_SECRET_KEY;
+
 app.use(
   session({
-    secret: "Dtc+Kem2016", // Replace with a secret key
+    secret: sessionSecretKey,
     resave: false,
     saveUninitialized: false,
   })
