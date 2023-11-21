@@ -33,7 +33,7 @@ export function SelectOfficeRouteScreen() {
       const fetchOffices = async () => {
         try {
           const response = await fetch(
-            `https://5165-71-85-245-93.ngrok-free.app/api/offices?user_id=${userId}`
+            `https://a961-71-85-245-93.ngrok-free.app/api/offices?user_id=${userId}`
           );
           if (response.ok) {
             const data = await response.json();
@@ -62,7 +62,7 @@ export function SelectOfficeRouteScreen() {
 
       // Fetch the routes for the selected office
       const response = await fetch(
-        `https://5165-71-85-245-93.ngrok-free.app/api/routesByOfficeId?office_id=${postOffice.office_id}`
+        `https://a961-71-85-245-93.ngrok-free.app/api/routesByOfficeId?office_id=${postOffice.office_id}`
       );
 
       if (response.ok) {

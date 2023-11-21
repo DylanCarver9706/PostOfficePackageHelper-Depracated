@@ -17,16 +17,16 @@ export function PackageHelperScreen() {
 
         // Get today's date in the "YYYY-MM-DD" format
         const currentDate = new Date().toISOString().split("T")[0];
-        console.log(currentDate)
+        console.log(currentDate);
 
         // Make the API request to get deliveries for the current route and date
         const response = await fetch(
-          `https://5165-71-85-245-93.ngrok-free.app/api/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${currentDate}`
+          `https://a961-71-85-245-93.ngrok-free.app/api/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${currentDate}`
         );
 
         if (response.ok) {
           const data = await response.json();
-          console.log(data)
+          console.log(data);
           setDeliveries(data); // Set the deliveries data in state
         } else {
           console.error("Error fetching deliveries:", response.status);
@@ -51,7 +51,9 @@ export function PackageHelperScreen() {
             <Text>Address ID: {item.address_id}</Text>
             <Text>Delivery Date: {item.delivery_date}</Text>
             <Text>Scanned: {item.scanned ? "Yes" : "No"}</Text>
-            <Text>Out for Delivery: {item.out_for_delivery ? "Yes" : "No"}</Text>
+            <Text>
+              Out for Delivery: {item.out_for_delivery ? "Yes" : "No"}
+            </Text>
             <Text>Delivered: {item.delivered ? "Yes" : "No"}</Text>
           </View>
         )}

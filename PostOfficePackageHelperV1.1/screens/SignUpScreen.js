@@ -23,7 +23,7 @@ export function SignUpScreen() {
     };
 
     // Send a POST request to the API to create a new user
-    fetch("https://5165-71-85-245-93.ngrok-free.app/api/users/new", {
+    fetch("https://a961-71-85-245-93.ngrok-free.app/api/users/new", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

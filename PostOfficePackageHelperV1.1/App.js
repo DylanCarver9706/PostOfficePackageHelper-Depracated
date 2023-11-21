@@ -4,12 +4,11 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { HomeScreen } from "./screens/HomeScreen";
 import { CaseBuilderScreen } from "./screens/CaseBuilderScreen";
 import { ScanLabelScreen } from "./screens/ScanLabelScreen";
-// import { SignupScreen } from './screens/SignupScreen';
 import { SelectOfficeRouteScreen } from "./screens/SelectOfficeRouteScreen";
 import { AddressesScreen } from "./screens/AddressesScreen";
 import { HaveAccountScreen } from "./screens/HaveAccountScreen";
 import { LoginScreen } from "./screens/LoginScreen";
-import { SignUpScreen } from "./screens/SignupScreen";
+import { SignUpScreen } from "./screens/SignUpScreen";
 import { PackageHelperScreen } from "./screens/PackageHelperScreen";
 
 const Stack = createStackNavigator();
@@ -17,30 +16,30 @@ const Stack = createStackNavigator();
 export default function App() {
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    // Check if the user session is active (you can make an API call to /api/check-auth)
-    // If the user is authenticated, set user to true
-    // If the user is not authenticated, set user to null
-    // Replace the following logic with your actual authentication check
-    const checkUserAuthentication = async () => {
-      try {
-        const response = await fetch(
-          "https://5165-71-85-245-93.ngrok-free.app/api/check-auth?user_id=1"
-        );
-        const data = await response.json();
-        if (data.isAuthenticated) {
-          setUser(true);
-          navigation.navigate("Home");
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-      }
-    };
+  // useEffect(() => {
+  // Check if the user session is active (you can make an API call to /api/check-auth)
+  // If the user is authenticated, set user to true
+  // If the user is not authenticated, set user to null
+  // Replace the following logic with your actual authentication check
+  //   const checkUserAuthentication = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         "https://a961-71-85-245-93.ngrok-free.app/api/check-auth?user_id=1"
+  //       );
+  //       const data = await response.json();
+  //       if (data.isAuthenticated) {
+  //         setUser(true);
+  //         navigation.navigate("Home");
+  //       } else {
+  //         setUser(null);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking authentication:", error);
+  //     }
+  //   };
 
-    checkUserAuthentication();
-  }, []);
+  //   checkUserAuthentication();
+  // }, []);
 
   return (
     <NavigationContainer>

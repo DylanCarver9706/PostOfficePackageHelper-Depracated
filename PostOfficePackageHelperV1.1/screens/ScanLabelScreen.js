@@ -33,7 +33,7 @@ export function ScanLabelScreen() {
         name: "image.jpg",
       });
 
-      fetch("https://5165-71-85-245-93.ngrok-free.app/api/recognize-text", {
+      fetch("https://a961-71-85-245-93.ngrok-free.app/api/recognize-text", {
         method: "POST",
         body: formData,
       })
@@ -43,35 +43,44 @@ export function ScanLabelScreen() {
 
           const startIndex = fullExtractedText.indexOf("TO:") + "TO:".length;
           const endIndex = fullExtractedText.indexOf("USPS TRACKING #");
-          const extractedText = data.text
-            .substring(startIndex, endIndex)
-            .trim();
+          const extractedText =
+            startIndex >= 0 && endIndex >= 0
+              ? data.text.substring(startIndex, endIndex).trim()
+              : "";
 
-          const lines = extractedText.split("\n");
+          if (extractedText) {
+            const lines = extractedText.split("\n");
 
-          const formattedData = {
-            customerName: lines[0].trim(),
-            addressOneAndTwo: lines[1].trim(),
-            cityStateZip: lines[2].trim(),
-          };
+            if (lines.length >= 3) {
+              const formattedData = {
+                customerName: lines[0].trim(),
+                addressOneAndTwo: lines[1].trim(),
+                cityStateZip: lines[2].trim(),
+              };
 
-          if (formattedData) {
-            await AsyncStorage.setItem(
-              "lastScannedData",
-              JSON.stringify(formattedData)
-            );
+              console.log(formattedData)
 
-            // Make the API request to addressesByFormattedData
-            const response = await fetch(
-              `https://5165-71-85-245-93.ngrok-free.app/api/addressesByFormattedData?fullAddress=${formattedData.addressOneAndTwo} ${formattedData.cityStateZip}`
-            );
+              await AsyncStorage.setItem(
+                "lastScannedData",
+                JSON.stringify(formattedData)
+              );
 
-            if (response.ok) {
-              const addressData = await response.json();
-              console.log("Address Data:", addressData);
+              // Make the API request to addressesByFormattedData
+              const response = await fetch(
+                `https://a961-71-85-245-93.ngrok-free.app/api/addressesByFormattedData?fullAddress=${formattedData.addressOneAndTwo} ${formattedData.cityStateZip}`
+              );
+
+              if (response.ok) {
+                const addressData = await response.json();
+                console.log("Address Data:", addressData);
+              } else {
+                console.error("Error fetching address:", response.status);
+              }
             } else {
-              console.error("Error fetching address:", response.status);
+              console.error("Invalid number of lines in extracted text.");
             }
+          } else {
+            console.error("No valid extracted text found.");
           }
         })
         .catch((error) => {

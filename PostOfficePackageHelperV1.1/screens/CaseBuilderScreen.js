@@ -16,7 +16,7 @@ export function CaseBuilderScreen({ route }) {
       const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
       setSelectedRoute(selectedRouteId);
       const response = await fetch(
-        `https://5165-71-85-245-93.ngrok-free.app/api/addressesByRouteId?route_id=${selectedRouteId}`
+        `https://a961-71-85-245-93.ngrok-free.app/api/addressesByRouteId?route_id=${selectedRouteId}`
       );
 
       if (response.ok) {
@@ -70,7 +70,7 @@ export function CaseBuilderScreen({ route }) {
       // console.log(newCaseData)
       // Send a POST request to add the new case
       const response = await fetch(
-        "https://5165-71-85-245-93.ngrok-free.app/api/addresses",
+        "https://a961-71-85-245-93.ngrok-free.app/api/addresses",
         {
           method: "POST",
           headers: {
