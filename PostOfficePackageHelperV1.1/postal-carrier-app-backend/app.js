@@ -902,9 +902,10 @@ app.get("/api/deliveriesByRouteAndDate", (req, res) => {
   const formattedDeliveryDate = deliveryDate.substring(0, 10);
 
   const sql = `
-    SELECT *
+    SELECT deliveries.*, addresses.address_number, addresses.address1, addresses.address2, addresses.city, addresses.state, addresses.zip_code
     FROM deliveries
-    WHERE route_id = ? AND DATE(delivery_date) = ?
+    LEFT JOIN addresses ON deliveries.address_id = addresses.address_id
+    WHERE deliveries.route_id = ? AND DATE(deliveries.delivery_date) = ?
   `;
 
   db.query(sql, [route_id, formattedDeliveryDate], (err, results) => {

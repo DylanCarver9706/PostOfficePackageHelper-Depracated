@@ -11,6 +11,11 @@ import { LoginScreen } from "./screens/LoginScreen";
 import { SignUpScreen } from "./screens/SignUpScreen";
 import { PackageHelperScreen } from "./screens/PackageHelperScreen";
 import API_BASE_URL from "./apiConfig";
+// if(__DEV__) {
+//   import('../ReactotronConfig').then(() => console.log('Reactotron Configured'))
+// }
+// import Reactotron from 'reactotron-react-native'
+// Reactotron.log('hello rendering world')
 
 const Stack = createStackNavigator();
 

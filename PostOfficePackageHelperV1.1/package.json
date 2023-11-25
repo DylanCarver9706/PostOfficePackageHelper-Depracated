@@ -38,7 +38,8 @@
     "react-native-toast-message": "^2.1.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "reactotron-react-native": "^5.0.3"
   },
   "private": true
 }
