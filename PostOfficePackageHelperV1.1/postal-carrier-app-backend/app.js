@@ -14,7 +14,7 @@ require("dotenv").config({
   path: "C:/Users/Dylan/PostOfficePackageHelper/PostOfficePackageHelperV1.1/PostOfficePackageHelperV1.1/.env",
 });
 const sharp = require("sharp");
-const fs = require('fs');
+const fs = require("fs");
 
 // Use the cors middleware
 app.use(cors());
@@ -131,28 +131,11 @@ app.post(
       }
 
       // console.log(JSON.stringify(result1, null, 2));
-      // bottom left: 712,3790
 
-      // Filter and select the object with "mid" = "/j/8sk4f3" and the highest "score"
-      const packageLabels = result1.localizedObjectAnnotations
-        .filter((annotation) => annotation.mid === "/j/8sk4f3")
-      //   .reduce((maxScoreAnnotation, annotation) => {
-      //     if (
-      //       !maxScoreAnnotation ||
-      //       annotation.score > maxScoreAnnotation.score
-      //     ) {
-      //       console.log(JSON.stringify(maxScoreAnnotation, null, 2));
-      //       return annotation;
-      //     }
-      //     return maxScoreAnnotation;
-      //   }, null);
-
-      // if (!packageLabels) {
-      //   console.log("No package label found in the response.");
-      //   return res
-      //     .status(404)
-      //     .json({ error: "No package label found in the image" });
-      // }
+      // Filter and select the object with "mid" = "/j/8sk4f3"
+      const packageLabels = result1.localizedObjectAnnotations.filter(
+        (annotation) => annotation.mid === "/j/8sk4f3"
+      );
 
       // Use sharp to get the image dimensions dynamically
       sharp(req.file.buffer)
@@ -161,8 +144,10 @@ app.post(
           const imageWidth = metadata.width;
           const imageHeight = metadata.height;
           console.log("Image dimensions");
-          console.log("Image Width: " + imageWidth + " Image Height: " + imageHeight);
-          console.log("####################################################")
+          console.log(
+            "Image Width: " + imageWidth + " Image Height: " + imageHeight
+          );
+          console.log("####################################################");
 
           // Calculate the pixel coordinates based on the image dimensions
           const startX1 = Math.floor(
@@ -182,51 +167,36 @@ app.post(
           console.log("Shipping Label Coordinates:");
           console.log(`StartX1: ${startX1}, StartY1: ${startY1}`);
           console.log(`EndX1: ${endX1}, EndY1: ${endY1}`);
-          console.log("####################################################")
+          console.log("####################################################");
 
-          // Calculate the pixel coordinates based on the image dimensions
-          // const startX2 = Math.floor(
-          //   packageLabels[1].boundingPoly.normalizedVertices[0].x * imageWidth
-          // );
-          // const startY2 = Math.floor(
-          //   packageLabels[1].boundingPoly.normalizedVertices[0].y * imageHeight
-          // );
-          // const endX2 = Math.floor(
-          //   packageLabels[1].boundingPoly.normalizedVertices[2].x * imageWidth
-          // );
-          // const endY2 = Math.floor(
-          //   packageLabels[1].boundingPoly.normalizedVertices[2].y * imageHeight
-          // );
+          console.log("endX1 - startX1: " + (endX1 - startX1));
 
-          // // Log the coordinates of the shipping label
-          // console.log("Shipping Label Coordinates:");
-          // console.log(`StartX2: ${startX2}, StartY2: ${startY2}`);
-          // console.log(`EndX2: ${endX2}, EndY2: ${endY2}`);
-          // console.log("####################################################")
+          let startLeft = startX1 - Math.floor((endX1 - startX1) * 0.5);
+          if (startLeft < 1) {
+            startLeft = 0;
+          }
+          console.log("Start Left: " + startLeft);
 
-          // Calculate the width and height for cropping
-          // const cropWidth = (Math.floor(imageWidth * 1.15) - (endX2 - startX1));
-
-          console.log("endX1 - startX1: " + (endX1 - startX1))
-
-          let startLeft = startX1 - Math.floor((endX1 - startX1) * 0.5)
-          if(startLeft < 1){startLeft = 0}
-          console.log("Start Left: " + startLeft)
-
-          let startTop = startY1 - Math.floor((endX1 - startX1) * 2.5)
-          if(startTop < 1){startTop = 0}
-          console.log("Start Top: " + startTop)
+          let startTop = startY1 - Math.floor((endX1 - startX1) * 0.85);
+          if (startTop < 1) {
+            startTop = 0;
+          }
+          console.log("Start Top: " + startTop);
 
           // const cropWidth = Math.floor((endX1 - startX1) * 2);
-          let cropWidth = startLeft + (Math.floor((endX1 - startX1) * 2.5));
-          if(cropWidth > (imageWidth - startLeft)){cropWidth = (imageWidth - startLeft)}
-          console.log("Crop Width: " + cropWidth)
+          let cropWidth = startLeft + Math.floor((endX1 - startX1) * 2);
+          if (cropWidth > imageWidth - startLeft) {
+            cropWidth = imageWidth - startLeft;
+          }
+          console.log("Crop Width: " + cropWidth);
 
-          let cropHeight = startTop + Math.floor((endX1 - startX1) * 3.5);
-          if(cropHeight > (imageHeight - startTop)){cropHeight = (imageHeight - startTop)}
+          let cropHeight = Math.floor((endX1 - startX1) * 0.5);
+          if (cropHeight > imageHeight - startTop) {
+            cropHeight = imageHeight - startTop;
+          }
           // const cropHeight = 3000;
-          console.log("Crop Height: " + cropHeight)
-          console.log("####################################################")
+          console.log("Crop Height: " + cropHeight);
+          console.log("####################################################");
 
           // Crop the image to the specified coordinates
           sharp(req.file.buffer)
@@ -243,19 +213,42 @@ app.post(
 
               // Log the base64 string to the console
               // console.log("Cropped Image Base64: data:image/jpg;base64,", croppedBase64);
-              
-              fs.writeFileSync('./croppedImage.txt', croppedBase64);
+
+              fs.writeFileSync("./croppedImage.txt", croppedBase64);
               console.log("Cropped Image Base64 written to croppedImage.txt.");
 
               // Send the croppedBase64 string in the response if required
-              res
-                .status(200)
-                .json({
-                  message: "Image cropped successfully.",
-                  croppedBase64,
-                });
+              // res.status(200).json({
+              //   message: "Image cropped successfully.",
+              //   croppedBase64,
+              // });
 
-              
+              // #############################################################################
+              // Extract text from cropped image
+              // #############################################################################
+
+              const [result] = await client.textDetection(
+                Buffer.from(croppedBase64, "base64")
+              );
+
+              if (result.error) {
+                console.error(
+                  "Google Cloud Vision API error:",
+                  result.error.message
+                );
+                return res
+                  .status(500)
+                  .json({ error: "Error processing image" });
+              }
+
+              console.log(result.textAnnotations[0].description);
+              // console.log(result.textAnnotations);
+              const textAnnotations = result.textAnnotations || [];
+              const recognizedText = textAnnotations.length
+                ? textAnnotations[0].description
+                : "";
+              res.header("Content-Type", "application/json; charset=utf-8");
+              res.json({ text: recognizedText });
             })
             .catch((error) => {
               console.error("Error cropping image:", error);

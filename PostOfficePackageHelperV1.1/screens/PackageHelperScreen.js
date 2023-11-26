@@ -42,12 +42,6 @@ export function PackageHelperScreen() {
     setIsAddDeliveryModalVisible(false);
   };
 
-  const handleSelectAddress = (address_id) => {
-    console.log(selectedAddress);
-    // handleAddDelivery();
-    // closeAddDeliveryModal();
-  };
-
   const searchAddresses = (text) => {
     // Filter addresses based on the searchQuery
     const searchText = text.toLowerCase();
@@ -99,7 +93,7 @@ export function PackageHelperScreen() {
   };
 
   useEffect(() => {
-    // Get the route_id from AsyncStorage (you need to implement this)
+    console.log(currentDate)
     const fetchDeliveries = async () => {
       try {
         const selectedRouteId = await AsyncStorage.getItem("selectedRoute");

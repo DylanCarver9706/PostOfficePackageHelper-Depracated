@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, Button, Image, Alert } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  Button,
+  Image,
+  Alert,
+  Dimensions,
+} from "react-native";
 import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import API_BASE_URL from "../apiConfig";
+
+const { width, height } = Dimensions.get("window");
 
 export function ScanLabelScreen() {
   const navigation = useNavigation();
@@ -44,22 +54,25 @@ export function ScanLabelScreen() {
         .then((response) => response.json())
         .then(async (data) => {
           const fullExtractedText = data.text;
+          // if (fullExtractedText.includes("TO:")){console.log(true)}
+          // const startIndex = fullExtractedText.indexOf("TO:") + "TO:".length;
+          // const endIndex = fullExtractedText.indexOf("USPS TRACKING #");
+          // const extractedText =
+          //   startIndex >= 0 && endIndex >= 0
+          //     ? data.text.substring(startIndex, endIndex).trim()
+          //     : "";
 
-          const startIndex = fullExtractedText.indexOf("TO:") + "TO:".length;
-          const endIndex = fullExtractedText.indexOf("USPS TRACKING #");
-          const extractedText =
-            startIndex >= 0 && endIndex >= 0
-              ? data.text.substring(startIndex, endIndex).trim()
-              : "";
-
-          if (extractedText) {
-            const lines = extractedText.split("\n");
+          if (fullExtractedText) {
+            const lines = fullExtractedText.split("\n");
+            console.log(lines[0])
+            console.log(lines[1])
+            console.log(lines[2])
 
             if (lines.length >= 3) {
               const formattedData = {
-                customerName: lines[0].trim(),
-                addressOneAndTwo: lines[1].trim(),
-                cityStateZip: lines[2].trim(),
+                customerName: lines[0].replace("SHIP", "").replace("TO:", "").trim(),
+                addressOneAndTwo: lines[1].replace("SHIP", "").replace("TO:", "").trim(),
+                cityStateZip: lines[2].replace("SHIP", "").replace("TO:", "").trim(),
               };
 
               console.log(formattedData);
@@ -117,7 +130,14 @@ export function ScanLabelScreen() {
             ref={cameraRef}
             style={styles.cameraPreview}
             type={Camera.Constants.Type.back}
-          />
+          >
+            {/* Mask Overlay */}
+            <View style={styles.maskOverlay}>
+              <View style={styles.maskCenter}>
+                <View style={[styles.maskFrame, styles.maskCenterFrame]} />
+              </View>
+            </View>
+          </Camera>
           <Button title="Take Picture" onPress={takePicture} />
         </View>
       )}
@@ -181,5 +201,19 @@ const styles = StyleSheet.create({
   textRecognitionText: {
     fontSize: 16,
     fontWeight: "bold",
+  },
+  maskOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  maskCenter: {
+    flexDirection: "row",
+  },
+  maskCenterFrame: {
+    width: width - 150,
+    height: height / 1.55,
+    borderColor: "red",
+    borderWidth: 5,
   },
 });

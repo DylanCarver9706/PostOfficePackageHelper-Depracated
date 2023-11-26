@@ -38,3 +38,6 @@ yarn-error.*
 
 # Cropped Images
 croppedImage.txt
+
+# JSON Test Data
+extractedText.json
