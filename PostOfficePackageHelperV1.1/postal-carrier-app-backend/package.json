@@ -15,6 +15,7 @@
     "axios": "^1.6.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
+    "clipboardy": "^4.0.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "firebase-functions": "^4.5.0",
@@ -22,6 +23,7 @@
     "mysql": "^2.18.1",
     "mysql2": "^3.6.2",
     "nodemon": "^3.0.1",
+    "sharp": "^0.32.6",
     "xmlbuilder2": "^3.1.1"
   }
 }

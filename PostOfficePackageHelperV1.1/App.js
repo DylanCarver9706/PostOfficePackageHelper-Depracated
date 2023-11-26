@@ -10,6 +10,7 @@ import { HaveAccountScreen } from "./screens/HaveAccountScreen";
 import { LoginScreen } from "./screens/LoginScreen";
 import { SignUpScreen } from "./screens/SignUpScreen";
 import { PackageHelperScreen } from "./screens/PackageHelperScreen";
+import { BarcodeScannerScreen } from "./screens/BarcodeScannerScreen";
 import API_BASE_URL from "./apiConfig";
 // if(__DEV__) {
 //   import('../ReactotronConfig').then(() => console.log('Reactotron Configured'))
@@ -55,6 +56,7 @@ export default function App() {
         </Stack.Screen>
         <Stack.Screen name="Case Builder" component={CaseBuilderScreen} />
         <Stack.Screen name="Package Helper" component={PackageHelperScreen} />
+        <Stack.Screen name="Barcode Scanner" component={BarcodeScannerScreen} />
         <Stack.Screen name="Scan Label" component={ScanLabelScreen} />
         {/* <Stack.Screen name="Sign Up" component={SignupScreen} /> */}
         <Stack.Screen

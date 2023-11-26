@@ -27,6 +27,9 @@ export function ScanLabelScreen() {
       const photo = await cameraRef.current.takePictureAsync();
       navigation.navigate("Package Helper");
 
+      // Save the captured image to the device's media library
+      MediaLibrary.createAssetAsync(photo.uri);
+
       const formData = new FormData();
       formData.append("imageUri", {
         uri: photo.uri,
@@ -34,7 +37,7 @@ export function ScanLabelScreen() {
         name: "image.jpg",
       });
 
-      fetch(`${API_BASE_URL}/recognize-text`, {
+      fetch(`${API_BASE_URL}/recognize-image-objects`, {
         method: "POST",
         body: formData,
       })
@@ -59,7 +62,7 @@ export function ScanLabelScreen() {
                 cityStateZip: lines[2].trim(),
               };
 
-              console.log(formattedData)
+              console.log(formattedData);
 
               await AsyncStorage.setItem(
                 "lastScannedData",
