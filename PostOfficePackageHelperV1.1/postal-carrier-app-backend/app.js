@@ -837,18 +837,18 @@ app.get("/api/addresses", (req, res) => {
 });
 
 // Get addresses by case_number and case_row_number
-app.get("/api/addressesByCaseAndRow", (req, res) => {
-  const { case_number, case_row_number } = req.query;
+app.get("/api/addressesByRouteAndCaseAndRow", (req, res) => {
+  const { route_id, case_number, case_row_number } = req.query;
 
-  if (!case_number || !case_row_number) {
+  if (!route_id || !case_number || !case_row_number) {
     return res
       .status(400)
       .json({ error: "Both case_number and case_row_number are required." });
   }
 
   const sql =
-    "SELECT * FROM addresses WHERE case_number = ? AND case_row_number = ?";
-  db.query(sql, [case_number, case_row_number], (err, results) => {
+    "SELECT * FROM addresses WHERE route_id = ? AND case_number = ? AND case_row_number = ?";
+  db.query(sql, [route_id, case_number, case_row_number], (err, results) => {
     if (err) {
       console.error("Error retrieving addresses:", err);
       return res

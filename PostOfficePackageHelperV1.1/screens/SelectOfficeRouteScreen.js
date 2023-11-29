@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API_BASE_URL from "../apiConfig";
 
@@ -53,6 +53,9 @@ export function SelectOfficeRouteScreen() {
 
   const handlePostOfficeSelection = async (postOffice) => {
     try {
+      // Clear the selected route value to allow for a new selection
+      setSelectedRoute(null)
+
       setSelectedPostOffice(postOffice);
 
       // Save the selected office to AsyncStorage
@@ -74,6 +77,7 @@ export function SelectOfficeRouteScreen() {
         // Log the selected office ID from AsyncStorage
         const selectedOfficeId = await AsyncStorage.getItem("selectedOffice");
         console.log("Selected office ID: ", selectedOfficeId);
+        // setSelectedPostOffice(null)
       } else {
         console.error("Failed to fetch routes");
       }
@@ -86,12 +90,14 @@ export function SelectOfficeRouteScreen() {
     setSelectedRoute(route);
     await AsyncStorage.setItem("selectedRoute", route.route_id.toString()); // Save route_id as a string
     const theSelectedRoute = await AsyncStorage.getItem("selectedRoute");
+    // setSelectedRoute(null)
     console.log("Selected route: ", theSelectedRoute);
   };
 
   const handleNextScreen = async () => {
-    usersNextScreen = await AsyncStorage.getItem("selectedScreen");
-    setNextScreen(usersNextScreen);
+    homeScreenSelection = await AsyncStorage.getItem("selectedScreen");
+    console.log("The next Screen: ", homeScreenSelection);
+    navigation.navigate(homeScreenSelection);
   };
 
   // Use useEffect to navigate when both office and route are selected
@@ -100,14 +106,6 @@ export function SelectOfficeRouteScreen() {
       handleNextScreen();
     }
   }, [selectedPostOffice, selectedRoute]);
-
-  // Use another useEffect to navigate based on the nextScreen value
-  useEffect(() => {
-    if (nextScreen) {
-      console.log("The next Screen: ", nextScreen);
-      navigation.navigate(nextScreen);
-    }
-  }, [nextScreen]);
 
   return (
     <View style={{ flex: 1, flexDirection: "row", padding: 16 }}>
@@ -140,7 +138,7 @@ export function SelectOfficeRouteScreen() {
       <View style={{ flex: 1 }}>
         {selectedPostOffice && (
           <View>
-            <Text>Routes for {selectedPostOffice.name}:</Text>
+            <Text>Select Route:</Text>
             <FlatList
               data={selectedPostOffice ? selectedPostOffice.routes : []}
               keyExtractor={(item) => item.route_id.toString()}

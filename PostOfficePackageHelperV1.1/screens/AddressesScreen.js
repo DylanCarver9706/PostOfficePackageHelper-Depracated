@@ -47,16 +47,19 @@ export function AddressesScreen() {
   const fetchPreviousSelections = async () => {
     try {
       const previouslySelectedRoute = await AsyncStorage.getItem("selectedRoute");
-      console.log("Prev Selected Route: " + previouslySelectedRoute)
+      // console.log("Prev Selected Route: " + previouslySelectedRoute)
       setSelectedRoute(previouslySelectedRoute)
 
       const previouslySelectedCase = await AsyncStorage.getItem("selectedCase");
-      console.log("Prev Selected Case: " + previouslySelectedCase)
+      // console.log("Prev Selected Case: " + previouslySelectedCase)
       setSelectedCase(previouslySelectedCase)
 
       const previouslySelectedRow = await AsyncStorage.getItem("selectedRow");
-      console.log("Prev Selected Row: " + previouslySelectedRow)
+      // console.log("Prev Selected Row: " + previouslySelectedRow)
       setSelectedRow(previouslySelectedRow)
+
+      fetchAddresses();
+
     } catch (error) {
       console.error("Error fetching route:", error);
     }
@@ -64,13 +67,11 @@ export function AddressesScreen() {
 
   const fetchAddresses = async () => {
     try {
-      const selectedCase = await AsyncStorage.getItem("selectedCase");
-      const selectedRow = await AsyncStorage.getItem("selectedRow");
-
+      // console.log(selectedCase, selectedRow)
       if (selectedCase && selectedRow) {
-        const response = await fetch(
-          `${API_BASE_URL}/addressesByCaseAndRow?case_number=${selectedCase}&case_row_number=${selectedRow}`
-        );
+        requestUrl = `${API_BASE_URL}/addressesByRouteAndCaseAndRow?route_id=${selectedRoute}&case_number=${selectedCase}&case_row_number=${selectedRow}`
+        // console.log(requestUrl)
+        const response = await fetch(requestUrl);
 
         if (response.ok) {
           const data = await response.json();
@@ -85,9 +86,14 @@ export function AddressesScreen() {
   };
 
   useEffect(() => {
-    fetchAddresses();
     fetchPreviousSelections();
   }, []);
+
+
+  useEffect(() => {
+    fetchAddresses();
+  }, [selectedRoute, selectedCase, selectedRow]);
+
 
   const handleDeleteAddress = async (addressId) => {
     try {
