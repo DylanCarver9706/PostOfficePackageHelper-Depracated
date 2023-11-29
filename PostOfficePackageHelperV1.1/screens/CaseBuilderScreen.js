@@ -16,6 +16,10 @@ export function CaseBuilderScreen({ route }) {
     try {
       const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
       setSelectedRoute(selectedRouteId);
+
+      const selectedOfficeId = await AsyncStorage.getItem("selectedOffice");
+      setSelectedPostOffice(selectedOfficeId);
+
       const response = await fetch(
         `${API_BASE_URL}/addressesByRouteId?route_id=${selectedRouteId}`
       );
@@ -127,8 +131,8 @@ export function CaseBuilderScreen({ route }) {
 
   return (
     <View style={styles.container}>
-      <Text>Post Office: {selectedPostOffice}</Text>
-      <Text>Route: {selectedRoute}</Text>
+      <Text>Post Office ID: {selectedPostOffice}</Text>
+      <Text>Route ID: {selectedRoute}</Text>
       <Button title="Add New Case" onPress={handleAddNewCase} />
       <View style={styles.caseContainer}>
         <Text style={styles.caseTitle}>
