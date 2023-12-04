@@ -108,6 +108,7 @@ app.post("/api/recognize-text", upload.single("imageUri"), async (req, res) => {
   }
 });
 
+// Define a route to perform object detection, cropping, and text recognition
 app.post(
   "/api/recognize-image-objects",
   upload.single("imageUri"),
@@ -468,8 +469,24 @@ app.post("/api/users/new", async (req, res) => {
             .status(500)
             .json({ error: "An error occurred while registering the user." });
         }
+        
+        // Successfully inserted user, get the user's ID from the result
+        const userId = result.insertId;
+
         console.log("User registered successfully");
-        res.status(201).json({ message: "User registered successfully" });
+        // Return the user's information in the response
+        res.status(201).json({
+          message: "User registered successfully",
+          user: {
+            id: userId,
+            first_name,
+            last_name,
+            email,
+            phone_number,
+            home_post_office,
+            position,
+          },
+        });
       }
     );
   } catch (error) {
@@ -513,7 +530,7 @@ app.get("/api/users/:id", (req, res) => {
 });
 
 // ******************************************************************************************************************
-app.put("/api/users/:id", (req, res) => {
+app.put("/api/users/:id", async (req, res) => {
   const userId = req.params.id;
   const {
     first_name,
@@ -525,33 +542,65 @@ app.put("/api/users/:id", (req, res) => {
     password,
   } = req.body;
 
-  // Hash the password here before saving it to the database
-  // ...
+  try {
+    // Hash the password here before saving it to the database
+    // ...
 
-  const sql =
-    "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, home_post_office=?, position=?, password=? WHERE user_id=?";
-  db.query(
-    sql,
-    [
-      first_name,
-      last_name,
-      email,
-      phone_number,
-      home_post_office,
-      position,
-      password,
-      userId,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("Error updating user:", err);
-        return res
-          .status(500)
-          .json({ error: "An error occurred while updating the user." });
+    const sql =
+      "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, home_post_office=?, position=?, password=? WHERE user_id=?";
+    db.query(
+      sql,
+      [
+        first_name,
+        last_name,
+        email,
+        phone_number,
+        home_post_office,
+        position,
+        password,
+        userId,
+      ],
+      async (err, result) => {
+        if (err) {
+          console.error("Error updating user:", err);
+          return res
+            .status(500)
+            .json({ error: "An error occurred while updating the user." });
+        }
+
+        // Check if the update was successful
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        console.log("User updated successfully");
+
+        // Fetch the updated user information from the database
+        const getUserSql = "SELECT user_id, first_name, last_name, email, phone_number, home_post_office, position FROM users WHERE user_id=?";
+        db.query(getUserSql, [userId], (err, userResult) => {
+          if (err) {
+            console.error("Error fetching updated user:", err);
+            return res.status(500).json({
+              error: "An error occurred while fetching the updated user.",
+            });
+          }
+
+          const updatedUser = userResult[0];
+
+          // Return the updated user information in the response (excluding password)
+          res.status(200).json({
+            message: "User updated successfully",
+            user: updatedUser,
+          });
+        });
       }
-      res.status(200).json({ message: "User updated successfully" });
-    }
-  );
+    );
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the user." });
+  }
 });
 
 // ******************************************************************************************************************
@@ -592,8 +641,22 @@ app.post("/api/offices", (req, res) => {
         .status(500)
         .json({ error: "An error occurred while creating the office." });
     }
+
+    // Successfully created office, get the office ID from the result
+    const officeId = result.insertId;
+
     console.log("Office created successfully");
-    res.status(201).json({ message: "Office created successfully" });
+    // Return the office's information in the response
+    res.status(201).json({
+      message: "Office created successfully",
+      office: {
+        id: officeId,
+        user_id,
+        city,
+        state,
+        phone_number,
+      },
+    });
   });
 });
 
@@ -645,7 +708,25 @@ app.put("/api/offices/:id", (req, res) => {
         .status(500)
         .json({ error: "An error occurred while updating the office." });
     }
-    res.status(200).json({ message: "Office updated successfully" });
+
+    // Check if any rows were affected by the update
+    if (result.affectedRows > 0) {
+      // Office was updated successfully, retrieve the updated office data
+      const updatedOffice = {
+        office_id: officeId,
+        city,
+        state,
+        phone_number,
+      };
+
+      res.status(200).json({
+        message: "Office updated successfully",
+        office: updatedOffice,
+      });
+    } else {
+      // No rows were affected, meaning the office with the specified ID was not found
+      res.status(404).json({ error: "Office not found" });
+    }
   });
 });
 
@@ -687,8 +768,20 @@ app.post("/api/routes", (req, res) => {
         .status(500)
         .json({ error: "An error occurred while creating the route." });
     }
+
+    // Successfully created the route, get the route ID from the result
+    const routeId = result.insertId;
+
     console.log("Route created successfully");
-    res.status(201).json({ message: "Route created successfully" });
+    // Return the route's information in the response
+    res.status(201).json({
+      message: "Route created successfully",
+      route: {
+        id: routeId,
+        route_number,
+        office_id,
+      },
+    });
   });
 });
 
@@ -752,7 +845,24 @@ app.put("/api/routes/:id", (req, res) => {
         .status(500)
         .json({ error: "An error occurred while updating the route." });
     }
-    res.status(200).json({ message: "Route updated successfully" });
+    
+    if (result.affectedRows === 0) {
+      // No rows were affected, indicating that the route with the specified ID was not found
+      return res
+        .status(404)
+        .json({ error: "Route not found" });
+    }
+
+    console.log("Route updated successfully");
+    // Return the updated route information in the response
+    res.status(200).json({
+      message: "Route updated successfully",
+      route: {
+        route_id: routeId,
+        route_number,
+        office_id,
+      },
+    });
   });
 });
 
@@ -816,8 +926,27 @@ app.post("/api/addresses", (req, res) => {
           .status(500)
           .json({ error: "An error occurred while creating the address." });
       }
+      
+      // Successfully created address, get the newly created address's ID from the result
+      const addressId = result.insertId;
+
       console.log("Address created successfully");
-      res.status(201).json({ message: "Address created successfully" });
+      // Return the newly created address data in the response
+      res.status(201).json({
+        message: "Address created successfully",
+        address: {
+          id: addressId,
+          case_number,
+          case_row_number,
+          address_number,
+          address1,
+          address2,
+          city,
+          state,
+          zip_code,
+          route_id,
+        },
+      });
     }
   );
 });
@@ -959,7 +1088,31 @@ app.put("/api/addresses/:id", (req, res) => {
           .status(500)
           .json({ error: "An error occurred while updating the address." });
       }
-      res.status(200).json({ message: "Address updated successfully" });
+      
+      // Check if any rows were affected by the update
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Address not found" });
+      }
+
+      console.log("Address updated successfully");
+      
+      // Fetch the updated address from the database and send it in the response
+      const fetchUpdatedAddressSql = "SELECT * FROM addresses WHERE address_id=?";
+      db.query(fetchUpdatedAddressSql, [addressId], (fetchErr, fetchResult) => {
+        if (fetchErr) {
+          console.error("Error fetching updated address:", fetchErr);
+          return res.status(500).json({
+            error: "An error occurred while fetching the updated address.",
+          });
+        }
+        
+        // Return the updated address in the response
+        const updatedAddress = fetchResult[0];
+        res.status(200).json({
+          message: "Address updated successfully",
+          address: updatedAddress,
+        });
+      });
     }
   );
 });
@@ -1036,9 +1189,20 @@ app.post("/api/deliveries", (req, res) => {
           .status(500)
           .json({ error: "An error occurred while creating the delivery." });
       } else {
+        // Successfully created delivery, get the delivery's ID from the result
+        const deliveryId = result.insertId;
+
         res.status(201).json({
           message: "Delivery created successfully",
-          id: result.insertId,
+          delivery: {
+            id: deliveryId,
+            route_id,
+            address_id,
+            delivery_date,
+            scanned,
+            out_for_delivery,
+            delivered,
+          },
         });
       }
     }
@@ -1141,7 +1305,26 @@ app.put("/api/deliveries/:id", (req, res) => {
         if (result.affectedRows === 0) {
           res.status(404).json({ error: "Delivery not found" });
         } else {
-          res.status(200).json({ message: "Delivery updated successfully" });
+          // Fetch the updated delivery from the database
+          db.query(
+            "SELECT * FROM deliveries WHERE delivery_id = ?",
+            [deliveryId],
+            (err, rows) => {
+              if (err) {
+                console.error("Error fetching updated delivery:", err);
+                res.status(500).json({
+                  error: "An error occurred while fetching the updated delivery.",
+                });
+              } else {
+                // Successfully updated delivery, include the updated delivery data in the response
+                const updatedDelivery = rows[0]; // Assuming it's a single delivery
+                res.status(200).json({
+                  message: "Delivery updated successfully",
+                  delivery: updatedDelivery,
+                });
+              }
+            }
+          );
         }
       }
     }
