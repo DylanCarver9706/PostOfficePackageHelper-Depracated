@@ -734,15 +734,64 @@ app.put("/api/offices/:id", (req, res) => {
 // Delete an office by ID
 app.delete("/api/offices/:id", (req, res) => {
   const officeId = req.params.id;
-  const sql = "DELETE FROM offices WHERE office_id=?";
-  db.query(sql, [officeId], (err, result) => {
+
+  // Step 1: Find the routes associated with the office
+  const findRoutesSql = "SELECT * FROM routes WHERE office_id=?";
+  db.query(findRoutesSql, [officeId], (err, routeResults) => {
     if (err) {
-      console.error("Error deleting office:", err);
+      console.error("Error finding associated routes:", err);
       return res
         .status(500)
-        .json({ error: "An error occurred while deleting the office." });
+        .json({ error: "An error occurred while finding associated routes." });
     }
-    res.status(200).json({ message: "Office deleted successfully" });
+
+    // Step 2: Find the addresses associated with the routes
+    const routeIds = routeResults.map((route) => route.route_id);
+    const findAddressesSql = "SELECT * FROM addresses WHERE route_id IN (?)";
+    db.query(findAddressesSql, [routeIds], (err, addressResults) => {
+      if (err) {
+        console.error("Error finding associated addresses:", err);
+        return res
+          .status(500)
+          .json({ error: "An error occurred while finding associated addresses." });
+      }
+
+      // Step 3: Delete associated addresses
+      const addressIds = addressResults.map((address) => address.address_id);
+      const deleteAddressesSql = "DELETE FROM addresses WHERE address_id IN (?)";
+      db.query(deleteAddressesSql, [addressIds], (err) => {
+        if (err) {
+          console.error("Error deleting associated addresses:", err);
+          return res
+            .status(500)
+            .json({ error: "An error occurred while deleting associated addresses." });
+        }
+
+        // Step 4: Delete associated routes
+        const deleteRoutesSql = "DELETE FROM routes WHERE office_id=?";
+        db.query(deleteRoutesSql, [officeId], (err) => {
+          if (err) {
+            console.error("Error deleting associated routes:", err);
+            return res
+              .status(500)
+              .json({ error: "An error occurred while deleting associated routes." });
+          }
+
+          // Step 5: Delete the office itself
+          const deleteOfficeSql = "DELETE FROM offices WHERE office_id=?";
+          db.query(deleteOfficeSql, [officeId], (err) => {
+            if (err) {
+              console.error("Error deleting office:", err);
+              return res
+                .status(500)
+                .json({ error: "An error occurred while deleting the office." });
+            }
+
+            res.status(200).json({ message: "Office and associated routes, addresses deleted successfully" });
+          });
+        });
+      });
+    });
   });
 });
 

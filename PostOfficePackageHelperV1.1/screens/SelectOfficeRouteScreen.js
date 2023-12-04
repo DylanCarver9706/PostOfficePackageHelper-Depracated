@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Button,
+  Alert,
+} from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API_BASE_URL from "../apiConfig";
@@ -10,6 +19,13 @@ export function SelectOfficeRouteScreen() {
   const [offices, setOffices] = useState([]);
   const [userId, setUserId] = useState(null);
   const [nextScreen, setNextScreen] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newOfficeInfo, setNewOfficeInfo] = useState({
+    city: "",
+    state: "",
+    phone_number: "",
+  });
+  const [editingOffice, setEditingOffice] = useState(null);
 
   // Initialize the navigation object
   const navigation = useNavigation();
@@ -28,25 +44,24 @@ export function SelectOfficeRouteScreen() {
     getUserInfo();
   }, []);
 
+  // Function to fetch the list of offices
+  const fetchOffices = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/offices?user_id=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setOffices(data); // Update the state with the fetched offices
+      } else {
+        console.error("Failed to fetch offices");
+      }
+    } catch (error) {
+      console.error("Error fetching offices:", error);
+    }
+  };
+
   useEffect(() => {
     if (userId) {
       // Fetch the list of offices using userId
-      const fetchOffices = async () => {
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}/offices?user_id=${userId}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            setOffices(data); // Update the state with the fetched offices
-          } else {
-            console.error("Failed to fetch offices");
-          }
-        } catch (error) {
-          console.error("Error fetching offices:", error);
-        }
-      };
-
       fetchOffices();
     }
   }, [userId]);
@@ -54,7 +69,7 @@ export function SelectOfficeRouteScreen() {
   const handlePostOfficeSelection = async (postOffice) => {
     try {
       // Clear the selected route value to allow for a new selection
-      setSelectedRoute(null)
+      setSelectedRoute(null);
 
       setSelectedPostOffice(postOffice);
 
@@ -107,6 +122,144 @@ export function SelectOfficeRouteScreen() {
     }
   }, [selectedPostOffice, selectedRoute]);
 
+  // Function to handle opening the modal
+  const handleOpenModal = () => {
+    setModalVisible(true);
+  };
+
+  // Function to handle the submission of the new office form
+  const handleAddNewOffice = async () => {
+    try {
+      // Get user ID from AsyncStorage
+      const userId = await AsyncStorage.getItem("userId");
+
+      // Create a new office object
+      const newOffice = {
+        user_id: userId,
+        city: newOfficeInfo.city,
+        state: newOfficeInfo.state,
+        phone_number: newOfficeInfo.phone_number,
+      };
+
+      // Send a POST request to create a new office
+      const response = await fetch(`${API_BASE_URL}/offices`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newOffice),
+      });
+
+      if (response.ok) {
+        // Refresh the list of offices
+        fetchOffices();
+        // Close the modal
+        setModalVisible(false);
+        // Clear the new office info
+        setNewOfficeInfo({
+          city: "",
+          state: "",
+          phone_number: "",
+        });
+      } else {
+        console.error("Failed to add new office");
+      }
+    } catch (error) {
+      console.error("Error adding new office:", error);
+    }
+  };
+
+  // Function to handle deleting an office
+  const handleDeleteOffice = async (officeId) => {
+    try {
+      // Show a confirmation alert before deleting
+      Alert.alert(
+        "Confirm Deletion",
+        "Are you sure you want to delete this office?\n\nThis will also delete all routes and addresses associated to it!",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Delete",
+            onPress: async () => {
+              // Send a DELETE request to delete the office
+              const response = await fetch(
+                `${API_BASE_URL}/offices/${officeId}`,
+                {
+                  method: "DELETE",
+                }
+              );
+
+              if (response.ok) {
+                // Refresh the list of offices after a successful delete
+                setSelectedRoute(null);
+                setSelectedPostOffice(null);
+                fetchOffices();
+              } else {
+                console.error("Failed to delete office");
+              }
+            },
+            style: "destructive", // Use destructive style for the delete button
+          },
+        ],
+        { cancelable: false }
+      );
+    } catch (error) {
+      console.error("Error deleting office:", error);
+    }
+  };
+
+  // Function to handle opening the edit modal
+const handleEditOffice = (office) => {
+  setEditingOffice(office); // Set the office being edited
+  setNewOfficeInfo({
+    city: office.city,
+    state: office.state,
+    phone_number: office.phone_number,
+  }); // Populate the input fields with existing office data
+  setModalVisible(true); // Open the modal
+};
+
+  // Function to update an existing office
+  const handleUpdateOffice = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/offices/${editingOffice.office_id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            city: newOfficeInfo.city,
+            state: newOfficeInfo.state,
+            phone_number: newOfficeInfo.phone_number,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        // Refresh the list of offices
+        fetchOffices();
+        // Close the modal
+        setModalVisible(false);
+        // Clear the new office info
+        setNewOfficeInfo({
+          city: "",
+          state: "",
+          phone_number: "",
+        });
+        setEditingOffice(null);
+      } else {
+        console.error("Failed to update office");
+      }
+    } catch (error) {
+      console.error("Error updating office:", error);
+    }
+  };
+
   return (
     <View style={{ flex: 1, flexDirection: "row", padding: 16 }}>
       <View style={{ flex: 1 }}>
@@ -115,26 +268,68 @@ export function SelectOfficeRouteScreen() {
           data={offices}
           keyExtractor={(item) => item.office_id.toString()}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => handlePostOfficeSelection(item)}
-              style={{
-                padding: 8,
-                marginBottom: 4,
-                borderRadius: 4,
-                borderWidth: 1,
-                borderColor: "gray",
-                backgroundColor:
-                  selectedPostOffice &&
-                  selectedPostOffice.office_id === item.office_id
-                    ? "lightblue"
-                    : "white",
-              }}
-            >
-              <Text>{`${item.city}, ${item.state}`}</Text>
-            </TouchableOpacity>
+            <View>
+              <TouchableOpacity
+                onPress={() => handlePostOfficeSelection(item)}
+                style={{
+                  padding: 8,
+                  marginBottom: 4,
+                  borderRadius: 4,
+                  borderWidth: 1,
+                  borderColor: "gray",
+                  backgroundColor:
+                    selectedPostOffice &&
+                    selectedPostOffice.office_id === item.office_id
+                      ? "lightblue"
+                      : "white",
+                }}
+              >
+                <Text>{`${item.city}, ${item.state}`}</Text>
+              </TouchableOpacity>
+  
+              {/* Delete and Edit buttons for each office */}
+              <View style={{ flexDirection: "row" }}>
+                <TouchableOpacity
+                  onPress={() => handleDeleteOffice(item.office_id)}
+                  style={{
+                    flex: 1,
+                    padding: 8,
+                    marginBottom: 4,
+                    borderRadius: 4,
+                    borderWidth: 1,
+                    borderColor: "red",
+                    backgroundColor: "white",
+                    marginRight: 4,
+                  }}
+                >
+                  <Text style={{ color: "red" }}>Delete</Text>
+                </TouchableOpacity>
+  
+                <TouchableOpacity
+                  onPress={() => handleEditOffice(item)}
+                  style={{
+                    flex: 1,
+                    padding: 8,
+                    marginBottom: 4,
+                    borderRadius: 4,
+                    borderWidth: 1,
+                    borderColor: "blue",
+                    backgroundColor: "white",
+                  }}
+                >
+                  <Text style={{ color: "blue" }}>Edit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
         />
+  
+        {/* Button to open the modal */}
+        <TouchableOpacity onPress={handleOpenModal}>
+          <Text style={{ color: "blue", marginTop: 10 }}>Add New Office</Text>
+        </TouchableOpacity>
       </View>
+  
       <View style={{ flex: 1 }}>
         {selectedPostOffice && (
           <View>
@@ -164,6 +359,54 @@ export function SelectOfficeRouteScreen() {
           </View>
         )}
       </View>
+  
+      {/* Modal for adding a new office or editing an existing office */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(false);
+        }}
+      >
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <View style={{ backgroundColor: "white", padding: 20 }}>
+            <Text>
+              {editingOffice
+                ? "Edit Office"
+                : "Add New Office"}
+            </Text>
+            <TextInput
+              placeholder="City"
+              value={editingOffice ? newOfficeInfo.city : newOfficeInfo.city}
+              onChangeText={(text) =>
+                setNewOfficeInfo({ ...newOfficeInfo, city: text })
+              }
+            />
+            <TextInput
+              placeholder="State"
+              value={editingOffice ? newOfficeInfo.state : newOfficeInfo.state}
+              onChangeText={(text) =>
+                setNewOfficeInfo({ ...newOfficeInfo, state: text })
+              }
+            />
+            <TextInput
+              placeholder="Phone Number"
+              value={editingOffice ? newOfficeInfo.phone_number : newOfficeInfo.phone_number}
+              onChangeText={(text) =>
+                setNewOfficeInfo({ ...newOfficeInfo, phone_number: text })
+              }
+            />
+            <Button title="Cancel" onPress={() => setModalVisible(false)} />
+            <Button
+              title="Save"
+              onPress={editingOffice ? handleUpdateOffice : handleAddNewOffice}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
