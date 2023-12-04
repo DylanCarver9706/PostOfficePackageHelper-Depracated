@@ -19,13 +19,19 @@ export function SelectOfficeRouteScreen() {
   const [offices, setOffices] = useState([]);
   const [userId, setUserId] = useState(null);
   const [nextScreen, setNextScreen] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [officeModalVisible, setOfficeModalVisible] = useState(false);
+  const [routeModalVisible, setRouteModalVisible] = useState(false);
   const [newOfficeInfo, setNewOfficeInfo] = useState({
     city: "",
     state: "",
     phone_number: "",
   });
   const [editingOffice, setEditingOffice] = useState(null);
+  const [newRouteInfo, setNewRouteInfo] = useState({
+    route_number: "",
+    // Add other route fields here
+  });
+  const [editingRoute, setEditingRoute] = useState(null);
 
   // Initialize the navigation object
   const navigation = useNavigation();
@@ -122,9 +128,14 @@ export function SelectOfficeRouteScreen() {
     }
   }, [selectedPostOffice, selectedRoute]);
 
-  // Function to handle opening the modal
-  const handleOpenModal = () => {
-    setModalVisible(true);
+  // Function to handle opening the office modal
+  const handleOpenOfficeModal = () => {
+    setOfficeModalVisible(true);
+  };
+
+  // Function to handle opening the route modal
+  const handleOpenRouteModal = () => {
+    setRouteModalVisible(true);
   };
 
   // Function to handle the submission of the new office form
@@ -154,7 +165,7 @@ export function SelectOfficeRouteScreen() {
         // Refresh the list of offices
         fetchOffices();
         // Close the modal
-        setModalVisible(false);
+        setOfficeModalVisible(false);
         // Clear the new office info
         setNewOfficeInfo({
           city: "",
@@ -185,12 +196,13 @@ export function SelectOfficeRouteScreen() {
             text: "Delete",
             onPress: async () => {
               // Send a DELETE request to delete the office
-              const response = await fetch(
-                `${API_BASE_URL}/offices/${officeId}`,
-                {
-                  method: "DELETE",
-                }
-              );
+              requestUrl = `${API_BASE_URL}/offices/${officeId}`;
+              console.log(requestUrl);
+              const response = await fetch(requestUrl, {
+                method: "DELETE",
+              });
+
+              console.log(response.status);
 
               if (response.ok) {
                 // Refresh the list of offices after a successful delete
@@ -212,15 +224,15 @@ export function SelectOfficeRouteScreen() {
   };
 
   // Function to handle opening the edit modal
-const handleEditOffice = (office) => {
-  setEditingOffice(office); // Set the office being edited
-  setNewOfficeInfo({
-    city: office.city,
-    state: office.state,
-    phone_number: office.phone_number,
-  }); // Populate the input fields with existing office data
-  setModalVisible(true); // Open the modal
-};
+  const handleEditOffice = (office) => {
+    setEditingOffice(office); // Set the office being edited
+    setNewOfficeInfo({
+      city: office.city,
+      state: office.state,
+      phone_number: office.phone_number,
+    }); // Populate the input fields with existing office data
+    setOfficeModalVisible(true); // Open the modal
+  };
 
   // Function to update an existing office
   const handleUpdateOffice = async () => {
@@ -244,7 +256,7 @@ const handleEditOffice = (office) => {
         // Refresh the list of offices
         fetchOffices();
         // Close the modal
-        setModalVisible(false);
+        setOfficeModalVisible(false);
         // Clear the new office info
         setNewOfficeInfo({
           city: "",
@@ -257,6 +269,171 @@ const handleEditOffice = (office) => {
       }
     } catch (error) {
       console.error("Error updating office:", error);
+    }
+  };
+
+  // Function to handle adding a new route
+  const handleAddNewRoute = async () => {
+    try {
+      const officeId = selectedPostOffice.office_id; // Get the current office ID
+      const newRoute = {
+        office_id: officeId,
+        route_number: newRouteInfo.route_number,
+        // Add other route fields here
+      };
+
+      const response = await fetch(`${API_BASE_URL}/routes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newRoute),
+      });
+
+      if (response.ok) {
+        // Refresh the list of routes for the selected office
+        const routesResponse = await fetch(
+          `${API_BASE_URL}/routesByOfficeId?office_id=${officeId}`
+        );
+
+        if (routesResponse.ok) {
+          const data = await routesResponse.json();
+          setSelectedPostOffice({ ...selectedPostOffice, routes: data });
+        } else {
+          console.error("Failed to fetch routes");
+        }
+
+        // Close the modal
+        setRouteModalVisible(false);
+
+        // Clear the new route info
+        setNewRouteInfo({
+          route_number: "",
+          // Clear other route fields here
+        });
+      } else {
+        console.error("Failed to add new route");
+      }
+    } catch (error) {
+      console.error("Error adding new route:", error);
+    }
+  };
+
+  // Function to handle deleting a route
+  const handleDeleteRoute = async (routeId) => {
+    try {
+      // Show a confirmation alert before deleting
+      Alert.alert(
+        "Confirm Deletion",
+        "Are you sure you want to delete this route?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Delete",
+            onPress: async () => {
+              // Send a DELETE request to delete the route
+              requestUrl = `${API_BASE_URL}/routes/${routeId}`;
+              // console.log(requestUrl)
+              const response = await fetch(requestUrl, {
+                method: "DELETE",
+              });
+
+              if (response.ok) {
+                // Refresh the list of routes for the selected office
+                const routesResponse = await fetch(
+                  `${API_BASE_URL}/routesByOfficeId?office_id=${selectedPostOffice.office_id}`
+                );
+
+                if (routesResponse.ok) {
+                  const data = await routesResponse.json();
+                  setSelectedPostOffice({
+                    ...selectedPostOffice,
+                    routes: data,
+                  });
+                } else {
+                  console.error("Failed to fetch routes");
+                }
+
+                // Close the modal
+                setRouteModalVisible(false);
+
+                // Clear the new route info
+                setNewRouteInfo({
+                  route_number: "",
+                  // Clear other route fields here
+                });
+              } else {
+                // Handle errors or failed delete requests
+                console.error("Failed to delete route");
+              }
+            },
+            style: "destructive", // Use destructive style for the delete button
+          },
+        ],
+        { cancelable: false }
+      );
+    } catch (error) {
+      console.error("Error deleting route:", error);
+    }
+  };
+
+  const handleEditRoute = (route) => {
+    setEditingRoute(route); // Set the route being edited
+    setNewRouteInfo({
+      route_number: route.route_number,
+      // Populate other route fields here for editing
+    });
+    setRouteModalVisible(true); // Open the modal
+  };
+
+  const handleUpdateRoute = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/routes/${editingRoute.route_id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            office_id: selectedPostOffice.office_id,
+            route_number: newRouteInfo.route_number,
+            // Include other updated route fields here
+          }),
+        }
+      );
+
+      if (response.ok) {
+        // Refresh the list of routes for the selected office
+        const routesResponse = await fetch(
+          `${API_BASE_URL}/routesByOfficeId?office_id=${selectedPostOffice.office_id}`
+        );
+
+        if (routesResponse.ok) {
+          const data = await routesResponse.json();
+          setSelectedPostOffice({ ...selectedPostOffice, routes: data });
+        } else {
+          console.error("Failed to fetch routes");
+        }
+
+        // Close the modal
+        setRouteModalVisible(false);
+
+        // Clear the new route info
+        setNewRouteInfo({
+          route_number: "",
+          // Clear other route fields here
+        });
+
+        setEditingRoute(null); // Reset the editing route
+      } else {
+        console.error("Failed to update route");
+      }
+    } catch (error) {
+      console.error("Error updating route:", error);
     }
   };
 
@@ -286,7 +463,7 @@ const handleEditOffice = (office) => {
               >
                 <Text>{`${item.city}, ${item.state}`}</Text>
               </TouchableOpacity>
-  
+
               {/* Delete and Edit buttons for each office */}
               <View style={{ flexDirection: "row" }}>
                 <TouchableOpacity
@@ -304,7 +481,7 @@ const handleEditOffice = (office) => {
                 >
                   <Text style={{ color: "red" }}>Delete</Text>
                 </TouchableOpacity>
-  
+
                 <TouchableOpacity
                   onPress={() => handleEditOffice(item)}
                   style={{
@@ -320,16 +497,17 @@ const handleEditOffice = (office) => {
                   <Text style={{ color: "blue" }}>Edit</Text>
                 </TouchableOpacity>
               </View>
+              {/* Button to open the modal */}
+              <TouchableOpacity onPress={handleOpenOfficeModal}>
+                <Text style={{ color: "blue", marginTop: 10 }}>
+                  Add New Office
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
         />
-  
-        {/* Button to open the modal */}
-        <TouchableOpacity onPress={handleOpenModal}>
-          <Text style={{ color: "blue", marginTop: 10 }}>Add New Office</Text>
-        </TouchableOpacity>
       </View>
-  
+
       <View style={{ flex: 1 }}>
         {selectedPostOffice && (
           <View>
@@ -338,46 +516,86 @@ const handleEditOffice = (office) => {
               data={selectedPostOffice ? selectedPostOffice.routes : []}
               keyExtractor={(item) => item.route_id.toString()}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => handleRouteSelection(item)}
-                  style={{
-                    padding: 8,
-                    marginBottom: 4,
-                    borderRadius: 4,
-                    borderWidth: 1,
-                    borderColor: "gray",
-                    backgroundColor:
-                      selectedRoute && selectedRoute.route_id === item.route_id
-                        ? "lightblue"
-                        : "white",
-                  }}
-                >
-                  <Text>{`Route ${item.route_number}`}</Text>
-                </TouchableOpacity>
+                <View>
+                  <TouchableOpacity
+                    onPress={() => handleRouteSelection(item)}
+                    style={{
+                      padding: 8,
+                      marginBottom: 4,
+                      borderRadius: 4,
+                      borderWidth: 1,
+                      borderColor: "gray",
+                      backgroundColor:
+                        selectedRoute &&
+                        selectedRoute.route_id === item.route_id
+                          ? "lightblue"
+                          : "white",
+                    }}
+                  >
+                    <Text>{`Route ${item.route_number}`}</Text>
+                  </TouchableOpacity>
+
+                  {/* Delete and Edit buttons for each office */}
+                  <View style={{ flexDirection: "row" }}>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteRoute(item.route_id)}
+                      style={{
+                        flex: 1,
+                        padding: 8,
+                        marginBottom: 4,
+                        borderRadius: 4,
+                        borderWidth: 1,
+                        borderColor: "red",
+                        backgroundColor: "white",
+                        marginRight: 4,
+                      }}
+                    >
+                      <Text style={{ color: "red" }}>Delete</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => handleEditRoute(item)}
+                      style={{
+                        flex: 1,
+                        padding: 8,
+                        marginBottom: 4,
+                        borderRadius: 4,
+                        borderWidth: 1,
+                        borderColor: "blue",
+                        backgroundColor: "white",
+                      }}
+                    >
+                      <Text style={{ color: "blue" }}>Edit</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               )}
             />
+
+            {/* Button to add a new route */}
+            <TouchableOpacity onPress={handleOpenRouteModal}>
+              <Text style={{ color: "blue", marginTop: 10 }}>
+                Add New Route
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
-  
+
       {/* Modal for adding a new office or editing an existing office */}
       <Modal
         animationType="slide"
         transparent={true}
-        visible={modalVisible}
+        visible={officeModalVisible}
         onRequestClose={() => {
-          setModalVisible(false);
+          setOfficeModalVisible(false);
         }}
       >
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
           <View style={{ backgroundColor: "white", padding: 20 }}>
-            <Text>
-              {editingOffice
-                ? "Edit Office"
-                : "Add New Office"}
-            </Text>
+            <Text>{editingOffice ? "Edit Office" : "Add New Office"}</Text>
             <TextInput
               placeholder="City"
               value={editingOffice ? newOfficeInfo.city : newOfficeInfo.city}
@@ -394,15 +612,56 @@ const handleEditOffice = (office) => {
             />
             <TextInput
               placeholder="Phone Number"
-              value={editingOffice ? newOfficeInfo.phone_number : newOfficeInfo.phone_number}
+              value={
+                editingOffice
+                  ? newOfficeInfo.phone_number
+                  : newOfficeInfo.phone_number
+              }
               onChangeText={(text) =>
                 setNewOfficeInfo({ ...newOfficeInfo, phone_number: text })
               }
             />
-            <Button title="Cancel" onPress={() => setModalVisible(false)} />
+            <Button
+              title="Cancel"
+              onPress={() => setOfficeModalVisible(false)}
+            />
             <Button
               title="Save"
               onPress={editingOffice ? handleUpdateOffice : handleAddNewOffice}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal for adding a new route or editing an existing route */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={routeModalVisible}
+        onRequestClose={() => {
+          setRouteModalVisible(false);
+        }}
+      >
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <View style={{ backgroundColor: "white", padding: 20 }}>
+            <Text>{editingRoute ? "Edit Route" : "Add New Route"}</Text>
+            <TextInput
+              placeholder="Route Number"
+              value={newRouteInfo.route_number}
+              onChangeText={(text) =>
+                setNewRouteInfo({ ...newRouteInfo, route_number: text })
+              }
+            />
+            {/* Add other input fields for route information here */}
+            <Button
+              title="Cancel"
+              onPress={() => setRouteModalVisible(false)}
+            />
+            <Button
+              title="Save"
+              onPress={editingRoute ? handleUpdateRoute : handleAddNewRoute}
             />
           </View>
         </View>
