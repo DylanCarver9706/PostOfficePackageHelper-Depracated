@@ -197,12 +197,12 @@ export function SelectOfficeRouteScreen() {
             onPress: async () => {
               // Send a DELETE request to delete the office
               requestUrl = `${API_BASE_URL}/offices/${officeId}`;
-              console.log(requestUrl);
+              // console.log(requestUrl);
               const response = await fetch(requestUrl, {
                 method: "DELETE",
               });
 
-              console.log(response.status);
+              // console.log(response.status);
 
               if (response.ok) {
                 // Refresh the list of offices after a successful delete
@@ -440,72 +440,76 @@ export function SelectOfficeRouteScreen() {
   return (
     <View style={{ flex: 1, flexDirection: "row", padding: 16 }}>
       <View style={{ flex: 1 }}>
-        <Text>Select a Post Office:</Text>
-        <FlatList
-          data={offices}
-          keyExtractor={(item) => item.office_id.toString()}
-          renderItem={({ item }) => (
-            <View>
-              <TouchableOpacity
-                onPress={() => handlePostOfficeSelection(item)}
-                style={{
-                  padding: 8,
-                  marginBottom: 4,
-                  borderRadius: 4,
-                  borderWidth: 1,
-                  borderColor: "gray",
-                  backgroundColor:
-                    selectedPostOffice &&
-                    selectedPostOffice.office_id === item.office_id
-                      ? "lightblue"
-                      : "white",
-                }}
-              >
-                <Text>{`${item.city}, ${item.state}`}</Text>
-              </TouchableOpacity>
+        {userId && (
+          <View>
+            <Text>Select a Post Office:</Text>
+            <FlatList
+              data={offices}
+              keyExtractor={(item) => item.office_id.toString()}
+              renderItem={({ item }) => (
+                <View>
+                  <TouchableOpacity
+                    onPress={() => handlePostOfficeSelection(item)}
+                    style={{
+                      padding: 8,
+                      marginBottom: 4,
+                      borderRadius: 4,
+                      borderWidth: 1,
+                      borderColor: "gray",
+                      backgroundColor:
+                        selectedPostOffice &&
+                        selectedPostOffice.office_id === item.office_id
+                          ? "lightblue"
+                          : "white",
+                    }}
+                  >
+                    <Text>{`${item.city}, ${item.state}`}</Text>
+                  </TouchableOpacity>
 
-              {/* Delete and Edit buttons for each office */}
-              <View style={{ flexDirection: "row" }}>
-                <TouchableOpacity
-                  onPress={() => handleDeleteOffice(item.office_id)}
-                  style={{
-                    flex: 1,
-                    padding: 8,
-                    marginBottom: 4,
-                    borderRadius: 4,
-                    borderWidth: 1,
-                    borderColor: "red",
-                    backgroundColor: "white",
-                    marginRight: 4,
-                  }}
-                >
-                  <Text style={{ color: "red" }}>Delete</Text>
-                </TouchableOpacity>
+                  {/* Delete and Edit buttons for each office */}
+                  <View style={{ flexDirection: "row" }}>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteOffice(item.office_id)}
+                      style={{
+                        flex: 1,
+                        padding: 8,
+                        marginBottom: 4,
+                        borderRadius: 4,
+                        borderWidth: 1,
+                        borderColor: "red",
+                        backgroundColor: "white",
+                        marginRight: 4,
+                      }}
+                    >
+                      <Text style={{ color: "red" }}>Delete</Text>
+                    </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={() => handleEditOffice(item)}
-                  style={{
-                    flex: 1,
-                    padding: 8,
-                    marginBottom: 4,
-                    borderRadius: 4,
-                    borderWidth: 1,
-                    borderColor: "blue",
-                    backgroundColor: "white",
-                  }}
-                >
-                  <Text style={{ color: "blue" }}>Edit</Text>
-                </TouchableOpacity>
-              </View>
-              {/* Button to open the modal */}
-              <TouchableOpacity onPress={handleOpenOfficeModal}>
-                <Text style={{ color: "blue", marginTop: 10 }}>
-                  Add New Office
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        />
+                    <TouchableOpacity
+                      onPress={() => handleEditOffice(item)}
+                      style={{
+                        flex: 1,
+                        padding: 8,
+                        marginBottom: 4,
+                        borderRadius: 4,
+                        borderWidth: 1,
+                        borderColor: "blue",
+                        backgroundColor: "white",
+                      }}
+                    >
+                      <Text style={{ color: "blue" }}>Edit</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            />
+            {/* Button to open the modal */}
+            <TouchableOpacity onPress={handleOpenOfficeModal}>
+              <Text style={{ color: "blue", marginTop: 10 }}>
+                Add New Office
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <View style={{ flex: 1 }}>

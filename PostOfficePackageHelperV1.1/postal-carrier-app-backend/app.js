@@ -735,51 +735,15 @@ app.put("/api/offices/:id", (req, res) => {
 // Delete an office by ID
 app.delete("/api/offices/:id", (req, res) => {
   const officeId = req.params.id;
-
-  // Step 1: Delete associated routes (if any)
-  const deleteRoutesSql = "DELETE FROM routes WHERE office_id=?";
-  db.query(deleteRoutesSql, [officeId], (err) => {
+  const sql = "DELETE FROM offices WHERE office_id=?";
+  db.query(sql, [officeId], (err, result) => {
     if (err) {
-      console.error("Error deleting associated routes:", err);
+      console.error("Error deleting office:", err);
       return res
         .status(500)
-        .json({
-          error: "An error occurred while deleting associated routes.",
-        });
+        .json({ error: "An error occurred while deleting the office." });
     }
-
-    // Step 2: Delete associated addresses (if any)
-    const deleteAddressesSql = "DELETE FROM addresses WHERE route_id NOT IN (SELECT route_id FROM routes)";
-    db.query(deleteAddressesSql, (err) => {
-      if (err) {
-        console.error("Error deleting associated addresses:", err);
-        return res
-          .status(500)
-          .json({
-            error: "An error occurred while deleting associated addresses.",
-          });
-      }
-
-      // Step 3: Delete the office itself
-      const deleteOfficeSql = "DELETE FROM offices WHERE office_id=?";
-      db.query(deleteOfficeSql, [officeId], (err) => {
-        if (err) {
-          console.error("Error deleting office:", err);
-          return res
-            .status(500)
-            .json({
-              error: "An error occurred while deleting the office.",
-            });
-        }
-
-        res
-          .status(200)
-          .json({
-            message:
-              "Office and associated routes, addresses deleted successfully",
-          });
-      });
-    });
+    res.status(200).json({ message: "Office deleted successfully" });
   });
 });
 
@@ -905,100 +869,15 @@ app.put("/api/routes/:id", (req, res) => {
 // Delete a route by ID
 app.delete("/api/routes/:id", (req, res) => {
   const routeId = req.params.id;
-
-  // Step 1: Find the deliveries associated with the addresses
-  const findDeliveriesSql =
-    "SELECT * FROM deliveries WHERE address_id IN (SELECT address_id FROM addresses WHERE route_id = ?)";
-  db.query(findDeliveriesSql, [routeId], (err, deliveryResults) => {
+  const sql = "DELETE FROM routes WHERE route_id=?";
+  db.query(sql, [routeId], (err, result) => {
     if (err) {
-      console.error("Error finding associated deliveries:", err);
+      console.error("Error deleting route:", err);
       return res
         .status(500)
-        .json({
-          error: "An error occurred while finding associated deliveries.",
-        });
+        .json({ error: "An error occurred while deleting the route." });
     }
-
-    // Extract delivery IDs if there are any
-    const deliveryIds = deliveryResults.map((delivery) => delivery.delivery_id);
-
-    // Step 2: Delete associated deliveries
-    if (deliveryIds.length > 0) {
-      const deleteDeliveriesSql =
-        "DELETE FROM deliveries WHERE delivery_id IN (?)";
-      db.query(deleteDeliveriesSql, [deliveryIds], (err) => {
-        if (err) {
-          console.error("Error deleting associated deliveries:", err);
-          return res
-            .status(500)
-            .json({
-              error: "An error occurred while deleting associated deliveries.",
-            });
-        }
-
-        // Step 3: Delete associated addresses
-        const deleteAddressesSql = "DELETE FROM addresses WHERE route_id = ?";
-        db.query(deleteAddressesSql, [routeId], (err) => {
-          if (err) {
-            console.error("Error deleting associated addresses:", err);
-            return res
-              .status(500)
-              .json({
-                error: "An error occurred while deleting associated addresses.",
-              });
-          }
-
-          // Step 4: Delete the route itself
-          const deleteRouteSql = "DELETE FROM routes WHERE route_id = ?";
-          db.query(deleteRouteSql, [routeId], (err) => {
-            if (err) {
-              console.error("Error deleting route:", err);
-              return res
-                .status(500)
-                .json({ error: "An error occurred while deleting the route." });
-            }
-
-            res
-              .status(200)
-              .json({
-                message:
-                  "Route and associated deliveries, addresses deleted successfully",
-              });
-          });
-        });
-      });
-    } else {
-      // If there are no associated deliveries, proceed to delete addresses and route
-      // Step 3: Delete associated addresses
-      const deleteAddressesSql = "DELETE FROM addresses WHERE route_id = ?";
-      db.query(deleteAddressesSql, [routeId], (err) => {
-        if (err) {
-          console.error("Error deleting associated addresses:", err);
-          return res
-            .status(500)
-            .json({
-              error: "An error occurred while deleting associated addresses.",
-            });
-        }
-
-        // Step 4: Delete the route itself
-        const deleteRouteSql = "DELETE FROM routes WHERE route_id = ?";
-        db.query(deleteRouteSql, [routeId], (err) => {
-          if (err) {
-            console.error("Error deleting route:", err);
-            return res
-              .status(500)
-              .json({ error: "An error occurred while deleting the route." });
-          }
-
-          res
-            .status(200)
-            .json({
-              message: "Route and associated addresses deleted successfully",
-            });
-        });
-      });
-    }
+    res.status(200).json({ message: "Route deleted successfully" });
   });
 });
 
@@ -1242,42 +1121,15 @@ app.put("/api/addresses/:id", (req, res) => {
 // Delete an address by ID along with associated deliveries
 app.delete("/api/addresses/:id", (req, res) => {
   const addressId = req.params.id;
-
-  // Step 1: Find the deliveries associated with the address
-  const findDeliveriesSql = "SELECT * FROM deliveries WHERE address_id=?";
-  db.query(findDeliveriesSql, [addressId], (err, deliveryResults) => {
+  const sql = "DELETE FROM addresses WHERE address_id=?";
+  db.query(sql, [addressId], (err, result) => {
     if (err) {
-      console.error("Error finding associated deliveries:", err);
-      return res.status(500).json({
-        error: "An error occurred while finding associated deliveries.",
-      });
+      console.error("Error deleting address:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting the address." });
     }
-
-    // Step 2: Delete associated deliveries
-    const deleteDeliveriesSql = "DELETE FROM deliveries WHERE address_id=?";
-    db.query(deleteDeliveriesSql, [addressId], (err) => {
-      if (err) {
-        console.error("Error deleting associated deliveries:", err);
-        return res.status(500).json({
-          error: "An error occurred while deleting associated deliveries.",
-        });
-      }
-
-      // Step 3: Delete the address itself
-      const deleteAddressSql = "DELETE FROM addresses WHERE address_id=?";
-      db.query(deleteAddressSql, [addressId], (err) => {
-        if (err) {
-          console.error("Error deleting address:", err);
-          return res
-            .status(500)
-            .json({ error: "An error occurred while deleting the address." });
-        }
-
-        res.status(200).json({
-          message: "Address and associated deliveries deleted successfully",
-        });
-      });
-    });
+    res.status(200).json({ message: "Address deleted successfully" });
   });
 });
 
@@ -1459,20 +1311,14 @@ app.put("/api/deliveries/:id", (req, res) => {
 // Delete a specific delivery by ID
 app.delete("/api/deliveries/:id", (req, res) => {
   const deliveryId = req.params.id;
-  const sql = "DELETE FROM deliveries WHERE delivery_id = ?";
-
+  const sql = "DELETE FROM deliveries WHERE delivery_id=?";
   db.query(sql, [deliveryId], (err, result) => {
     if (err) {
       console.error("Error deleting delivery:", err);
-      res
+      return res
         .status(500)
         .json({ error: "An error occurred while deleting the delivery." });
-    } else {
-      if (result.affectedRows === 0) {
-        res.status(404).json({ error: "Delivery not found" });
-      } else {
-        res.status(200).json({ message: "Delivery deleted successfully" });
-      }
     }
+    res.status(200).json({ message: "Delivery deleted successfully" });
   });
 });
