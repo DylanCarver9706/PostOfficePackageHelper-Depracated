@@ -514,7 +514,7 @@ app.get("/api/users", (req, res) => {
 // ******************************************************************************************************************
 app.get("/api/users/:id", (req, res) => {
   const userId = req.params.id;
-  const sql = "SELECT * FROM users WHERE user_id = ?";
+  const sql = "SELECT first_name, last_name, email, phone_number, home_post_office, position FROM users WHERE user_id = ?";
   db.query(sql, [userId], (err, results) => {
     if (err) {
       console.error("Error retrieving user by ID:", err);
@@ -539,7 +539,6 @@ app.put("/api/users/:id", async (req, res) => {
     phone_number,
     home_post_office,
     position,
-    password,
   } = req.body;
 
   try {
@@ -547,7 +546,7 @@ app.put("/api/users/:id", async (req, res) => {
     // ...
 
     const sql =
-      "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, home_post_office=?, position=?, password=? WHERE user_id=?";
+      "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, home_post_office=?, position=? WHERE user_id=?";
     db.query(
       sql,
       [
@@ -557,7 +556,6 @@ app.put("/api/users/:id", async (req, res) => {
         phone_number,
         home_post_office,
         position,
-        password,
         userId,
       ],
       async (err, result) => {

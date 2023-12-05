@@ -75,6 +75,13 @@ export function HomeScreen({ setUser }) {
           navigation.navigate("Select Office Route");
         }}
       />
+      <Button
+        title="Profile"
+        onPress={() => {
+          saveSelectedScreen("Profile");
+          navigation.navigate("Profile");
+        }}
+      />
       <Button title="Logout" onPress={handleLogout} />
     </View>
   );

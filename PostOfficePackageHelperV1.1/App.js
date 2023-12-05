@@ -12,6 +12,7 @@ import { SignUpScreen } from "./screens/SignUpScreen";
 import { PackageHelperScreen } from "./screens/PackageHelperScreen";
 import { BarcodeScannerScreen } from "./screens/BarcodeScannerScreen";
 import API_BASE_URL from "./apiConfig";
+import ProfileScreen from "./screens/ProfileScreen";
 // if(__DEV__) {
 //   import('../ReactotronConfig').then(() => console.log('Reactotron Configured'))
 // }
@@ -66,6 +67,7 @@ export default function App() {
           {(props) => <SelectOfficeRouteScreen {...props} user={user} />}
         </Stack.Screen>
         <Stack.Screen name="Addresses" component={AddressesScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Signup Screen" component={SignUpScreen} />
         <Stack.Screen name="HaveAccountScreen" component={HaveAccountScreen} />
         <Stack.Screen name="Login Screen">
