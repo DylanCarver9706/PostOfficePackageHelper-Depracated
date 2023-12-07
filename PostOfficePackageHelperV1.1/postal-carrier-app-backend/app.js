@@ -15,6 +15,7 @@ require("dotenv").config({
 });
 const sharp = require("sharp");
 const fs = require("fs");
+const { OpenAI } = require("openai");
 
 // Use the cors middleware
 app.use(cors());
@@ -59,7 +60,21 @@ db.connect((err) => {
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************
-// ******        GOOGLE VISION API        ***************************************************************************
+// ******        OpenAIApi        ***********************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Used in Google Vision Api for extracting addresses from extracted text
+
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******************************************************************************************************************
+// ******        GOOGLE VISION API + OpenAi Api        **************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************
@@ -73,40 +88,6 @@ const CONFIG = {
 
 // Initialize a Google Cloud Vision client
 const client = new vision.ImageAnnotatorClient(CONFIG);
-
-// Define a route to perform text recognition
-app.post("/api/recognize-text", upload.single("imageUri"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res
-        .status(400)
-        .json({ error: "Image data is missing in the request body" });
-    }
-
-    const base64ImageData = req.file.buffer.toString("base64");
-
-    const [result] = await client.textDetection(
-      Buffer.from(base64ImageData, "base64")
-    );
-
-    if (result.error) {
-      console.error("Google Cloud Vision API error:", result.error.message);
-      return res.status(500).json({ error: "Error processing image" });
-    }
-
-    console.log(result.textAnnotations[0].description);
-    // console.log(result.textAnnotations);
-    const textAnnotations = result.textAnnotations || [];
-    const recognizedText = textAnnotations.length
-      ? textAnnotations[0].description
-      : "";
-    res.header("Content-Type", "application/json; charset=utf-8");
-    res.json({ text: recognizedText });
-  } catch (error) {
-    console.error("Error processing image:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 // Define a route to perform object detection, cropping, and text recognition
 app.post(
@@ -131,6 +112,7 @@ app.post(
         return res.status(500).json({ error: "Error processing image" });
       }
 
+      // LocalizedObjects response
       // console.log(JSON.stringify(result1, null, 2));
 
       // Filter and select the object with "mid" = "/j/8sk4f3"
@@ -144,11 +126,11 @@ app.post(
         .then((metadata) => {
           const imageWidth = metadata.width;
           const imageHeight = metadata.height;
-          console.log("Image dimensions");
-          console.log(
-            "Image Width: " + imageWidth + " Image Height: " + imageHeight
-          );
-          console.log("####################################################");
+          // console.log("Image dimensions");
+          // console.log(
+          //   "Image Width: " + imageWidth + " Image Height: " + imageHeight
+          // );
+          // console.log("####################################################");
 
           // Calculate the pixel coordinates based on the image dimensions
           const startX1 = Math.floor(
@@ -165,39 +147,37 @@ app.post(
           );
 
           // Log the coordinates of the shipping label
-          console.log("Shipping Label Coordinates:");
-          console.log(`StartX1: ${startX1}, StartY1: ${startY1}`);
-          console.log(`EndX1: ${endX1}, EndY1: ${endY1}`);
-          console.log("####################################################");
+          // console.log("Shipping Label Coordinates:");
+          // console.log(`StartX1: ${startX1}, StartY1: ${startY1}`);
+          // console.log(`EndX1: ${endX1}, EndY1: ${endY1}`);
+          // console.log("####################################################");
 
-          console.log("endX1 - startX1: " + (endX1 - startX1));
+          // console.log("endX1 - startX1: " + (endX1 - startX1));
 
-          let startLeft = startX1 - Math.floor((endX1 - startX1) * 0.5);
+          let startLeft = startX1 - Math.floor((endX1 - startX1) * 0.35);
           if (startLeft < 1) {
             startLeft = 0;
           }
-          console.log("Start Left: " + startLeft);
+          // console.log("Start Left: " + startLeft);
 
-          let startTop = startY1 - Math.floor((endX1 - startX1) * 0.85);
+          let startTop = startY1 - Math.floor((endX1 - startX1) * 2);
           if (startTop < 1) {
             startTop = 0;
           }
-          console.log("Start Top: " + startTop);
+          // console.log("Start Top: " + startTop);
 
-          // const cropWidth = Math.floor((endX1 - startX1) * 2);
-          let cropWidth = startLeft + Math.floor((endX1 - startX1) * 2);
+          let cropWidth = startLeft + Math.floor((endX1 - startX1) * 1.6);
           if (cropWidth > imageWidth - startLeft) {
             cropWidth = imageWidth - startLeft;
           }
-          console.log("Crop Width: " + cropWidth);
+          // console.log("Crop Width: " + cropWidth);
 
-          let cropHeight = Math.floor((endX1 - startX1) * 0.5);
+          let cropHeight = startTop + Math.floor((endX1 - startX1) * 2.25);
           if (cropHeight > imageHeight - startTop) {
             cropHeight = imageHeight - startTop;
           }
-          // const cropHeight = 3000;
-          console.log("Crop Height: " + cropHeight);
-          console.log("####################################################");
+          // console.log("Crop Height: " + cropHeight);
+          // console.log("####################################################");
 
           // Crop the image to the specified coordinates
           sharp(req.file.buffer)
@@ -212,17 +192,12 @@ app.post(
               // Convert the cropped image buffer to base64
               const croppedBase64 = croppedBuffer.toString("base64");
 
-              // Log the base64 string to the console
-              // console.log("Cropped Image Base64: data:image/jpg;base64,", croppedBase64);
+              // #############################################################################
+              // Cropped image
+              // #############################################################################
 
-              fs.writeFileSync("./croppedImage.txt", croppedBase64);
-              console.log("Cropped Image Base64 written to croppedImage.txt.");
-
-              // Send the croppedBase64 string in the response if required
-              // res.status(200).json({
-              //   message: "Image cropped successfully.",
-              //   croppedBase64,
-              // });
+              // fs.writeFileSync("./croppedImage.txt", croppedBase64);
+              // console.log("Cropped Image Base64 written to croppedImage.txt.");
 
               // #############################################################################
               // Extract text from cropped image
@@ -242,14 +217,33 @@ app.post(
                   .json({ error: "Error processing image" });
               }
 
-              console.log(result.textAnnotations[0].description);
-              // console.log(result.textAnnotations);
-              const textAnnotations = result.textAnnotations || [];
-              const recognizedText = textAnnotations.length
-                ? textAnnotations[0].description
-                : "";
+              // console.log("Full GV Response: \n" + JSON.stringify(result, null, 2))
+              extractedTextDescription = result.textAnnotations[0].description;
+              // console.log(extractedTextDescription);
+
+              const promptResponse = await openai.chat.completions.create({
+                model: "gpt-3.5-turbo",
+                temperature: 0.2,
+                messages: [
+                  {
+                    role: "system",
+                    content:
+                      "You are a warehouse machine in charge of returning the addresses on package labels",
+                  },
+                  {
+                    role: "user",
+                    content: `Here is extracted text from a picture of a package label: ${extractedTextDescription}\n\n Please return the customer/business names and their address from that text as an array of JSON objects with key/value pairs for customer_or_business_name, address1, address2, city, state, and zip_code. There are only 2 addresses in there.`,
+                  },
+                ],
+              });
+
+              const jsonObject = JSON.parse(
+                promptResponse.choices[0].message.content
+              );
+              console.log("Prompt json object: \n" + JSON.stringify(jsonObject, null, 2));
+
               res.header("Content-Type", "application/json; charset=utf-8");
-              res.json({ text: recognizedText });
+              res.json({ text: jsonObject[1] });
             })
             .catch((error) => {
               console.error("Error cropping image:", error);
@@ -514,7 +508,8 @@ app.get("/api/users", (req, res) => {
 // ******************************************************************************************************************
 app.get("/api/users/:id", (req, res) => {
   const userId = req.params.id;
-  const sql = "SELECT first_name, last_name, email, phone_number, home_post_office, position FROM users WHERE user_id = ?";
+  const sql =
+    "SELECT first_name, last_name, email, phone_number, home_post_office, position FROM users WHERE user_id = ?";
   db.query(sql, [userId], (err, results) => {
     if (err) {
       console.error("Error retrieving user by ID:", err);
@@ -744,7 +739,6 @@ app.delete("/api/offices/:id", (req, res) => {
     res.status(200).json({ message: "Office deleted successfully" });
   });
 });
-
 
 // ******************************************************************************************************************
 // ******************************************************************************************************************
@@ -995,7 +989,7 @@ app.get("/api/addressesByFormattedData", (req, res) => {
 
   const uppercasedFullAddress = fullAddress.toUpperCase();
 
-  console.log("fullAddress", uppercasedFullAddress);
+  // console.log("fullAddress", uppercasedFullAddress);
 
   const sql = `
     SELECT *
@@ -1010,8 +1004,8 @@ app.get("/api/addressesByFormattedData", (req, res) => {
         .status(500)
         .json({ error: "An error occurred while retrieving addresses." });
     }
-    console.log("SQL Query:", sql);
-    console.log("Results:", results);
+    // console.log("SQL Query:", sql);
+    // console.log("Results:", results);
     res.status(200).json(results);
   });
 });
