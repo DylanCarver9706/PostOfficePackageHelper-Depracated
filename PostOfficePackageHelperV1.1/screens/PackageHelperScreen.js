@@ -1,20 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
   Button,
-  Modal,
+  Dimensions,
+  ActivityIndicator,
   TextInput,
+  FlatList,
+  Modal,
   TouchableOpacity,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { Camera } from "expo-camera";
+import * as MediaLibrary from "expo-media-library";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import ToastManager, { Toast } from "toastify-react-native";
 import API_BASE_URL from "../apiConfig";
+
+const { width, height } = Dimensions.get("window");
 
 export function PackageHelperScreen() {
   const navigation = useNavigation();
+  const [hasPermission, setHasPermission] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [deliveries, setDeliveries] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [isAddDeliveryModalVisible, setIsAddDeliveryModalVisible] =
@@ -23,12 +32,16 @@ export function PackageHelperScreen() {
   const [routeAddresses, setRouteAddresses] = useState([]);
   const [filteredAddresses, setFilteredAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  // Get today's date in the "YYYY-MM-DD" format
   const [currentDate, setCurrentDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [cameraVisible, setCameraVisible] = useState(false);
+  const cameraRef = useRef(null);
 
-  global_address_id = null;
+  const askForCameraPermission = async () => {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    setHasPermission(status === "granted");
+  };
 
   const openAddDeliveryModal = () => {
     fetchAddresses();
@@ -43,7 +56,6 @@ export function PackageHelperScreen() {
   };
 
   const searchAddresses = (text) => {
-    // Filter addresses based on the searchQuery
     const searchText = text.toLowerCase();
     const filtered = routeAddresses.filter((address) => {
       const addressString =
@@ -55,8 +67,6 @@ export function PackageHelperScreen() {
 
   const handleAddDelivery = async (address_id) => {
     try {
-      // address_id = await selectedAddress;
-      // Construct the new case data
       const newDeliveryData = {
         route_id: selectedRoute,
         address_id: address_id,
@@ -65,8 +75,7 @@ export function PackageHelperScreen() {
         out_for_delivery: false,
         delivered: false,
       };
-      // console.log(newCaseData)
-      // Send a POST request to add a new delivery
+
       const response = await fetch(`${API_BASE_URL}/deliveries`, {
         method: "POST",
         headers: {
@@ -76,8 +85,8 @@ export function PackageHelperScreen() {
       });
 
       if (response.ok) {
-        // After adding the delivery, fetch the updated list of delivery
         closeAddDeliveryModal();
+        Toast.success("Delivery Added");
         setSelectedAddress(address_id);
       } else {
         console.error(
@@ -92,31 +101,97 @@ export function PackageHelperScreen() {
     }
   };
 
-  useEffect(() => {
-    console.log(currentDate)
-    const fetchDeliveries = async () => {
-      try {
-        const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
-        setSelectedRoute(selectedRouteId);
+  const takePicture = async () => {
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync();
 
-        // Make the API request to get deliveries for the current route and date
-        const response = await fetch(
-          `${API_BASE_URL}/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${currentDate}`
-        );
+      // Save the captured image to the device's media library
+      // MediaLibrary.createAssetAsync(photo.uri);
 
-        if (response.ok) {
-          const data = await response.json();
-          // console.log(data);
-          setDeliveries(data); // Set the deliveries data in state
-        } else {
-          console.error("Error fetching deliveries:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching deliveries:", error);
+      const formData = new FormData();
+      formData.append("imageUri", {
+        uri: photo.uri,
+        type: "image/jpeg",
+        name: "image.jpg",
+      });
+      console.log("text extraction started...");
+      setIsLoading(true);
+      fetch(`${API_BASE_URL}/recognize-image-objects`, {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then(async (data) => {
+          const fullExtractedText = data.text;
+
+          if (fullExtractedText) {
+            await AsyncStorage.setItem(
+              "lastScannedData",
+              JSON.stringify(fullExtractedText)
+            );
+
+            if (fullExtractedText.address2 !== "") {
+              requestUrl = `${API_BASE_URL}/addressesByFormattedData?fullAddress=${fullExtractedText.address1} ${fullExtractedText.address2} ${fullExtractedText.city} ${fullExtractedText.state} ${fullExtractedText.zip_code}`;
+            } else {
+              requestUrl = `${API_BASE_URL}/addressesByFormattedData?fullAddress=${fullExtractedText.address1} ${fullExtractedText.city} ${fullExtractedText.state} ${fullExtractedText.zip_code}`;
+            }
+
+            const response = await fetch(requestUrl);
+
+            if (response.ok) {
+              const addressData = await response.json();
+              console.log("Address Found: \n", addressData);
+              if (addressData.length > 0) {
+                handleAddDelivery(addressData[0].address_id);
+                setCameraVisible(false);
+                setIsLoading(false);
+              } else {
+                console.log("Address not found. Creating new address...");
+                setCameraVisible(false);
+                setIsLoading(false);
+                const newAddressData = {
+                  address_number: fullExtractedText.address_number,
+                  address1: fullExtractedText.address1,
+                  address2: fullExtractedText.address2,
+                  city: fullExtractedText.city,
+                  state: fullExtractedText.state,
+                  zip_code: fullExtractedText.zip_code,
+                };
+              }
+            } else {
+              console.error("Error fetching address:", response.status);
+              setIsLoading(false);
+            }
+          } else {
+            console.error("No valid extracted text found.");
+            setIsLoading(false);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+  };
+
+  const fetchDeliveries = async () => {
+    try {
+      const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
+      setSelectedRoute(selectedRouteId);
+
+      const response = await fetch(
+        `${API_BASE_URL}/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${currentDate}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setDeliveries(data);
+      } else {
+        console.error("Error fetching deliveries:", response.status);
       }
-    };
-    fetchDeliveries();
-  }, [selectedAddress]);
+    } catch (error) {
+      console.error("Error fetching deliveries:", error);
+    }
+  };
 
   const fetchAddresses = async () => {
     try {
@@ -126,7 +201,7 @@ export function PackageHelperScreen() {
       if (response.ok) {
         const data = await response.json();
         setRouteAddresses(data);
-        setFilteredAddresses(data); // Initialize filteredAddresses with all addresses
+        setFilteredAddresses(data);
       } else {
         console.error("Error fetching addresses:", response.status);
       }
@@ -135,9 +210,62 @@ export function PackageHelperScreen() {
     }
   };
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      // Handle any logic you want when the screen is focused
+      askForCameraPermission();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  useEffect(() => {
+    fetchDeliveries();
+  }, [selectedAddress]);
+
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Package Helper Screen</Text>
+    <View style={styles.container}>
+      <ToastManager />
+
+      {hasPermission === false && (
+        <View style={styles.permissionContainer}>
+          <Text style={styles.permissionText}>No access to camera</Text>
+          <Button title={"Allow Camera"} onPress={askForCameraPermission} />
+        </View>
+      )}
+
+      <Modal
+        visible={cameraVisible}
+        animationType="slide"
+        onRequestClose={() => setCameraVisible(false)}
+      >
+        <View style={styles.cameraContainer}>
+          {hasPermission === true ? (
+            isLoading ? (
+              <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+              <View style={styles.cameraContainer}>
+                <Camera
+                  ref={cameraRef}
+                  style={styles.cameraPreview}
+                  type={Camera.Constants.Type.back}
+                >
+                  {/* Mask Overlay */}
+                  <View style={styles.maskOverlay}>
+                    <View style={styles.maskCenter}>
+                      <View
+                        style={[styles.maskFrame, styles.maskCenterFrame]}
+                      />
+                    </View>
+                  </View>
+                </Camera>
+                <Button title="Take Picture" onPress={takePicture} />
+              </View>
+            )
+          ) : null}
+        </View>
+      </Modal>
+
       <FlatList
         data={deliveries}
         keyExtractor={(item) => item.delivery_id.toString()}
@@ -160,15 +288,9 @@ export function PackageHelperScreen() {
           </View>
         )}
       />
-      <Button
-        title="Scan Label"
-        onPress={() => {
-          navigation.navigate("Scan Label");
-        }}
-      />
+      <Button title="Scan Label" onPress={() => setCameraVisible(true)} />
       <Button title="Add Delivery" onPress={openAddDeliveryModal} />
 
-      {/* Add Delivery Modal */}
       <Modal
         visible={isAddDeliveryModalVisible}
         animationType="slide"
@@ -179,7 +301,7 @@ export function PackageHelperScreen() {
             placeholder="Search for an address"
             onChangeText={(text) => {
               setSearchQuery(text);
-              searchAddresses(text); // Call searchAddresses with the updated text
+              searchAddresses(text);
             }}
             value={searchQuery}
           />
@@ -202,6 +324,26 @@ export function PackageHelperScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  permissionContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  permissionText: {
+    margin: 10,
+  },
+  cameraContainer: {
+    flex: 1,
+    width: "100%",
+  },
+  cameraPreview: {
+    flex: 1,
+  },
   deliveryItem: {
     padding: 10,
     borderWidth: 1,
@@ -214,5 +356,19 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     marginBottom: 10,
     backgroundColor: "#f0f0f0",
+  },
+  maskOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  maskCenter: {
+    flexDirection: "row",
+  },
+  maskCenterFrame: {
+    width: width - 150,
+    height: height / 1.55,
+    borderColor: "red",
+    borderWidth: 5,
   },
 });
