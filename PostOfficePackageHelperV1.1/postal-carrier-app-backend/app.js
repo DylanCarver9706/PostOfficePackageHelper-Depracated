@@ -989,12 +989,12 @@ app.get("/api/addressesByFormattedData", (req, res) => {
 
   const uppercasedFullAddress = fullAddress.toUpperCase();
 
-  // console.log("fullAddress", uppercasedFullAddress);
+  console.log(`Input fullAddress: "${uppercasedFullAddress}"`);
 
   const sql = `
     SELECT *
     FROM addresses
-    WHERE BINARY UPPER(CONCAT(address_number, " ", address1, " ", address2, " ", city, " ", state, " ", zip_code)) = ?
+    WHERE UPPER(CONCAT(address1, " ", IFNULL(address2, ""), city, " ", state, " ", zip_code)) = UPPER(?)
   `;
 
   db.query(sql, [uppercasedFullAddress], (err, results) => {
@@ -1005,7 +1005,7 @@ app.get("/api/addressesByFormattedData", (req, res) => {
         .json({ error: "An error occurred while retrieving addresses." });
     }
     // console.log("SQL Query:", sql);
-    // console.log("Results:", results);
+    console.log("Results:", results);
     res.status(200).json(results);
   });
 });

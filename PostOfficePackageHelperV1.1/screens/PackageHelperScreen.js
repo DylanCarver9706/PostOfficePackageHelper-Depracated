@@ -38,9 +38,31 @@ export function PackageHelperScreen() {
   const [cameraVisible, setCameraVisible] = useState(false);
   const cameraRef = useRef(null);
 
+  const [isAddNewAddressModalVisible, setIsAddNewAddressModalVisible] =
+    useState(false);
+  const [newAddressData, setNewAddressData] = useState({
+    route_id: null,
+    case_number: null,
+    case_row_number: null,
+    address_number: "",
+    address1: "",
+    address2: "",
+    city: "",
+    state: "",
+    zip_code: "",
+  });
+
   const askForCameraPermission = async () => {
     const { status } = await Camera.requestCameraPermissionsAsync();
     setHasPermission(status === "granted");
+  };
+
+  const closeAddNewAddressModal = () => {
+    setIsAddNewAddressModalVisible(false);
+  };
+
+  const openAddNewAddressModal = () => {
+    setIsAddNewAddressModalVisible(true);
   };
 
   const openAddDeliveryModal = () => {
@@ -123,6 +145,7 @@ export function PackageHelperScreen() {
         .then((response) => response.json())
         .then(async (data) => {
           const fullExtractedText = data.text;
+          console.log(fullExtractedText)
 
           if (fullExtractedText) {
             await AsyncStorage.setItem(
@@ -135,6 +158,7 @@ export function PackageHelperScreen() {
             } else {
               requestUrl = `${API_BASE_URL}/addressesByFormattedData?fullAddress=${fullExtractedText.address1} ${fullExtractedText.city} ${fullExtractedText.state} ${fullExtractedText.zip_code}`;
             }
+            console.log(requestUrl)
 
             const response = await fetch(requestUrl);
 
@@ -149,14 +173,16 @@ export function PackageHelperScreen() {
                 console.log("Address not found. Creating new address...");
                 setCameraVisible(false);
                 setIsLoading(false);
-                const newAddressData = {
+                openAddNewAddressModal();
+                setNewAddressData({
+                  route_id: selectedRoute,
                   address_number: fullExtractedText.address_number,
                   address1: fullExtractedText.address1,
                   address2: fullExtractedText.address2,
                   city: fullExtractedText.city,
                   state: fullExtractedText.state,
                   zip_code: fullExtractedText.zip_code,
-                };
+                });
               }
             } else {
               console.error("Error fetching address:", response.status);
@@ -223,6 +249,34 @@ export function PackageHelperScreen() {
     fetchDeliveries();
   }, [selectedAddress]);
 
+  const handleAddNewAddress = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/addresses`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newAddressData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        handleAddDelivery(data.address.id)
+        closeAddNewAddressModal();
+        Toast.success("Address Added");
+      } else {
+        console.error(
+          "Failed to add a new address. Response status:",
+          response.status
+        );
+        const responseText = await response.text();
+        console.error("Response data:", responseText);
+      }
+    } catch (error) {
+      console.error("Error adding a new address:", error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ToastManager />
@@ -263,6 +317,72 @@ export function PackageHelperScreen() {
               </View>
             )
           ) : null}
+        </View>
+      </Modal>
+
+      <Modal
+        visible={isAddNewAddressModalVisible}
+        animationType="slide"
+        onRequestClose={closeAddNewAddressModal}
+      >
+        <View style={styles.modalContainer}>
+        <Text style={styles.modalTitle}>Address Not Found.</Text>
+          <Text style={styles.modalTitle}>Add New Address?</Text>
+          <TextInput
+            placeholder="Address Number"
+            onChangeText={(text) =>
+              setNewAddressData({ ...newAddressData, address_number: text })
+            }
+            value={newAddressData.address_number}
+          />
+          <TextInput
+            placeholder="Address 1"
+            onChangeText={(text) =>
+              setNewAddressData({ ...newAddressData, address1: text })
+            }
+            value={newAddressData.address1}
+          />
+          <TextInput
+            placeholder="Address 2"
+            onChangeText={(text) =>
+              setNewAddressData({ ...newAddressData, address2: text })
+            }
+            value={newAddressData.address2}
+          />
+          <TextInput
+            placeholder="City"
+            onChangeText={(text) =>
+              setNewAddressData({ ...newAddressData, city: text })
+            }
+            value={newAddressData.city}
+          />
+          <TextInput
+            placeholder="State"
+            onChangeText={(text) =>
+              setNewAddressData({ ...newAddressData, state: text })
+            }
+            value={newAddressData.state}
+          />
+          <TextInput
+            placeholder="ZIP Code"
+            onChangeText={(text) =>
+              setNewAddressData({ ...newAddressData, zip_code: text })
+            }
+            value={newAddressData.zip_code}
+          />
+          <TextInput
+            placeholder="Case Number"
+            onChangeText={(text) =>
+              setNewAddressData({ ...newAddressData, case_number: text })
+            }
+          />
+          <TextInput
+            placeholder="Row Number"
+            onChangeText={(text) =>
+              setNewAddressData({ ...newAddressData, case_row_number: text })
+            }
+          />
+          <Button title="Add Address" onPress={handleAddNewAddress} />
         </View>
       </Modal>
 
