@@ -9,14 +9,16 @@ import {
   TextInput,
   Button,
   StyleSheet,
+  TouchableWithoutFeedback,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import DraggableFlatList from "react-native-draggable-flatlist";
 import API_BASE_URL from "../apiConfig";
 
 export function AddressesScreen() {
   const [selectedRoute, setSelectedRoute] = useState(null);
-  const [selectedCase, setSelectedCase] = useState(null)
-  const [selectedRow, setSelectedRow] = useState(null)
+  const [selectedCase, setSelectedCase] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -46,20 +48,21 @@ export function AddressesScreen() {
 
   const fetchPreviousSelections = async () => {
     try {
-      const previouslySelectedRoute = await AsyncStorage.getItem("selectedRoute");
+      const previouslySelectedRoute = await AsyncStorage.getItem(
+        "selectedRoute"
+      );
       // console.log("Prev Selected Route: " + previouslySelectedRoute)
-      setSelectedRoute(previouslySelectedRoute)
+      setSelectedRoute(previouslySelectedRoute);
 
       const previouslySelectedCase = await AsyncStorage.getItem("selectedCase");
       // console.log("Prev Selected Case: " + previouslySelectedCase)
-      setSelectedCase(previouslySelectedCase)
+      setSelectedCase(previouslySelectedCase);
 
       const previouslySelectedRow = await AsyncStorage.getItem("selectedRow");
       // console.log("Prev Selected Row: " + previouslySelectedRow)
-      setSelectedRow(previouslySelectedRow)
+      setSelectedRow(previouslySelectedRow);
 
       fetchAddresses();
-
     } catch (error) {
       console.error("Error fetching route:", error);
     }
@@ -69,7 +72,7 @@ export function AddressesScreen() {
     try {
       // console.log(selectedCase, selectedRow)
       if (selectedCase && selectedRow) {
-        requestUrl = `${API_BASE_URL}/addressesByRouteAndCaseAndRow?route_id=${selectedRoute}&case_number=${selectedCase}&case_row_number=${selectedRow}`
+        requestUrl = `${API_BASE_URL}/addressesByRouteAndCaseAndRow?route_id=${selectedRoute}&case_number=${selectedCase}&case_row_number=${selectedRow}&orderBy=position_number`;
         // console.log(requestUrl)
         const response = await fetch(requestUrl);
 
@@ -89,11 +92,9 @@ export function AddressesScreen() {
     fetchPreviousSelections();
   }, []);
 
-
   useEffect(() => {
     fetchAddresses();
   }, [selectedRoute, selectedCase, selectedRow]);
-
 
   const handleDeleteAddress = async (addressId) => {
     try {
@@ -214,40 +215,105 @@ export function AddressesScreen() {
     }
   };
 
+  const updateAddressOrderOnServer = async (data) => {
+    try {
+      // Iterate through the data array and send PUT requests
+      for (let i = 0; i < data.length; i++) {
+        const address = data[i];
+        const response = await fetch(
+          `${API_BASE_URL}/addresses/${address.address_id}/reorder`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              position_number: i + 1, // Assuming your position_number starts from 1
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          console.error("Failed to update address order");
+          // Handle errors here
+        }
+      }
+    } catch (error) {
+      console.error("Error updating address order:", error);
+    }
+  };
+
+  function formatAddress(addressData) {
+    const { address1, address2, city, state, zip_code } = addressData;
+    const formattedAddress = `${address1}${
+      address2 ? `, ${address2}` : ""
+    }, ${city}, ${state}, ${zip_code}`;
+    return formattedAddress;
+  }
+
+  // Define a function to update the address order on drag end
+  const onDragEnd = async ({ data }) => {
+    // Update the addresses state with the new order
+    setAddresses(data);
+
+    // Update the position_number on the server
+    updateAddressOrderOnServer(data);
+  };
+
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       {addresses.length > 0 ? (
-        <FlatList
+        <DraggableFlatList
           data={addresses}
           keyExtractor={(item) => item.address_id.toString()}
-          renderItem={({ item }) => (
-            <View style={{ padding: 10 }}>
-              <Text>{formatAddress(item)}</Text>
-              <TouchableOpacity onPress={() => handleEditAddress(item)}>
-                <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  Alert.alert(
-                    "Confirm Delete",
-                    "Are you sure you want to delete this address?\n\nAny deliveries associated with this address will also be deleted!\n",
-                    [
-                      {
-                        text: "Cancel",
-                        style: "cancel",
-                      },
-                      {
-                        text: "Delete",
-                        onPress: () => handleDeleteAddress(item.address_id),
-                      },
-                    ]
-                  );
+          renderItem={({ item, index, drag }) => (
+            <TouchableOpacity>
+              <View
+                style={{
+                  flexDirection: "row", // Add flexDirection to create a draggable handle
+                  alignItems: "center",
+                  flex: 1,
+                  padding: 15,
+                  // width: '90%',
+                  backgroundColor: "white",
+                  borderWidth: 1, // Add border width
+                  borderColor: "gray", // Set border color
+                  borderRadius: 25, // Add border radius for rounded corners
                 }}
               >
-                <Text style={{ color: "red", marginTop: 5 }}>Delete</Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableWithoutFeedback onPressIn={drag}>
+                  <Text style={{ color: "blue", marginRight: 10 }}>☰</Text>
+                </TouchableWithoutFeedback>
+                <Text>{formatAddress(item)}</Text>
+                <View>
+                  <TouchableOpacity onPress={() => handleEditAddress(item)}>
+                    <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Alert.alert(
+                        "Confirm Delete",
+                        "Are you sure you want to delete this address?\n\nAny deliveries associated with this address will also be deleted!\n",
+                        [
+                          {
+                            text: "Cancel",
+                            style: "cancel",
+                          },
+                          {
+                            text: "Delete",
+                            onPress: () => handleDeleteAddress(item.address_id),
+                          },
+                        ]
+                      );
+                    }}
+                  >
+                    <Text style={{ color: "red", marginTop: 5 }}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableOpacity>
           )}
+          onDragEnd={({ data }) => onDragEnd({ data })} // Add onDragEnd handler
         />
       ) : (
         <Text>No addresses found</Text>
@@ -379,15 +445,6 @@ export function AddressesScreen() {
       </Modal>
     </View>
   );
-}
-
-function formatAddress(addressData) {
-  const { address_number, address1, address2, city, state, zip_code } =
-    addressData;
-  const formattedAddress = `${address_number} ${address1}${
-    address2 ? `, ${address2}` : ""
-  }, ${city}, ${state}, ${zip_code}`;
-  return formattedAddress;
 }
 
 const styles = StyleSheet.create({

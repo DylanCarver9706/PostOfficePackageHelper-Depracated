@@ -887,7 +887,7 @@ app.post("/api/addresses", (req, res) => {
   const {
     case_number,
     case_row_number,
-    address_number,
+    position_number,
     address1,
     address2,
     city,
@@ -897,13 +897,13 @@ app.post("/api/addresses", (req, res) => {
   } = req.body;
 
   // Insert the address data into the database
-  const sql = `INSERT INTO addresses (case_number, case_row_number, address_number, address1, address2, city, state, zip_code, route_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO addresses (case_number, case_row_number, position_number, address1, address2, city, state, zip_code, route_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   db.query(
     sql,
     [
       case_number,
       case_row_number,
-      address_number,
+      position_number,
       address1,
       address2,
       city,
@@ -930,7 +930,7 @@ app.post("/api/addresses", (req, res) => {
           id: addressId,
           case_number,
           case_row_number,
-          address_number,
+          position_number,
           address1,
           address2,
           city,
@@ -959,24 +959,22 @@ app.get("/api/addresses", (req, res) => {
 
 // Get addresses by case_number and case_row_number
 app.get("/api/addressesByRouteAndCaseAndRow", (req, res) => {
-  const { route_id, case_number, case_row_number } = req.query;
+  const routeId = req.query.route_id;
+  const caseNumber = req.query.case_number;
+  const caseRowNumber = req.query.case_row_number;
+  const orderBy = req.query.orderBy || "address_id"; // Default to ordering by address_id if orderBy is not provided
 
-  if (!route_id || !case_number || !case_row_number) {
-    return res
-      .status(400)
-      .json({ error: "Both case_number and case_row_number are required." });
-  }
+  const sql = `SELECT * FROM addresses WHERE route_id=? AND case_number=? AND case_row_number=? ORDER BY ${orderBy}`;
 
-  const sql =
-    "SELECT * FROM addresses WHERE route_id = ? AND case_number = ? AND case_row_number = ?";
-  db.query(sql, [route_id, case_number, case_row_number], (err, results) => {
+  db.query(sql, [routeId, caseNumber, caseRowNumber], (err, result) => {
     if (err) {
-      console.error("Error retrieving addresses:", err);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while retrieving addresses." });
+      console.error("Error fetching addresses:", err);
+      return res.status(500).json({
+        error: "An error occurred while fetching addresses.",
+      });
     }
-    res.status(200).json(results);
+
+    res.status(200).json(result);
   });
 });
 
@@ -1050,7 +1048,7 @@ app.put("/api/addresses/:id", (req, res) => {
   const {
     case_number,
     case_row_number,
-    address_number,
+    position_number,
     address1,
     address2,
     city,
@@ -1058,13 +1056,13 @@ app.put("/api/addresses/:id", (req, res) => {
     zip_code,
     route_id,
   } = req.body;
-  const sql = `UPDATE addresses SET case_number=?, case_row_number=?, address_number=?, address1=?, address2=?, city=?, state=?, zip_code=?, route_id=? WHERE address_id=?`;
+  const sql = `UPDATE addresses SET case_number=?, case_row_number=?, position_number=?, address1=?, address2=?, city=?, state=?, zip_code=?, route_id=? WHERE address_id=?`;
   db.query(
     sql,
     [
       case_number,
       case_row_number,
-      address_number,
+      position_number,
       address1,
       address2,
       city,
@@ -1108,6 +1106,28 @@ app.put("/api/addresses/:id", (req, res) => {
       });
     }
   );
+});
+
+app.put("/api/addresses/:id/reorder", (req, res) => {
+  const addressId = req.params.id;
+  const { position_number } = req.body;
+  const sql = `UPDATE addresses SET position_number=? WHERE address_id=?`;
+  db.query(sql, [position_number, addressId], (err, result) => {
+    if (err) {
+      console.error("Error updating address order:", err);
+      return res.status(500).json({
+        error: "An error occurred while updating the address order.",
+      });
+    }
+
+    // Check if any rows were affected by the update
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Address not found" });
+    }
+
+    // console.log("Address order updated successfully");
+    res.status(200).json({ message: "Address order updated successfully" });
+  });
 });
 
 // Delete an address by ID along with associated deliveries
