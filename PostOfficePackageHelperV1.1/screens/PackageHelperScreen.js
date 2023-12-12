@@ -44,7 +44,6 @@ export function PackageHelperScreen() {
     route_id: null,
     case_number: null,
     case_row_number: null,
-    address_number: "",
     address1: "",
     address2: "",
     city: "",
@@ -81,7 +80,7 @@ export function PackageHelperScreen() {
     const searchText = text.toLowerCase();
     const filtered = routeAddresses.filter((address) => {
       const addressString =
-        `${address.address_number} ${address.address1} ${address.address2} ${address.city} ${address.state} ${address.zip_code}`.toLowerCase();
+        `${address.address1} ${address.address2} ${address.city} ${address.state} ${address.zip_code}`.toLowerCase();
       return addressString.includes(searchText);
     });
     setFilteredAddresses(filtered);
@@ -108,6 +107,7 @@ export function PackageHelperScreen() {
 
       if (response.ok) {
         closeAddDeliveryModal();
+        fetchDeliveries();
         Toast.success("Delivery Added");
         setSelectedAddress(address_id);
       } else {
@@ -145,7 +145,7 @@ export function PackageHelperScreen() {
         .then((response) => response.json())
         .then(async (data) => {
           const fullExtractedText = data.text;
-          console.log(fullExtractedText)
+          console.log(fullExtractedText);
 
           if (fullExtractedText) {
             await AsyncStorage.setItem(
@@ -158,7 +158,7 @@ export function PackageHelperScreen() {
             } else {
               requestUrl = `${API_BASE_URL}/addressesByFormattedData?fullAddress=${fullExtractedText.address1} ${fullExtractedText.city} ${fullExtractedText.state} ${fullExtractedText.zip_code}`;
             }
-            console.log(requestUrl)
+            // console.log(requestUrl);
 
             const response = await fetch(requestUrl);
 
@@ -176,7 +176,6 @@ export function PackageHelperScreen() {
                 openAddNewAddressModal();
                 setNewAddressData({
                   route_id: selectedRoute,
-                  address_number: fullExtractedText.address_number,
                   address1: fullExtractedText.address1,
                   address2: fullExtractedText.address2,
                   city: fullExtractedText.city,
@@ -200,6 +199,7 @@ export function PackageHelperScreen() {
   };
 
   const fetchDeliveries = async () => {
+    console.log("Current Date: " + currentDate);
     try {
       const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
       setSelectedRoute(selectedRouteId);
@@ -250,6 +250,7 @@ export function PackageHelperScreen() {
   }, [selectedAddress]);
 
   const handleAddNewAddress = async () => {
+    // console.log(newAddressData);
     try {
       const response = await fetch(`${API_BASE_URL}/addresses`, {
         method: "POST",
@@ -261,7 +262,7 @@ export function PackageHelperScreen() {
 
       if (response.ok) {
         const data = await response.json();
-        handleAddDelivery(data.address.id)
+        handleAddDelivery(data.address.id);
         closeAddNewAddressModal();
         Toast.success("Address Added");
       } else {
@@ -326,15 +327,8 @@ export function PackageHelperScreen() {
         onRequestClose={closeAddNewAddressModal}
       >
         <View style={styles.modalContainer}>
-        <Text style={styles.modalTitle}>Address Not Found.</Text>
+          <Text style={styles.modalTitle}>Address Not Found.</Text>
           <Text style={styles.modalTitle}>Add New Address?</Text>
-          <TextInput
-            placeholder="Address Number"
-            onChangeText={(text) =>
-              setNewAddressData({ ...newAddressData, address_number: text })
-            }
-            value={newAddressData.address_number}
-          />
           <TextInput
             placeholder="Address 1"
             onChangeText={(text) =>
@@ -383,6 +377,22 @@ export function PackageHelperScreen() {
             }
           />
           <Button title="Add Address" onPress={handleAddNewAddress} />
+          <Button
+            title="Retry?"
+            onPress={() => {
+              setCameraVisible(true);
+              setNewAddressData({
+                route_id: null,
+                case_number: null,
+                case_row_number: null,
+                address1: "",
+                address2: "",
+                city: "",
+                state: "",
+                zip_code: "",
+              });
+            }}
+          />
         </View>
       </Modal>
 
@@ -393,7 +403,8 @@ export function PackageHelperScreen() {
           <View style={styles.deliveryItem}>
             <Text>Delivery ID: {item.delivery_id}</Text>
             <Text>Address ID: {item.address_id}</Text>
-            <Text>Address Number: {item.address_number}</Text>
+            <Text>Address ID: {item.case_number}</Text>
+            <Text>Address ID: {item.case_row_number}</Text>
             <Text>Address 1: {item.address1}</Text>
             <Text>Address 2: {item.address2}</Text>
             <Text>City: {item.city}</Text>
@@ -433,7 +444,7 @@ export function PackageHelperScreen() {
                 onPress={() => handleAddDelivery(item.address_id)}
                 style={styles.addressItem}
               >
-                <Text>{`${item.address_number} ${item.address1} ${item.address2} ${item.city}, ${item.state} ${item.zip_code}`}</Text>
+                <Text>{`${item.address1} ${item.address2} ${item.city}, ${item.state} ${item.zip_code}`}</Text>
               </TouchableOpacity>
             )}
           />

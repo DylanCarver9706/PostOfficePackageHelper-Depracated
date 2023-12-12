@@ -1159,17 +1159,18 @@ app.post("/api/deliveries", (req, res) => {
     route_id,
     address_id,
     delivery_date,
+    package_marker_number,
     scanned,
     out_for_delivery,
     delivered,
   } = req.body;
 
   const sql =
-    "INSERT INTO deliveries (route_id, address_id, delivery_date, scanned, out_for_delivery, delivered) VALUES (?, ?, ?, ?, ?, ?)";
+    "INSERT INTO deliveries (route_id, address_id, delivery_date, package_marker_number, scanned, out_for_delivery, delivered) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
   db.query(
     sql,
-    [route_id, address_id, delivery_date, scanned, out_for_delivery, delivered],
+    [route_id, address_id, delivery_date, package_marker_number, scanned, out_for_delivery, delivered],
     (err, result) => {
       if (err) {
         console.error("Error creating delivery:", err);
@@ -1187,6 +1188,7 @@ app.post("/api/deliveries", (req, res) => {
             route_id,
             address_id,
             delivery_date,
+            package_marker_number,
             scanned,
             out_for_delivery,
             delivered,
@@ -1247,7 +1249,7 @@ app.get("/api/deliveriesByRouteAndDate", (req, res) => {
   const formattedDeliveryDate = deliveryDate.substring(0, 10);
 
   const sql = `
-    SELECT deliveries.*, addresses.address_number, addresses.address1, addresses.address2, addresses.city, addresses.state, addresses.zip_code
+    SELECT deliveries.*, addresses.address1, addresses.case_number, addresses.case_row_number, addresses.address2, addresses.city, addresses.state, addresses.zip_code
     FROM deliveries
     LEFT JOIN addresses ON deliveries.address_id = addresses.address_id
     WHERE deliveries.route_id = ? AND DATE(deliveries.delivery_date) = ?
@@ -1274,15 +1276,15 @@ app.get("/api/deliveriesByRouteAndDate", (req, res) => {
 // Update a specific delivery by ID
 app.put("/api/deliveries/:id", (req, res) => {
   const deliveryId = req.params.id;
-  const { route_id, address_id, scanned, out_for_delivery, delivered } =
+  const { route_id, address_id, scanned, package_marker_number, out_for_delivery, delivered } =
     req.body;
 
   const sql =
-    "UPDATE deliveries SET route_id = ?, address_id = ?, scanned = ?, out_for_delivery = ?, delivered = ? WHERE delivery_id = ?";
+    "UPDATE deliveries SET route_id = ?, address_id = ?, scanned = ?, package_marker_number = ?, out_for_delivery = ?, delivered = ? WHERE delivery_id = ?";
 
   db.query(
     sql,
-    [route_id, address_id, scanned, out_for_delivery, delivered, deliveryId],
+    [route_id, address_id, scanned, package_marker_number, out_for_delivery, delivered, deliveryId],
     (err, result) => {
       if (err) {
         console.error("Error updating delivery:", err);
