@@ -50,6 +50,9 @@ export function PackageHelperScreen() {
     state: "",
     zip_code: "",
   });
+  const [isPackageMarkerModalVisible, setIsPackageMarkerModalVisible] =
+    useState(false);
+  const [packageMarker, setPackageMarker] = useState("");
 
   const askForCameraPermission = async () => {
     const { status } = await Camera.requestCameraPermissionsAsync();
@@ -88,10 +91,12 @@ export function PackageHelperScreen() {
 
   const handleAddDelivery = async (address_id) => {
     try {
+      setIsPackageMarkerModalVisible(true);
       const newDeliveryData = {
         route_id: selectedRoute,
         address_id: address_id,
         delivery_date: currentDate,
+        package_marker: packageMarker,
         scanned: true,
         out_for_delivery: false,
         delivered: false,
@@ -166,7 +171,10 @@ export function PackageHelperScreen() {
               const addressData = await response.json();
               console.log("Address Found: \n", addressData);
               if (addressData.length > 0) {
-                handleAddDelivery(addressData[0].address_id);
+                // handleAddDelivery(addressData[0].address_id);
+                setSelectedAddress(addressData[0].address_id);
+                setPackageMarker(addressData[0].package_marker_number)
+                openPackageMarkerModal();
                 setCameraVisible(false);
                 setIsLoading(false);
               } else {
@@ -210,7 +218,8 @@ export function PackageHelperScreen() {
 
       if (response.ok) {
         const data = await response.json();
-        setDeliveries(data);
+        console.log(data)
+        // setDeliveries(data);
       } else {
         console.error("Error fetching deliveries:", response.status);
       }
@@ -264,6 +273,7 @@ export function PackageHelperScreen() {
         const data = await response.json();
         handleAddDelivery(data.address.id);
         closeAddNewAddressModal();
+        closePackageMarkerModal();
         Toast.success("Address Added");
       } else {
         console.error(
@@ -275,6 +285,54 @@ export function PackageHelperScreen() {
       }
     } catch (error) {
       console.error("Error adding a new address:", error);
+    }
+  };
+
+  const openPackageMarkerModal = () => {
+    setIsPackageMarkerModalVisible(true);
+  };
+
+  const closePackageMarkerModal = () => {
+    setIsPackageMarkerModalVisible(false);
+  };
+
+  const handlePackageMarkerSubmit = async () => {
+    try {
+      const newDeliveryData = {
+        route_id: selectedRoute,
+        address_id: selectedAddress,
+        delivery_date: currentDate,
+        scanned: true,
+        out_for_delivery: false,
+        delivered: false,
+        package_marker_number: packageMarker,
+      };
+      console.log(newDeliveryData)
+  
+      const response = await fetch(`${API_BASE_URL}/deliveries`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newDeliveryData),
+      });
+  
+      if (response.ok) {
+        closeAddDeliveryModal();
+        closePackageMarkerModal();
+        fetchDeliveries();
+        Toast.success("Delivery Added");
+        setPackageMarker(""); // Clear package marker after submission
+      } else {
+        console.error(
+          "Failed to add a new delivery. Response status:",
+          response.status
+        );
+        const responseText = await response.text();
+        console.error("Response data:", responseText);
+      }
+    } catch (error) {
+      console.error("Error adding a new delivery:", error);
     }
   };
 
@@ -376,15 +434,22 @@ export function PackageHelperScreen() {
               setNewAddressData({ ...newAddressData, case_row_number: text })
             }
           />
+          <TextInput
+            placeholder="Package Marker Number"
+            onChangeText={(text) =>
+              setNewAddressData({ ...newAddressData, package_marker_number: text })
+            }
+          />
           <Button title="Add Address" onPress={handleAddNewAddress} />
           <Button
             title="Retry?"
             onPress={() => {
               setCameraVisible(true);
+              closeAddNewAddressModal();
               setNewAddressData({
-                route_id: null,
                 case_number: null,
                 case_row_number: null,
+                package_marker_number: "",
                 address1: "",
                 address2: "",
                 city: "",
@@ -403,8 +468,10 @@ export function PackageHelperScreen() {
           <View style={styles.deliveryItem}>
             <Text>Delivery ID: {item.delivery_id}</Text>
             <Text>Address ID: {item.address_id}</Text>
-            <Text>Address ID: {item.case_number}</Text>
-            <Text>Address ID: {item.case_row_number}</Text>
+            <Text>Case Number: {item.case_number}</Text>
+            <Text>Row Number: {item.case_row_number}</Text>
+            <Text>Row Position Number: {item.position_number}</Text>
+            <Text>Package Marker Number: {item.package_marker_number}</Text>
             <Text>Address 1: {item.address1}</Text>
             <Text>Address 2: {item.address2}</Text>
             <Text>City: {item.city}</Text>
@@ -447,6 +514,26 @@ export function PackageHelperScreen() {
                 <Text>{`${item.address1} ${item.address2} ${item.city}, ${item.state} ${item.zip_code}`}</Text>
               </TouchableOpacity>
             )}
+          />
+        </View>
+      </Modal>
+
+      <Modal
+        visible={isPackageMarkerModalVisible}
+        animationType="slide"
+        onRequestClose={() => setIsPackageMarkerModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Enter Package Marker Number</Text>
+          <TextInput
+            placeholder="Package Marker"
+            onChangeText={(text) => setPackageMarker(text)}
+            value={packageMarker}
+          />
+          <Button title="Submit" onPress={handlePackageMarkerSubmit} />
+          <Button
+            title="Cancel"
+            onPress={() => setIsPackageMarkerModalVisible(false)}
           />
         </View>
       </Modal>
