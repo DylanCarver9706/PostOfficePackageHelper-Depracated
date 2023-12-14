@@ -26,7 +26,6 @@ export function AddressesScreen() {
     route_id: selectedRoute,
     case_number: selectedCase,
     case_row_number: selectedRow,
-    address_number: "",
     address1: "",
     address2: "",
     city: "",
@@ -38,7 +37,6 @@ export function AddressesScreen() {
     route_id: selectedRoute,
     case_number: selectedCase,
     case_row_number: selectedRow,
-    address_number: "",
     address1: "",
     address2: "",
     city: "",
@@ -78,6 +76,7 @@ export function AddressesScreen() {
 
         if (response.ok) {
           const data = await response.json();
+          // console.log(data);
           setAddresses(data);
         } else {
           console.error("Failed to fetch addresses");
@@ -121,7 +120,6 @@ export function AddressesScreen() {
       route_id: address.route_id,
       case_number: address.case_number,
       case_row_number: address.case_row_number,
-      address_number: address.address_number,
       address1: address.address1,
       address2: address.address2,
       city: address.city,
@@ -172,7 +170,6 @@ export function AddressesScreen() {
       route_id: selectedRoute,
       case_number: selectedCase,
       case_row_number: selectedRow,
-      address_number: "",
       address1: "",
       address2: "",
       city: "",
@@ -200,7 +197,6 @@ export function AddressesScreen() {
           route_id: selectedRoute,
           case_number: selectedCase,
           case_row_number: selectedRow,
-          address_number: "",
           address1: "",
           address2: "",
           city: "",
@@ -274,7 +270,6 @@ export function AddressesScreen() {
                   alignItems: "center",
                   flex: 1,
                   padding: 15,
-                  // width: '90%',
                   backgroundColor: "white",
                   borderWidth: 1, // Add border width
                   borderColor: "gray", // Set border color
@@ -284,8 +279,11 @@ export function AddressesScreen() {
                 <TouchableWithoutFeedback onPressIn={drag}>
                   <Text style={{ color: "blue", marginRight: 10 }}>☰</Text>
                 </TouchableWithoutFeedback>
-                <Text>{formatAddress(item)}</Text>
                 <View>
+                  <Text>{formatAddress(item)}</Text>
+                  <Text>Position Number: {item.position_number}</Text>
+                  <Text>Case Number: {item.case_number}</Text>
+                  <Text>Row Number: {item.case_row_number}</Text>
                   <TouchableOpacity onPress={() => handleEditAddress(item)}>
                     <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
                   </TouchableOpacity>
@@ -341,13 +339,6 @@ export function AddressesScreen() {
         >
           <View style={{ backgroundColor: "white", padding: 20 }}>
             <TextInput
-              placeholder="Address Number"
-              value={editedAddress.address_number}
-              onChangeText={(text) =>
-                setEditedAddress({ ...editedAddress, address_number: text })
-              }
-            />
-            <TextInput
               placeholder="Address 1"
               value={editedAddress.address1}
               onChangeText={(text) =>
@@ -399,12 +390,6 @@ export function AddressesScreen() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <TextInput
-              placeholder="Address Number"
-              onChangeText={(text) =>
-                setNewAddress({ ...newAddress, address_number: text })
-              }
-            />
             <TextInput
               placeholder="Address 1"
               onChangeText={(text) =>

@@ -41,3 +41,6 @@ croppedImage.txt
 
 # JSON Test Data
 extractedText.json
+
+#ApiConfig
+apiConfig.js
