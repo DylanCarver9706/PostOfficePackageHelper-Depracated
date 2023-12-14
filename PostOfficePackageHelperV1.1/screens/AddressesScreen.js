@@ -21,6 +21,7 @@ export function AddressesScreen() {
   const [selectedRow, setSelectedRow] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
+  const [nextPositionNumber, setNextPositionNumber] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editedAddress, setEditedAddress] = useState({
     route_id: selectedRoute,
@@ -37,6 +38,7 @@ export function AddressesScreen() {
     route_id: selectedRoute,
     case_number: selectedCase,
     case_row_number: selectedRow,
+    position_number: nextPositionNumber,
     address1: "",
     address2: "",
     city: "",
@@ -68,16 +70,32 @@ export function AddressesScreen() {
 
   const fetchAddresses = async () => {
     try {
-      // console.log(selectedCase, selectedRow)
       if (selectedCase && selectedRow) {
-        requestUrl = `${API_BASE_URL}/addressesByRouteAndCaseAndRow?route_id=${selectedRoute}&case_number=${selectedCase}&case_row_number=${selectedRow}&orderBy=position_number`;
-        // console.log(requestUrl)
+        const requestUrl = `${API_BASE_URL}/addressesByRouteAndCaseAndRow?route_id=${selectedRoute}&case_number=${selectedCase}&case_row_number=${selectedRow}&orderBy=position_number`;
         const response = await fetch(requestUrl);
 
         if (response.ok) {
           const data = await response.json();
-          // console.log(data);
-          setAddresses(data);
+          // Sort addresses by position_number
+          const sortedAddresses = [...data].sort(
+            (a, b) => a.position_number - b.position_number
+          );
+
+          // Update the position_number for each address
+          const updatedAddresses = sortedAddresses.map((address, index) => ({
+            ...address,
+            position_number: index + 1,
+          }));
+
+          // Set the next position_number
+          // console.log(sortedAddresses.length + 1)
+          setNextPositionNumber(sortedAddresses.length + 1);
+
+          // Update the state with the corrected position numbers
+          setAddresses(updatedAddresses);
+
+          // Update the position numbers on the server
+          updateAddressOrderOnServer(updatedAddresses);
         } else {
           console.error("Failed to fetch addresses");
         }
@@ -106,6 +124,7 @@ export function AddressesScreen() {
         setAddresses((prevAddresses) =>
           prevAddresses.filter((address) => address.address_id !== addressId)
         );
+        fetchAddresses()
       } else {
         console.error("Failed to delete address");
       }
@@ -170,13 +189,14 @@ export function AddressesScreen() {
       route_id: selectedRoute,
       case_number: selectedCase,
       case_row_number: selectedRow,
+      position_number: nextPositionNumber,
       address1: "",
       address2: "",
       city: "",
       state: "",
       zip_code: "",
     });
-  }, [selectedRoute, selectedCase, selectedRow]);
+  }, [selectedRoute, selectedCase, selectedRow, nextPositionNumber]);
 
   const handleSaveNewAddress = async () => {
     // Send a POST request to create a new address
@@ -197,6 +217,7 @@ export function AddressesScreen() {
           route_id: selectedRoute,
           case_number: selectedCase,
           case_row_number: selectedRow,
+          position_number: nextPositionNumber,
           address1: "",
           address2: "",
           city: "",
@@ -204,10 +225,10 @@ export function AddressesScreen() {
           zip_code: "",
         });
       } else {
-        console.error("Failed to add new address");
+        console.error("Failed to add a new address");
       }
     } catch (error) {
-      console.error("Error adding new address:", error);
+      console.error("Error adding a new address:", error);
     }
   };
 
@@ -224,7 +245,7 @@ export function AddressesScreen() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              position_number: i + 1, // Assuming your position_number starts from 1
+              position_number: i + 1,
             }),
           }
         );
@@ -252,8 +273,18 @@ export function AddressesScreen() {
     // Update the addresses state with the new order
     setAddresses(data);
 
-    // Update the position_number on the server
-    updateAddressOrderOnServer(data);
+    // Update the position_number for each address
+    const updatedAddresses = data.map((address, index) => ({
+      ...address,
+      position_number: index + 1,
+    }));
+
+    // Update the position numbers on the server
+    updateAddressOrderOnServer(updatedAddresses);
+
+    // Optionally, you can fetch the addresses again from the server
+    // to ensure that your local state is in sync with the server.
+    fetchAddresses();
   };
 
   return (
