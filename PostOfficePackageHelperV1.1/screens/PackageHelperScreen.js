@@ -10,15 +10,28 @@ import {
   FlatList,
   Modal,
   TouchableOpacity,
+  SafeAreaView,
+  Pressable,
+  Platform,
 } from "react-native";
 import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import ToastManager, { Toast } from "toastify-react-native";
+// import DatePicker from "react-native-date-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import API_BASE_URL from "../apiConfig";
 
 const { width, height } = Dimensions.get("window");
+
+// Function to set the timezone to the user's timezone
+function setTimeZoneToUserTimeZone(date) {
+  const userTimeZoneOffsetMinutes = new Date().getTimezoneOffset();
+  const offsetMilliseconds = userTimeZoneOffsetMinutes * 60 * 1000;
+  const userTimeZoneDate = new Date(date.getTime() - offsetMilliseconds);
+  return userTimeZoneDate;
+}
 
 export function PackageHelperScreen() {
   const navigation = useNavigation();
@@ -32,9 +45,6 @@ export function PackageHelperScreen() {
   const [routeAddresses, setRouteAddresses] = useState([]);
   const [filteredAddresses, setFilteredAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [currentDate, setCurrentDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
   const [cameraVisible, setCameraVisible] = useState(false);
   const cameraRef = useRef(null);
 
@@ -53,6 +63,24 @@ export function PackageHelperScreen() {
   const [isPackageMarkerModalVisible, setIsPackageMarkerModalVisible] =
     useState(false);
   const [packageMarker, setPackageMarker] = useState("");
+
+  let currentDate = setTimeZoneToUserTimeZone(new Date());
+
+  const formatDate = (rawDate) => {
+    let date = new Date(rawDate);
+
+    let year = date.getFullYear();
+    let month = date.getMonth() + 1;
+    let day = date.getDate();
+
+    let formattedMonth = month < 10 ? `0${month}` : `${month}`;
+    let formattedDay = day < 10 ? `0${day}` : `${day}`;
+
+    return `${year}-${formattedMonth}-${formattedDay}`;
+  };
+
+  const [date, setDate] = useState(formatDate(currentDate));
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const askForCameraPermission = async () => {
     const { status } = await Camera.requestCameraPermissionsAsync();
@@ -95,7 +123,7 @@ export function PackageHelperScreen() {
       const newDeliveryData = {
         route_id: selectedRoute,
         address_id: address_id,
-        delivery_date: currentDate,
+        delivery_date: date,
         package_marker: packageMarker,
         scanned: true,
         out_for_delivery: false,
@@ -173,7 +201,7 @@ export function PackageHelperScreen() {
               if (addressData.length > 0) {
                 // handleAddDelivery(addressData[0].address_id);
                 setSelectedAddress(addressData[0].address_id);
-                setPackageMarker(addressData[0].package_marker_number)
+                setPackageMarker(addressData[0].package_marker_number);
                 openPackageMarkerModal();
                 setCameraVisible(false);
                 setIsLoading(false);
@@ -207,19 +235,19 @@ export function PackageHelperScreen() {
   };
 
   const fetchDeliveries = async () => {
-    console.log("Current Date: " + currentDate);
+    // console.log("Current Date: " + date);
     try {
       const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
       setSelectedRoute(selectedRouteId);
 
       const response = await fetch(
-        `${API_BASE_URL}/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${currentDate}`
+        `${API_BASE_URL}/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${date}`
       );
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data)
-        // setDeliveries(data);
+        // console.log(data);
+        setDeliveries(data);
       } else {
         console.error("Error fetching deliveries:", response.status);
       }
@@ -256,7 +284,7 @@ export function PackageHelperScreen() {
 
   useEffect(() => {
     fetchDeliveries();
-  }, [selectedAddress]);
+  }, [selectedAddress, date]);
 
   const handleAddNewAddress = async () => {
     // console.log(newAddressData);
@@ -301,14 +329,14 @@ export function PackageHelperScreen() {
       const newDeliveryData = {
         route_id: selectedRoute,
         address_id: selectedAddress,
-        delivery_date: currentDate,
+        delivery_date: date,
         scanned: true,
         out_for_delivery: false,
         delivered: false,
         package_marker_number: packageMarker,
       };
-      console.log(newDeliveryData)
-  
+      console.log(newDeliveryData);
+
       const response = await fetch(`${API_BASE_URL}/deliveries`, {
         method: "POST",
         headers: {
@@ -316,7 +344,7 @@ export function PackageHelperScreen() {
         },
         body: JSON.stringify(newDeliveryData),
       });
-  
+
       if (response.ok) {
         closeAddDeliveryModal();
         closePackageMarkerModal();
@@ -336,9 +364,73 @@ export function PackageHelperScreen() {
     }
   };
 
+  const onChange = ({ type }, selectedDate) => {
+    if (type == "set") {
+      // setShowDatePicker(Platform.OS === 'ios'); // Hide the picker on iOS
+      setDate(formatDate(selectedDate));
+      console.log(formatDate(selectedDate));
+
+      if (Platform.OS === "android") {
+        toggleDatepicker();
+        setDate(formatDate(selectedDate));
+      }
+    } else {
+      toggleDatepicker();
+    }
+  };
+
+  const toggleDatepicker = () => {
+    setShowDatePicker(!showDatePicker);
+  };
+
+  const confirmIOSDate = () => {
+    setDate(formatDate(selectedDate));
+    toggleDatepicker();
+  };
+
   return (
     <View style={styles.container}>
       <ToastManager />
+      <SafeAreaView>
+        <Button onPress={toggleDatepicker} title="Select Date" />
+        <Text>Deliveries for: {date}</Text>
+        {/* DateTimePicker component */}
+        {showDatePicker && (
+          <DateTimePicker
+            value={currentDate}
+            mode="date"
+            display="spinner"
+            onChange={onChange}
+          />
+        )}
+        {/* For IOS Date Picker  */}
+        {/* {showDatePicker && (
+        <Pressable onPress={toggleDatepicker()}>
+          <TextInput
+            style={styles.input}
+            placeholder="Sat Aug 21 2004"
+            value={date}
+            onChangeText={(text) => setDate(text)}
+            onPressIn={toggleDatepicker()}
+          />
+        </Pressable>
+      )}
+
+      {showDatePicker && Platform.OS === "ios" && (
+        <View
+          style={{ flexDirection: "row", justifyContent: "space-around" }}
+        >
+          <TouchableOpacity onPress={toggleDatepicker}>
+            <Text>Cancel</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={confirmIOSDate}>
+            <Text>Confirm</Text>
+          </TouchableOpacity>
+
+        </View>
+        )} */}
+      </SafeAreaView>
 
       {hasPermission === false && (
         <View style={styles.permissionContainer}>
@@ -437,7 +529,10 @@ export function PackageHelperScreen() {
           <TextInput
             placeholder="Package Marker Number"
             onChangeText={(text) =>
-              setNewAddressData({ ...newAddressData, package_marker_number: text })
+              setNewAddressData({
+                ...newAddressData,
+                package_marker_number: text,
+              })
             }
           />
           <Button title="Add Address" onPress={handleAddNewAddress} />

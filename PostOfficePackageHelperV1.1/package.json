@@ -11,6 +11,7 @@
   "dependencies": {
     "@google-cloud/vision": "^4.0.2",
     "@react-native-async-storage/async-storage": "1.18.2",
+    "@react-native-community/datetimepicker": "^7.2.0",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/stack": "^6.3.19",
