@@ -235,19 +235,29 @@ export function PackageHelperScreen() {
   };
 
   const fetchDeliveries = async () => {
-    // console.log("Current Date: " + date);
     try {
       const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
       setSelectedRoute(selectedRouteId);
-
+  
       const response = await fetch(
         `${API_BASE_URL}/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${date}`
       );
-
+  
       if (response.ok) {
         const data = await response.json();
-        // console.log(data);
-        setDeliveries(data);
+  
+        // Sort deliveries based on case_number, case_row_number, and position_number
+        const sortedDeliveries = data.sort((a, b) => {
+          if (a.case_number !== b.case_number) {
+            return a.case_number - b.case_number;
+          }
+          if (a.case_row_number !== b.case_row_number) {
+            return a.case_row_number - b.case_row_number;
+          }
+          return a.position_number - b.position_number;
+        });
+  
+        setDeliveries(sortedDeliveries);
       } else {
         console.error("Error fetching deliveries:", response.status);
       }
@@ -255,6 +265,7 @@ export function PackageHelperScreen() {
       console.error("Error fetching deliveries:", error);
     }
   };
+  
 
   const fetchAddresses = async () => {
     try {
