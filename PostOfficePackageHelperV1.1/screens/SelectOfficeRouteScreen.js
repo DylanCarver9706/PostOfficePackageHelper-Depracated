@@ -53,7 +53,7 @@ export function SelectOfficeRouteScreen() {
   // Function to fetch the list of offices
   const fetchOffices = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/offices?user_id=${userId}`);
+      const response = await fetch(`${API_BASE_URL}/officesByUserId?user_id=${userId}`);
       if (response.ok) {
         const data = await response.json();
         setOffices(data); // Update the state with the fetched offices

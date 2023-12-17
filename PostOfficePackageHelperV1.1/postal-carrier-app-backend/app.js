@@ -240,7 +240,9 @@ app.post(
               const jsonObject = JSON.parse(
                 promptResponse.choices[0].message.content
               );
-              console.log("Prompt json object: \n" + JSON.stringify(jsonObject, null, 2));
+              console.log(
+                "Prompt json object: \n" + JSON.stringify(jsonObject, null, 2)
+              );
 
               res.header("Content-Type", "application/json; charset=utf-8");
               res.json({ text: jsonObject[1] });
@@ -685,6 +687,24 @@ app.get("/api/offices/:id", (req, res) => {
       return res.status(404).json({ error: "Office not found" });
     }
     res.status(200).json(results[0]);
+  });
+});
+
+// Get all offices by user_id
+app.get("/api/officesByUserId", (req, res) => {
+  const user_id = req.query.user_id;
+  const sql = "SELECT * FROM offices WHERE user_id = ?";
+
+  db.query(sql, [user_id], (err, results) => {
+    if (err) {
+      console.error("Error retrieving offices by user_id:", err);
+      return res
+        .status(500)
+        .json({
+          error: "An error occurred while retrieving offices by user_id.",
+        });
+    }
+    res.status(200).json(results);
   });
 });
 
@@ -1170,7 +1190,15 @@ app.post("/api/deliveries", (req, res) => {
 
   db.query(
     sql,
-    [route_id, address_id, delivery_date, package_marker_number, scanned, out_for_delivery, delivered],
+    [
+      route_id,
+      address_id,
+      delivery_date,
+      package_marker_number,
+      scanned,
+      out_for_delivery,
+      delivered,
+    ],
     (err, result) => {
       if (err) {
         console.error("Error creating delivery:", err);
@@ -1276,15 +1304,29 @@ app.get("/api/deliveriesByRouteAndDate", (req, res) => {
 // Update a specific delivery by ID
 app.put("/api/deliveries/:id", (req, res) => {
   const deliveryId = req.params.id;
-  const { route_id, address_id, scanned, package_marker_number, out_for_delivery, delivered } =
-    req.body;
+  const {
+    route_id,
+    address_id,
+    scanned,
+    package_marker_number,
+    out_for_delivery,
+    delivered,
+  } = req.body;
 
   const sql =
     "UPDATE deliveries SET route_id = ?, address_id = ?, scanned = ?, package_marker_number = ?, out_for_delivery = ?, delivered = ? WHERE delivery_id = ?";
 
   db.query(
     sql,
-    [route_id, address_id, scanned, package_marker_number, out_for_delivery, delivered, deliveryId],
+    [
+      route_id,
+      address_id,
+      scanned,
+      package_marker_number,
+      out_for_delivery,
+      delivered,
+      deliveryId,
+    ],
     (err, result) => {
       if (err) {
         console.error("Error updating delivery:", err);
