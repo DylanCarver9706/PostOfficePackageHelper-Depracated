@@ -13,6 +13,7 @@ import {
   SafeAreaView,
   Pressable,
   Platform,
+  Alert,
 } from "react-native";
 import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
@@ -429,6 +430,49 @@ export function PackageHelperScreen() {
     }
   };
 
+  const handleDeleteDelivery = async (deliveryId) => {
+    // Display a confirmation alert to confirm the delete action
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this delivery?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Delete"),
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              // Send a DELETE request to the server to delete the delivery
+              const response = await fetch(`${API_BASE_URL}/deliveries/${deliveryId}`, {
+                method: "DELETE",
+              });
+
+              if (response.ok) {
+                // Remove the deleted delivery from the local state (deliveries)
+                setDeliveries((prevDeliveries) =>
+                  prevDeliveries.filter((delivery) => delivery.delivery_id !== deliveryId)
+                );
+                Toast.success("Delivery Deleted");
+              } else {
+                console.error(
+                  "Failed to delete the delivery. Response status:",
+                  response.status
+                );
+              }
+            } catch (error) {
+              console.error("Error deleting the delivery:", error);
+            }
+          },
+          style: "destructive",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <View style={styles.container}>
       <ToastManager />
@@ -622,6 +666,12 @@ export function PackageHelperScreen() {
             <Button
               title={item.delivered ? "Mark Undelivered" : "Mark Delivered"}
               onPress={() => toggleDeliveredStatus(item.delivery_id, !item.delivered)}
+            />
+            {/* Delete button */}
+            <Button
+              title="Delete"
+              onPress={() => handleDeleteDelivery(item.delivery_id)}
+              color="red"
             />
           </View>
         )}
