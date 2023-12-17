@@ -246,8 +246,14 @@ export function PackageHelperScreen() {
       if (response.ok) {
         const data = await response.json();
   
-        // Sort deliveries based on case_number, case_row_number, and position_number
+        // Sort deliveries based on 'delivered' status and then by case_number,
+        // case_row_number, and position_number
         const sortedDeliveries = data.sort((a, b) => {
+          // First, sort by 'delivered' status (ascending order)
+          if (a.delivered !== b.delivered) {
+            return a.delivered ? 1 : -1;
+          }
+          // If 'delivered' status is the same, then sort by case_number, etc.
           if (a.case_number !== b.case_number) {
             return a.case_number - b.case_number;
           }
@@ -397,6 +403,30 @@ export function PackageHelperScreen() {
   const confirmIOSDate = () => {
     setDate(formatDate(selectedDate));
     toggleDatepicker();
+  };
+
+  // Function to toggle the 'Delivered' status for a specific delivery
+  const toggleDeliveredStatus = async (deliveryId, isDelivered) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/deliveries/${deliveryId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ delivered: isDelivered }),
+      });
+
+      if (response.ok) {
+        fetchDeliveries(); // Refresh the delivery list
+        Toast.success(`Delivery marked as ${isDelivered ? "delivered" : "not delivered"}`);
+      } else {
+        console.error("Failed to toggle 'Delivered' status. Response status:", response.status);
+        const responseText = await response.text();
+        console.error("Response data:", responseText);
+      }
+    } catch (error) {
+      console.error("Error toggling 'Delivered' status:", error);
+    }
   };
 
   return (
@@ -583,12 +613,16 @@ export function PackageHelperScreen() {
             <Text>City: {item.city}</Text>
             <Text>State: {item.state}</Text>
             <Text>Zip Code: {item.zip_code}</Text>
-            <Text>Delivery Date: {item.delivery_date}</Text>
-            <Text>Scanned: {item.scanned ? "Yes" : "No"}</Text>
-            <Text>
+            {/* <Text>Delivery Date: {item.delivery_date}</Text> */}
+            {/* <Text>Scanned: {item.scanned ? "Yes" : "No"}</Text> */}
+            {/* <Text>
               Out for Delivery: {item.out_for_delivery ? "Yes" : "No"}
-            </Text>
+            </Text> */}
             <Text>Delivered: {item.delivered ? "Yes" : "No"}</Text>
+            <Button
+              title={item.delivered ? "Mark Undelivered" : "Mark Delivered"}
+              onPress={() => toggleDeliveredStatus(item.delivery_id, !item.delivered)}
+            />
           </View>
         )}
       />

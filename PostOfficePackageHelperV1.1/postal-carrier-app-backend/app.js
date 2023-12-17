@@ -1322,6 +1322,34 @@ app.put("/api/deliveries/:id", (req, res) => {
   );
 });
 
+// Update the 'delivered' status of a specific delivery by ID using PATCH
+app.patch("/api/deliveries/:id", (req, res) => {
+  const deliveryId = req.params.id;
+  const { delivered } = req.body; // Only include 'delivered' in the request body
+
+  const sql = "UPDATE deliveries SET delivered = ? WHERE delivery_id = ?";
+
+  db.query(sql, [delivered, deliveryId], (err, result) => {
+    if (err) {
+      console.error("Error updating 'delivered' status:", err);
+      res.status(500).json({
+        error: "An error occurred while updating the 'delivered' status.",
+      });
+    } else {
+      if (result.affectedRows === 0) {
+        res.status(404).json({ error: "Delivery not found" });
+      } else {
+        // Successfully updated 'delivered' status, include the updated status in the response
+        res.status(200).json({
+          message: "'Delivered' status updated successfully",
+          updatedDeliveryId: deliveryId,
+          delivered: delivered,
+        });
+      }
+    }
+  });
+});
+
 // Delete a specific delivery by ID
 app.delete("/api/deliveries/:id", (req, res) => {
   const deliveryId = req.params.id;
