@@ -61,6 +61,7 @@ export function PackageHelperScreen() {
     state: "",
     zip_code: "",
   });
+  const [selectedAddressUpdated, setSelectedAddressUpdated] = useState(false);
   const [isPackageMarkerModalVisible, setIsPackageMarkerModalVisible] =
     useState(false);
   const [packageMarker, setPackageMarker] = useState("");
@@ -101,7 +102,6 @@ export function PackageHelperScreen() {
     setIsAddDeliveryModalVisible(true);
     setSearchQuery("");
     setFilteredAddresses([]);
-    setSelectedAddress(null);
   };
 
   const closeAddDeliveryModal = () => {
@@ -118,19 +118,32 @@ export function PackageHelperScreen() {
     setFilteredAddresses(filtered);
   };
 
-  const handleAddDelivery = async (address_id) => {
+  function wait(timeout) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, timeout);
+    });
+  }
+
+  const handleAddDelivery = async () => {
+    // let counter = 0
+    // while (!selectedAddress && !packageMarker) {
+    //   counter ++ 
+    //   await wait(1000)
+    //   console.log("Looped " + counter + " time(s)")
+    // }
+    await wait(1000)
+    console.log("address_id: " + selectedAddress + " package marker: " + packageMarker)
     try {
-      setIsPackageMarkerModalVisible(true);
       const newDeliveryData = {
         route_id: selectedRoute,
-        address_id: address_id,
+        address_id: selectedAddress,
         delivery_date: date,
-        package_marker: packageMarker,
+        package_marker_number: packageMarker,
         scanned: true,
         out_for_delivery: false,
         delivered: false,
       };
-
+      console.log(newDeliveryData)
       const response = await fetch(`${API_BASE_URL}/deliveries`, {
         method: "POST",
         headers: {
@@ -141,9 +154,9 @@ export function PackageHelperScreen() {
 
       if (response.ok) {
         closeAddDeliveryModal();
+        closePackageMarkerModal();
         fetchDeliveries();
         Toast.success("Delivery Added");
-        setSelectedAddress(address_id);
       } else {
         console.error(
           "Failed to add a new delivery. Response status:",
@@ -200,7 +213,6 @@ export function PackageHelperScreen() {
               const addressData = await response.json();
               console.log("Address Found: \n", addressData);
               if (addressData.length > 0) {
-                // handleAddDelivery(addressData[0].address_id);
                 setSelectedAddress(addressData[0].address_id);
                 setPackageMarker(addressData[0].package_marker_number);
                 openPackageMarkerModal();
@@ -239,14 +251,14 @@ export function PackageHelperScreen() {
     try {
       const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
       setSelectedRoute(selectedRouteId);
-  
+
       const response = await fetch(
         `${API_BASE_URL}/deliveriesByRouteAndDate?route_id=${selectedRouteId}&deliveryDate=${date}`
       );
-  
+
       if (response.ok) {
         const data = await response.json();
-  
+
         // Sort deliveries based on 'delivered' status and then by case_number,
         // case_row_number, and position_number
         const sortedDeliveries = data.sort((a, b) => {
@@ -263,7 +275,7 @@ export function PackageHelperScreen() {
           }
           return a.position_number - b.position_number;
         });
-  
+
         setDeliveries(sortedDeliveries);
       } else {
         console.error("Error fetching deliveries:", response.status);
@@ -272,7 +284,6 @@ export function PackageHelperScreen() {
       console.error("Error fetching deliveries:", error);
     }
   };
-  
 
   const fetchAddresses = async () => {
     try {
@@ -305,7 +316,7 @@ export function PackageHelperScreen() {
   }, [selectedAddress, date]);
 
   const handleAddNewAddress = async () => {
-    // console.log(newAddressData);
+    console.log("handle add new address data: \n" + JSON.stringify(newAddressData, null, 2));
     try {
       const response = await fetch(`${API_BASE_URL}/addresses`, {
         method: "POST",
@@ -317,7 +328,13 @@ export function PackageHelperScreen() {
 
       if (response.ok) {
         const data = await response.json();
-        handleAddDelivery(data.address.id);
+        console.log(data)
+        setSelectedAddress(data.address.id.toString());
+        console.log(data.address.id)
+        await wait(2000)
+        console.log(selectedAddress)
+        // Triggers addNewDelivery
+        setSelectedAddressUpdated(true);
         closeAddNewAddressModal();
         closePackageMarkerModal();
         Toast.success("Address Added");
@@ -334,52 +351,18 @@ export function PackageHelperScreen() {
     }
   };
 
+  useEffect(() => {
+    if (selectedAddressUpdated) {
+      handleAddDelivery();
+    }
+  }, [selectedAddressUpdated]);
+
   const openPackageMarkerModal = () => {
     setIsPackageMarkerModalVisible(true);
   };
 
   const closePackageMarkerModal = () => {
     setIsPackageMarkerModalVisible(false);
-  };
-
-  const handlePackageMarkerSubmit = async () => {
-    try {
-      const newDeliveryData = {
-        route_id: selectedRoute,
-        address_id: selectedAddress,
-        delivery_date: date,
-        scanned: true,
-        out_for_delivery: false,
-        delivered: false,
-        package_marker_number: packageMarker,
-      };
-      console.log(newDeliveryData);
-
-      const response = await fetch(`${API_BASE_URL}/deliveries`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newDeliveryData),
-      });
-
-      if (response.ok) {
-        closeAddDeliveryModal();
-        closePackageMarkerModal();
-        fetchDeliveries();
-        Toast.success("Delivery Added");
-        setPackageMarker(""); // Clear package marker after submission
-      } else {
-        console.error(
-          "Failed to add a new delivery. Response status:",
-          response.status
-        );
-        const responseText = await response.text();
-        console.error("Response data:", responseText);
-      }
-    } catch (error) {
-      console.error("Error adding a new delivery:", error);
-    }
   };
 
   const onChange = ({ type }, selectedDate) => {
@@ -419,9 +402,14 @@ export function PackageHelperScreen() {
 
       if (response.ok) {
         fetchDeliveries(); // Refresh the delivery list
-        Toast.success(`Delivery marked as ${isDelivered ? "delivered" : "not delivered"}`);
+        Toast.success(
+          `Delivery marked as ${isDelivered ? "delivered" : "not delivered"}`
+        );
       } else {
-        console.error("Failed to toggle 'Delivered' status. Response status:", response.status);
+        console.error(
+          "Failed to toggle 'Delivered' status. Response status:",
+          response.status
+        );
         const responseText = await response.text();
         console.error("Response data:", responseText);
       }
@@ -446,14 +434,19 @@ export function PackageHelperScreen() {
           onPress: async () => {
             try {
               // Send a DELETE request to the server to delete the delivery
-              const response = await fetch(`${API_BASE_URL}/deliveries/${deliveryId}`, {
-                method: "DELETE",
-              });
+              const response = await fetch(
+                `${API_BASE_URL}/deliveries/${deliveryId}`,
+                {
+                  method: "DELETE",
+                }
+              );
 
               if (response.ok) {
                 // Remove the deleted delivery from the local state (deliveries)
                 setDeliveries((prevDeliveries) =>
-                  prevDeliveries.filter((delivery) => delivery.delivery_id !== deliveryId)
+                  prevDeliveries.filter(
+                    (delivery) => delivery.delivery_id !== deliveryId
+                  )
                 );
                 Toast.success("Delivery Deleted");
               } else {
@@ -613,12 +606,7 @@ export function PackageHelperScreen() {
           />
           <TextInput
             placeholder="Package Marker Number"
-            onChangeText={(text) =>
-              setNewAddressData({
-                ...newAddressData,
-                package_marker_number: text,
-              })
-            }
+            onChangeText={(text) => setPackageMarker(text)}
           />
           <Button title="Add Address" onPress={handleAddNewAddress} />
           <Button
@@ -629,7 +617,6 @@ export function PackageHelperScreen() {
               setNewAddressData({
                 case_number: null,
                 case_row_number: null,
-                package_marker_number: "",
                 address1: "",
                 address2: "",
                 city: "",
@@ -665,7 +652,9 @@ export function PackageHelperScreen() {
             <Text>Delivered: {item.delivered ? "Yes" : "No"}</Text>
             <Button
               title={item.delivered ? "Mark Undelivered" : "Mark Delivered"}
-              onPress={() => toggleDeliveredStatus(item.delivery_id, !item.delivered)}
+              onPress={() =>
+                toggleDeliveredStatus(item.delivery_id, !item.delivered)
+              }
             />
             {/* Delete button */}
             <Button
@@ -698,7 +687,10 @@ export function PackageHelperScreen() {
             keyExtractor={(item) => item.address_id.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
-                onPress={() => handleAddDelivery(item.address_id)}
+                onPress={() => {
+                  setIsPackageMarkerModalVisible(true);
+                  setSelectedAddress(item.address_id);
+                }}
                 style={styles.addressItem}
               >
                 <Text>{`${item.address1} ${item.address2} ${item.city}, ${item.state} ${item.zip_code}`}</Text>
@@ -720,7 +712,7 @@ export function PackageHelperScreen() {
             onChangeText={(text) => setPackageMarker(text)}
             value={packageMarker}
           />
-          <Button title="Submit" onPress={handlePackageMarkerSubmit} />
+          <Button title="Submit" onPress={handleAddDelivery} />
           <Button
             title="Cancel"
             onPress={() => setIsPackageMarkerModalVisible(false)}
