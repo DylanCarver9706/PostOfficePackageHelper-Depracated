@@ -45,6 +45,7 @@ export function AddressesScreen() {
     state: "",
     zip_code: "",
   });
+  const [updatedAddressOrder, setUpdatedAddressOrder] = useState([]);
 
   const fetchPreviousSelections = async () => {
     try {
@@ -93,9 +94,6 @@ export function AddressesScreen() {
 
           // Update the state with the corrected position numbers
           setAddresses(updatedAddresses);
-
-          // Update the position numbers on the server
-          updateAddressOrderOnServer(updatedAddresses);
         } else {
           console.error("Failed to fetch addresses");
         }
@@ -124,7 +122,7 @@ export function AddressesScreen() {
         setAddresses((prevAddresses) =>
           prevAddresses.filter((address) => address.address_id !== addressId)
         );
-        fetchAddresses()
+        fetchAddresses();
       } else {
         console.error("Failed to delete address");
       }
@@ -255,6 +253,7 @@ export function AddressesScreen() {
           // Handle errors here
         }
       }
+      console.log("address positions updated to server!")
     } catch (error) {
       console.error("Error updating address order:", error);
     }
@@ -269,7 +268,7 @@ export function AddressesScreen() {
   }
 
   // Define a function to update the address order on drag end
-  const onDragEnd = async ({ data }) => {
+  const onDragEnd = ({ data }) => {
     // Update the addresses state with the new order
     setAddresses(data);
 
@@ -278,14 +277,16 @@ export function AddressesScreen() {
       ...address,
       position_number: index + 1,
     }));
-
-    // Update the position numbers on the server
-    updateAddressOrderOnServer(updatedAddresses);
-
-    // Optionally, you can fetch the addresses again from the server
-    // to ensure that your local state is in sync with the server.
-    fetchAddresses();
+    // Set the updated address order
+    setUpdatedAddressOrder(updatedAddresses);
   };
+
+  useEffect(() => {
+    if (updatedAddressOrder.length > 0) {
+      // Update the position numbers on the server
+      updateAddressOrderOnServer(updatedAddressOrder);
+    }
+  }, [updatedAddressOrder]);
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
