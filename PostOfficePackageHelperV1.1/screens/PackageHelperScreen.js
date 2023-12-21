@@ -127,12 +127,14 @@ export function PackageHelperScreen() {
   const handleAddDelivery = async () => {
     // let counter = 0
     // while (!selectedAddress && !packageMarker) {
-    //   counter ++ 
+    //   counter ++
     //   await wait(1000)
     //   console.log("Looped " + counter + " time(s)")
     // }
-    await wait(1000)
-    console.log("address_id: " + selectedAddress + " package marker: " + packageMarker)
+    await wait(1000);
+    console.log(
+      "address_id: " + selectedAddress + " package marker: " + packageMarker
+    );
     try {
       const newDeliveryData = {
         route_id: selectedRoute,
@@ -143,7 +145,7 @@ export function PackageHelperScreen() {
         out_for_delivery: false,
         delivered: false,
       };
-      console.log(newDeliveryData)
+      console.log(newDeliveryData);
       const response = await fetch(`${API_BASE_URL}/deliveries`, {
         method: "POST",
         headers: {
@@ -261,20 +263,31 @@ export function PackageHelperScreen() {
 
         // Sort deliveries based on 'delivered' status and then by case_number,
         // case_row_number, and position_number
-        const sortedDeliveries = data.sort((a, b) => {
-          // First, sort by 'delivered' status (ascending order)
-          if (a.delivered !== b.delivered) {
-            return a.delivered ? 1 : -1;
+        // Group deliveries by case_row_number
+        const groupedDeliveries = {};
+        data.forEach((delivery) => {
+          const caseRowNumber = delivery.case_row_number;
+          if (!groupedDeliveries[caseRowNumber]) {
+            groupedDeliveries[caseRowNumber] = [];
           }
-          // If 'delivered' status is the same, then sort by case_number, etc.
-          if (a.case_number !== b.case_number) {
-            return a.case_number - b.case_number;
-          }
-          if (a.case_row_number !== b.case_row_number) {
-            return a.case_row_number - b.case_row_number;
-          }
-          return a.position_number - b.position_number;
+          groupedDeliveries[caseRowNumber].push(delivery);
         });
+
+        // Sort deliveries within each group by case_number
+        for (const key in groupedDeliveries) {
+          groupedDeliveries[key].sort((a, b) => a.case_number - b.case_number);
+        }
+
+        // Flatten the groups back into a single array
+        const sortedDeliveries = [];
+        const maxGroups = Math.max(...Object.keys(groupedDeliveries));
+        for (let i = 1; i <= maxGroups; i++) {
+          if (groupedDeliveries[i]) {
+            sortedDeliveries.push(...groupedDeliveries[i]);
+          }
+        }
+
+        console.log(sortedDeliveries);
 
         setDeliveries(sortedDeliveries);
       } else {
@@ -316,7 +329,10 @@ export function PackageHelperScreen() {
   }, [selectedAddress, date]);
 
   const handleAddNewAddress = async () => {
-    console.log("handle add new address data: \n" + JSON.stringify(newAddressData, null, 2));
+    console.log(
+      "handle add new address data: \n" +
+        JSON.stringify(newAddressData, null, 2)
+    );
     try {
       const response = await fetch(`${API_BASE_URL}/addresses`, {
         method: "POST",
@@ -328,11 +344,11 @@ export function PackageHelperScreen() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data)
+        console.log(data);
         setSelectedAddress(data.address.id.toString());
-        console.log(data.address.id)
-        await wait(2000)
-        console.log(selectedAddress)
+        console.log(data.address.id);
+        await wait(2000);
+        console.log(selectedAddress);
         // Triggers addNewDelivery
         setSelectedAddressUpdated(true);
         closeAddNewAddressModal();
