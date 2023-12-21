@@ -469,6 +469,7 @@ useEffect(() => {
 const groupAddressesByCase = () => {
   const groupedAddresses = [];
   let currentCaseNumber = null;
+  let currentRowNumber = null;
 
   listAddresses.forEach((address) => {
     if (address.case_number !== currentCaseNumber) {
@@ -478,6 +479,21 @@ const groupAddressesByCase = () => {
         caseNumber: currentCaseNumber,
       });
     }
+
+    if (address.case_row_number !== currentRowNumber) {
+      currentRowNumber = address.case_row_number;
+      groupedAddresses.push({
+        type: "rowStart",
+        rowNumber: currentRowNumber,
+      });
+    }
+
+    // groupedAddresses.push({
+    //   type: "rowStart",
+    //   caseNumber: currentCaseNumber,
+    //   caseRowNumber: address.case_row_number,
+    // });
+
     groupedAddresses.push({
       type: "address",
       addressData: address,
@@ -539,70 +555,76 @@ const groupedAddresses = groupAddressesByCase();
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         {groupedAddresses.length > 0 ? (
           <DraggableFlatList
-            data={groupedAddresses}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item, index, drag }) => {
-              if (item.type === "caseStart") {
-                return (
-                  <View style={styles.caseSeparator}>
-                    <Text>Case {item.caseNumber} start</Text>
-                  </View>
-                );
-              } else if (item.type === "address") {
-                const address = item.addressData;
-                return (
-                  <TouchableOpacity>
-                    <View
-                      style={{
-                        flexDirection: "row", // Add flexDirection to create a draggable handle
-                        alignItems: "center",
-                        flex: 1,
-                        padding: 15,
-                        backgroundColor: "white",
-                        borderWidth: 1, // Add border width
-                        borderColor: "gray", // Set border color
-                        borderRadius: 25, // Add border radius for rounded corners
-                      }}
-                    >
-                      <TouchableWithoutFeedback onPressIn={drag}>
-                        <Text style={{ color: "blue", marginRight: 10 }}>☰</Text>
-                      </TouchableWithoutFeedback>
-                      <View>
-                        <Text>{formatAddress(address)}</Text>
-                        <Text>Position Number: {address.position_number}</Text>
-                        <Text>Case Number: {address.case_number}</Text>
-                        <Text>Row Number: {address.case_row_number}</Text>
-                        <TouchableOpacity onPress={() => handleEditAddress(address)}>
-                          <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => {
-                            Alert.alert(
-                              "Confirm Delete",
-                              "Are you sure you want to delete this address?\n\nAny deliveries associated with this address will also be deleted!\n",
-                              [
-                                {
-                                  text: "Cancel",
-                                  style: "cancel",
-                                },
-                                {
-                                  text: "Delete",
-                                  onPress: () => handleDeleteAddress(address.address_id),
-                                },
-                              ]
-                            );
-                          }}
-                        >
-                          <Text style={{ color: "red", marginTop: 5 }}>Delete</Text>
-                        </TouchableOpacity>
-                      </View>
+          data={groupedAddresses}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item, index, drag }) => {
+            if (item.type === "caseStart") {
+              return (
+                <View style={styles.caseSeparator}>
+                  <Text>Case {item.caseNumber} start</Text>
+                </View>
+              );
+            } else if (item.type === "rowStart") {
+              return (
+                <View style={styles.caseRowSeparator}>
+                  <Text>Row {item.rowNumber} start</Text>
+                </View>
+              );
+            } else if (item.type === "address") {
+              const address = item.addressData;
+              return (
+                <TouchableOpacity>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                      padding: 15,
+                      backgroundColor: "white",
+                      borderWidth: 1,
+                      borderColor: "gray",
+                      borderRadius: 25,
+                    }}
+                  >
+                    <TouchableWithoutFeedback onPressIn={drag}>
+                      <Text style={{ color: "blue", marginRight: 10 }}>☰</Text>
+                    </TouchableWithoutFeedback>
+                    <View>
+                      <Text>{formatAddress(address)}</Text>
+                      <Text>Position Number: {address.position_number}</Text>
+                      <Text>Case Number: {address.case_number}</Text>
+                      <Text>Row Number: {address.case_row_number}</Text>
+                      <TouchableOpacity onPress={() => handleEditAddress(address)}>
+                        <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          Alert.alert(
+                            "Confirm Delete",
+                            "Are you sure you want to delete this address?\n\nAny deliveries associated with this address will also be deleted!\n",
+                            [
+                              {
+                                text: "Cancel",
+                                style: "cancel",
+                              },
+                              {
+                                text: "Delete",
+                                onPress: () => handleDeleteAddress(address.address_id),
+                              },
+                            ]
+                          );
+                        }}
+                      >
+                        <Text style={{ color: "red", marginTop: 5 }}>Delete</Text>
+                      </TouchableOpacity>
                     </View>
-                  </TouchableOpacity>
-                );
-              }
-            }}
-            onDragEnd={({ data }) => onDragEnd({ data })}
-          />
+                  </View>
+                </TouchableOpacity>
+              );
+            }
+          }}
+          onDragEnd={({ data }) => onDragEnd({ data })}
+        />
         ) : (
           <Text>No addresses found</Text>
         )}

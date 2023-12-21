@@ -269,7 +269,7 @@ export function AddressesScreen() {
 
   // Define a function to update the address order on drag end
   const onDragEnd = ({ data }) => {
-    console.log("OngDragEnd Data: " + JSON.stringify(data, null, 2))
+    // console.log("OngDragEnd Data: " + JSON.stringify(data, null, 2))
     // Update the addresses state with the new order
     setAddresses(data);
 
