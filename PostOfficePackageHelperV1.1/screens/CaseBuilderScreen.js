@@ -485,33 +485,57 @@ export function CaseBuilderScreen() {
     const groupedAddresses = [];
     let currentCaseNumber = null;
     let currentRowNumber = null;
-
+    let hasAddressesInCurrentRow = false;
+  
     listAddresses.forEach((address) => {
       if (address.case_number !== currentCaseNumber) {
+        if (currentCaseNumber !== null) {
+          // Add "row start" separator only if there were addresses in the previous row
+          if (!hasAddressesInCurrentRow) {
+            groupedAddresses.push({
+              type: "rowStart",
+              rowNumber: currentRowNumber,
+              caseNumber: currentCaseNumber,
+            });
+          }
+        }
         currentCaseNumber = address.case_number;
         groupedAddresses.push({
           type: "caseStart",
           caseNumber: currentCaseNumber,
         });
+        currentRowNumber = null;
+        hasAddressesInCurrentRow = false;
       }
-
+  
       if (address.case_row_number !== currentRowNumber) {
         currentRowNumber = address.case_row_number;
+        hasAddressesInCurrentRow = true; // Mark that there are addresses in this row
         groupedAddresses.push({
           type: "rowStart",
           rowNumber: currentRowNumber,
           caseNumber: currentCaseNumber,
         });
       }
-
+  
       groupedAddresses.push({
         type: "address",
         addressData: address,
       });
     });
-
+  
+    if (currentCaseNumber !== null && !hasAddressesInCurrentRow) {
+      // Add a "row start" separator if there were addresses in the last row
+      groupedAddresses.push({
+        type: "rowStart",
+        rowNumber: currentRowNumber,
+        caseNumber: currentCaseNumber,
+      });
+    }
+  
     return groupedAddresses;
   };
+  
 
   const groupedAddresses = groupAddressesByCase();
 
