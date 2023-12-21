@@ -5,10 +5,10 @@ import {
   Button,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
   Modal,
   TextInput,
   TouchableWithoutFeedback,
+  Alert
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -784,6 +784,18 @@ export function CaseBuilderScreen() {
               placeholder="Zip Code"
               onChangeText={(text) =>
                 setNewAddress({ ...newAddress, zip_code: text })
+              }
+            />
+            <TextInput
+              placeholder="Case Number"
+              onChangeText={(text) =>
+                setNewAddress({ ...newAddress, case_number: text })
+              }
+            />
+            <TextInput
+              placeholder="Row Number"
+              onChangeText={(text) =>
+                setNewAddress({ ...newAddress, case_row_number: text })
               }
             />
             <Button
