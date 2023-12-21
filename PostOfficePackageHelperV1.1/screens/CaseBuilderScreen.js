@@ -53,6 +53,13 @@ export function CaseBuilderScreen() {
     zip_code: "",
   });
   const [updatedAddressOrder, setUpdatedAddressOrder] = useState([]);
+  const [selectedOfficeData, setSelectedOfficeData] = useState({
+    office_city: null,
+    office_state: null,
+  });
+  const [selectedRouteData, setSelectedRouteData] = useState({
+    route_number: null,
+  });
 
   // Define a function to fetch cases
   const fetchCases = async () => {
@@ -76,7 +83,7 @@ export function CaseBuilderScreen() {
           if (!(case_number in casesData)) {
             casesData[case_number] = [];
           }
-          casesData[case_number].push(case_row_number); // <-- Remove parseInt here
+          casesData[case_number].push(case_row_number);
         });
 
         const casesArray = Object.entries(casesData).map(
@@ -242,6 +249,31 @@ export function CaseBuilderScreen() {
     return formattedAddress;
   }
 
+  const fetchOfficeAndRouteData = async () => {
+    const officeResponse = await fetch(
+      `${API_BASE_URL}/offices/${selectedPostOffice}`
+    );
+    if (officeResponse.ok) {
+      const data = await officeResponse.json();
+      // console.log("Office Data:\n" + data)
+      setSelectedOfficeData({
+        office_city: data.city,
+        office_state: data.state,
+      })
+    }
+
+    const routeResponse = await fetch(
+      `${API_BASE_URL}/routes/${selectedRoute}`
+    );
+    if (routeResponse.ok) {
+      const data = await routeResponse.json();
+      // console.log("Route Data:\n" + data)
+      setSelectedRouteData({
+        route_number: data.route_number,
+      })
+    }
+  }
+
   const fetchPreviousSelections = async () => {
     try {
       const previouslySelectedRoute = await AsyncStorage.getItem(
@@ -270,6 +302,7 @@ export function CaseBuilderScreen() {
 
   useEffect(() => {
     fetchAddresses();
+    fetchOfficeAndRouteData();
   }, [selectedRoute, selectedCase, selectedRow]);
 
   const handleDeleteAddress = async (addressId) => {
@@ -371,6 +404,7 @@ export function CaseBuilderScreen() {
       if (response.ok) {
         // Refresh the addresses list
         fetchAddresses();
+        fetchCases();
         setNewAddressModalVisible(false);
         setNewAddress({
           route_id: selectedRoute,
@@ -536,7 +570,6 @@ export function CaseBuilderScreen() {
     return groupedAddresses;
   };
   
-
   const groupedAddresses = groupAddressesByCase();
 
   return (
@@ -551,9 +584,8 @@ export function CaseBuilderScreen() {
       </View>
       {caseViewActive === true && (
         <View>
-          <Text>Post Office ID: {selectedPostOffice}</Text>
-          <Text>Route ID: {selectedRoute}</Text>
-          <Button title="Add New Case" onPress={handleAddNewCase} />
+          <Text>Post Office: {`${selectedOfficeData.office_city}, ${selectedOfficeData.office_state}`}</Text>
+          <Text>Route ID: {selectedRouteData.route_number}</Text>
           <View style={styles.caseContainer}>
             <Text style={styles.caseTitle}>
               Case: {cases[currentCaseIndex]?.caseNumber}
@@ -576,12 +608,13 @@ export function CaseBuilderScreen() {
             </TouchableOpacity>
             <View style={styles.navigationButtons}>
               <TouchableOpacity onPress={handlePrevCase}>
-                <Text style={styles.navigationText}>Previous Case</Text>
+                <Text style={styles.navigationText}>⬅️</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleNextCase}>
-                <Text style={styles.navigationText}>Next Case</Text>
+                <Text style={styles.navigationText}>➡️</Text>
               </TouchableOpacity>
             </View>
+          <Button title="+" style={styles.buttonText} onPress={handleAddNewCase} />
           </View>
         </View>
       )}
