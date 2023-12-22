@@ -79,52 +79,6 @@ export function SignUpScreen() {
     }
   };
 
-  const handleLogin = async (userEmail, userPassword) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userEmail, userPassword }),
-      });
-
-      if (response.ok) {
-        const responseData = await response.json();
-        // console.log(responseData);
-        const { email, user_id } = responseData.user;
-
-        // Save user information to AsyncStorage
-        await AsyncStorage.setItem("userEmail", email);
-        await AsyncStorage.setItem("userId", user_id.toString());
-
-        // Display user info in console log
-        console.log("User Email:", email);
-        console.log("User ID:", user_id);
-
-        // Force a full app reload
-        LogBox.ignoreAllLogs(); // Ignore warnings to prevent errors during reload
-        setTimeout(() => {
-          // Reload the app after a delay
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "Home" }], // Navigate to the Home screen
-          });
-        }, 1000); // You can adjust the delay as needed
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
-
-      // Show an error toast
-      Toast.show({
-        text1: "An error occurred",
-        type: "error",
-      });
-    }
-  };
-
-  // TODO: Make New screens that POST to offices and addresses with users new info, navigate to it after signup response.ok
-
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Text>Sign Up Screen</Text>
