@@ -437,7 +437,6 @@ app.post("/api/users/new", async (req, res) => {
       email,
       password,
       phone_number,
-      home_post_office,
       position,
     } = req.body;
 
@@ -446,7 +445,7 @@ app.post("/api/users/new", async (req, res) => {
 
     // Insert the user's information into the database
     const sql =
-      "INSERT INTO users (first_name, last_name, email, password, phone_number, home_post_office, position) VALUES (?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO users (first_name, last_name, email, password, phone_number, position) VALUES (?, ?, ?, ?, ?, ?)";
     db.query(
       sql,
       [
@@ -455,7 +454,6 @@ app.post("/api/users/new", async (req, res) => {
         email,
         hashedPassword,
         phone_number,
-        home_post_office,
         position,
       ],
       (err, result) => {
@@ -478,8 +476,8 @@ app.post("/api/users/new", async (req, res) => {
             first_name,
             last_name,
             email,
+            hashedPassword,
             phone_number,
-            home_post_office,
             position,
           },
         });
@@ -511,7 +509,7 @@ app.get("/api/users", (req, res) => {
 app.get("/api/users/:id", (req, res) => {
   const userId = req.params.id;
   const sql =
-    "SELECT first_name, last_name, email, phone_number, home_post_office, position FROM users WHERE user_id = ?";
+    "SELECT first_name, last_name, email, phone_number, position FROM users WHERE user_id = ?";
   db.query(sql, [userId], (err, results) => {
     if (err) {
       console.error("Error retrieving user by ID:", err);
@@ -534,7 +532,6 @@ app.put("/api/users/:id", async (req, res) => {
     last_name,
     email,
     phone_number,
-    home_post_office,
     position,
   } = req.body;
 
@@ -543,7 +540,7 @@ app.put("/api/users/:id", async (req, res) => {
     // ...
 
     const sql =
-      "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, home_post_office=?, position=? WHERE user_id=?";
+      "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, position=? WHERE user_id=?";
     db.query(
       sql,
       [
@@ -551,7 +548,6 @@ app.put("/api/users/:id", async (req, res) => {
         last_name,
         email,
         phone_number,
-        home_post_office,
         position,
         userId,
       ],
@@ -572,7 +568,7 @@ app.put("/api/users/:id", async (req, res) => {
 
         // Fetch the updated user information from the database
         const getUserSql =
-          "SELECT user_id, first_name, last_name, email, phone_number, home_post_office, position FROM users WHERE user_id=?";
+          "SELECT user_id, first_name, last_name, email, phone_number, position FROM users WHERE user_id=?";
         db.query(getUserSql, [userId], (err, userResult) => {
           if (err) {
             console.error("Error fetching updated user:", err);
