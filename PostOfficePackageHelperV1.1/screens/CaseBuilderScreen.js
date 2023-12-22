@@ -93,7 +93,7 @@ export function CaseBuilderScreen() {
             rows: [1, 2, 3, 4, 5], // Ensure each case has 5 rows
           })
         );
-
+        fillMissingCases(casesArray)
         setCases(casesArray);
       } else {
         console.error("Failed to fetch addresses");
@@ -103,17 +103,77 @@ export function CaseBuilderScreen() {
     }
   };
 
-  useEffect(() => {
-    // Fetch cases when the component mounts
-    fetchCases();
-  }, []);
+  const fillMissingCases = async (casesArray) => {
+    if (casesArray.length === 0) {
+      // If there are no cases, create the first case
+      createNewCase("1");
+      createNewCase("2");
+      createNewCase("3");
+      createNewCase("4");
+    } else {
+      const sortedCases = casesArray.sort(
+        (a, b) => parseInt(a.caseNumber) - parseInt(b.caseNumber)
+      );
+  
+      for (let i = 0; i < sortedCases.length - 1; i++) {
+        const currentCase = sortedCases[i];
+        const nextCase = sortedCases[i + 1];
+        const currentCaseNumber = parseInt(currentCase.caseNumber);
+        const nextCaseNumber = parseInt(nextCase.caseNumber);
+  
+        if (nextCaseNumber - currentCaseNumber > 1) {
+          // Fill the gap by creating missing cases
+          for (let j = currentCaseNumber + 1; j < nextCaseNumber; j++) {
+            createNewCase(j.toString());
+          }
+        }
+      }
+    }
+  };
 
+  const findMissingCaseNumbers = (cases) => {
+    const allCaseNumbers = cases.map((c) => parseInt(c.caseNumber));
+    const maxCaseNumber = Math.max(...allCaseNumbers);
+  
+    const missingCaseNumbers = [];
+    for (let i = 1; i <= maxCaseNumber; i++) {
+      if (!allCaseNumbers.includes(i)) {
+        missingCaseNumbers.push(i.toString());
+      }
+    }
+  
+    return missingCaseNumbers;
+  };
+  
   const handleAddNewCase = async () => {
+    try {
+      const missingCaseNumbers = findMissingCaseNumbers(cases);
+  
+      if (missingCaseNumbers.length === 0) {
+        // No missing case numbers, create a new case after the last case
+        const lastCase = cases[cases.length - 1];
+        const newCaseNumber = (parseInt(lastCase.caseNumber) + 1).toString();
+        createNewCase(newCaseNumber);
+      } else {
+        // There are missing case numbers, fill the gaps
+        for (const missingCaseNumber of missingCaseNumbers) {
+          createNewCase(missingCaseNumber);
+        }
+        const lastCase = cases[cases.length - 1];
+        const newCaseNumber = (parseInt(lastCase.caseNumber) + 1).toString();
+        createNewCase(newCaseNumber)
+      }
+    } catch (error) {
+      console.error("Error adding a new case:", error);
+    }
+  };
+  
+  const createNewCase = async (newCaseNumber) => {
     try {
       // Construct the new case data
       const newCaseData = {
         route_id: selectedRoute,
-        case_number: `${(cases.length + 1).toString()}`, // Increment the case number
+        case_number: newCaseNumber,
         case_row_number: "0",
         address_number: "Address 1",
         address1: "123 Main St",
@@ -122,7 +182,7 @@ export function CaseBuilderScreen() {
         state: "State 1",
         zip_code: "12345",
       };
-      // console.log(newCaseData)
+  
       // Send a POST request to add the new case
       const response = await fetch(`${API_BASE_URL}/addresses`, {
         method: "POST",
@@ -131,15 +191,12 @@ export function CaseBuilderScreen() {
         },
         body: JSON.stringify(newCaseData),
       });
-
+  
       if (response.ok) {
         // After adding the new case, fetch the updated list of cases
         fetchCases();
       } else {
-        console.error(
-          "Failed to add a new case. Response status:",
-          response.status
-        );
+        console.error("Failed to add a new case. Response status:", response.status);
         const responseText = await response.text();
         console.error("Response data:", responseText);
       }
@@ -237,10 +294,6 @@ export function CaseBuilderScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchAddresses();
-  }, []);
-
   function formatAddress(addressData) {
     const { address1, address2, city, state, zip_code } = addressData;
     const formattedAddress = `${address1}${
@@ -298,7 +351,9 @@ export function CaseBuilderScreen() {
 
   useEffect(() => {
     fetchPreviousSelections();
-  }, []);
+    fetchAddresses();
+    fetchCases();
+  }, [selectedRoute]);
 
   useEffect(() => {
     fetchAddresses();
