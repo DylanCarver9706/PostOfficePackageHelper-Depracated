@@ -1165,6 +1165,27 @@ app.delete("/api/addresses/:id", (req, res) => {
   });
 });
 
+app.delete("/api/deleteAddressesByCaseAndRoute", (req, res) => {
+  const { case_number, route_id } = req.query;
+
+  // Ensure that case_number and route_id are provided in the query parameters
+  if (!case_number || !route_id) {
+    return res.status(400).json({ error: "Both case_number and route_id are required." });
+  }
+
+  // Construct the SQL query to delete addresses
+  const sql = "DELETE FROM addresses WHERE case_number = ? AND route_id = ?";
+  
+  db.query(sql, [case_number, route_id], (err, result) => {
+    if (err) {
+      console.error("Error deleting addresses by case and route:", err);
+      return res.status(500).json({ error: "An error occurred while deleting addresses." });
+    }
+    
+    res.status(200).json({ message: `Addresses for case ${case_number} on route ${route_id} deleted successfully` });
+  });
+});
+
 // ******************************************************************************************************************
 // ******************************************************************************************************************
 // ******************************************************************************************************************

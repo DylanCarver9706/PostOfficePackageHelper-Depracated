@@ -8,11 +8,12 @@ import {
   Modal,
   TextInput,
   TouchableWithoutFeedback,
-  Alert
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DraggableFlatList from "react-native-draggable-flatlist";
+import ToastManager, { Toast } from "toastify-react-native";
 import API_BASE_URL from "../apiConfig";
 
 export function CaseBuilderScreen() {
@@ -20,6 +21,7 @@ export function CaseBuilderScreen() {
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [cases, setCases] = useState([]);
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
+  const [onLastCase, setOnLastCase] = useState(false);
   const navigation = useNavigation();
   const [caseViewActive, setCaseViewActive] = useState(true);
   const [addresses, setAddresses] = useState([]);
@@ -93,7 +95,7 @@ export function CaseBuilderScreen() {
             rows: [1, 2, 3, 4, 5], // Ensure each case has 5 rows
           })
         );
-        fillMissingCases(casesArray)
+        fillMissingCases(casesArray);
         setCases(casesArray);
       } else {
         console.error("Failed to fetch addresses");
@@ -114,13 +116,13 @@ export function CaseBuilderScreen() {
       const sortedCases = casesArray.sort(
         (a, b) => parseInt(a.caseNumber) - parseInt(b.caseNumber)
       );
-  
+
       for (let i = 0; i < sortedCases.length - 1; i++) {
         const currentCase = sortedCases[i];
         const nextCase = sortedCases[i + 1];
         const currentCaseNumber = parseInt(currentCase.caseNumber);
         const nextCaseNumber = parseInt(nextCase.caseNumber);
-  
+
         if (nextCaseNumber - currentCaseNumber > 1) {
           // Fill the gap by creating missing cases
           for (let j = currentCaseNumber + 1; j < nextCaseNumber; j++) {
@@ -134,21 +136,22 @@ export function CaseBuilderScreen() {
   const findMissingCaseNumbers = (cases) => {
     const allCaseNumbers = cases.map((c) => parseInt(c.caseNumber));
     const maxCaseNumber = Math.max(...allCaseNumbers);
-  
+
     const missingCaseNumbers = [];
     for (let i = 1; i <= maxCaseNumber; i++) {
       if (!allCaseNumbers.includes(i)) {
         missingCaseNumbers.push(i.toString());
       }
     }
-  
+
     return missingCaseNumbers;
   };
-  
+
   const handleAddNewCase = async () => {
     try {
+      setOnLastCase(false);
       const missingCaseNumbers = findMissingCaseNumbers(cases);
-  
+
       if (missingCaseNumbers.length === 0) {
         // No missing case numbers, create a new case after the last case
         const lastCase = cases[cases.length - 1];
@@ -161,13 +164,13 @@ export function CaseBuilderScreen() {
         }
         const lastCase = cases[cases.length - 1];
         const newCaseNumber = (parseInt(lastCase.caseNumber) + 1).toString();
-        createNewCase(newCaseNumber)
+        await createNewCase(newCaseNumber);
       }
     } catch (error) {
       console.error("Error adding a new case:", error);
     }
   };
-  
+
   const createNewCase = async (newCaseNumber) => {
     try {
       // Construct the new case data
@@ -182,7 +185,7 @@ export function CaseBuilderScreen() {
         state: "State 1",
         zip_code: "12345",
       };
-  
+
       // Send a POST request to add the new case
       const response = await fetch(`${API_BASE_URL}/addresses`, {
         method: "POST",
@@ -191,12 +194,17 @@ export function CaseBuilderScreen() {
         },
         body: JSON.stringify(newCaseData),
       });
-  
+
       if (response.ok) {
         // After adding the new case, fetch the updated list of cases
+        Toast.success("Case Added");
         fetchCases();
+        handleNextCase();
       } else {
-        console.error("Failed to add a new case. Response status:", response.status);
+        console.error(
+          "Failed to add a new case. Response status:",
+          response.status
+        );
         const responseText = await response.text();
         console.error("Response data:", responseText);
       }
@@ -205,16 +213,71 @@ export function CaseBuilderScreen() {
     }
   };
 
+  const handleDeleteLastCase = () => {
+    const lastCase = cases[cases.length - 1];
+    if (lastCase) {
+      Alert.alert(
+        "Confirm Delete",
+        `Are you sure you want to delete Case ${lastCase.caseNumber}? This will delete all addresses associated with this case.`,
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Delete",
+            onPress: () => {
+              deleteLastCase(lastCase.caseNumber);
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert("No Cases", "There are no cases to delete.");
+    }
+  };
+
+  const deleteLastCase = async (caseNumber) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/deleteAddressesByCaseAndRoute?case_number=${caseNumber}&route_id=${selectedRoute}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        // Case deleted successfully, update the cases state
+        Toast.success("Case Deleted");
+        fetchCases();
+        handlePrevCase();
+        setOnLastCase(true);
+      } else {
+        console.error("Failed to delete the case");
+      }
+    } catch (error) {
+      console.error("Error deleting the case:", error);
+    }
+  };
+
   const handlePrevCase = () => {
     if (currentCaseIndex > 0) {
       setCurrentCaseIndex(currentCaseIndex - 1);
+      setOnLastCase(false);
     }
   };
 
   const handleNextCase = () => {
+    // console.log("Current Case: " + currentCaseIndex)
     if (currentCaseIndex < cases.length - 1) {
       setCurrentCaseIndex(currentCaseIndex + 1);
     }
+    if (currentCaseIndex === cases.length - 2) {
+      // console.log("Cases length: " + cases.length)
+      // console.log("On last case")
+      setOnLastCase(true);
+    }
+    // console.log("Current Case: " + currentCaseIndex)
   };
 
   const handleRowPress = (caseNumber, rowNumber) => {
@@ -312,7 +375,7 @@ export function CaseBuilderScreen() {
       setSelectedOfficeData({
         office_city: data.city,
         office_state: data.state,
-      })
+      });
     }
 
     const routeResponse = await fetch(
@@ -323,9 +386,9 @@ export function CaseBuilderScreen() {
       // console.log("Route Data:\n" + data)
       setSelectedRouteData({
         route_number: data.route_number,
-      })
+      });
     }
-  }
+  };
 
   const fetchPreviousSelections = async () => {
     try {
@@ -575,7 +638,7 @@ export function CaseBuilderScreen() {
     let currentCaseNumber = null;
     let currentRowNumber = null;
     let hasAddressesInCurrentRow = false;
-  
+
     listAddresses.forEach((address) => {
       if (address.case_number !== currentCaseNumber) {
         if (currentCaseNumber !== null) {
@@ -596,7 +659,7 @@ export function CaseBuilderScreen() {
         currentRowNumber = null;
         hasAddressesInCurrentRow = false;
       }
-  
+
       if (address.case_row_number !== currentRowNumber) {
         currentRowNumber = address.case_row_number;
         hasAddressesInCurrentRow = true; // Mark that there are addresses in this row
@@ -606,13 +669,13 @@ export function CaseBuilderScreen() {
           caseNumber: currentCaseNumber,
         });
       }
-  
+
       groupedAddresses.push({
         type: "address",
         addressData: address,
       });
     });
-  
+
     if (currentCaseNumber !== null && !hasAddressesInCurrentRow) {
       // Add a "row start" separator if there were addresses in the last row
       groupedAddresses.push({
@@ -621,10 +684,10 @@ export function CaseBuilderScreen() {
         caseNumber: currentCaseNumber,
       });
     }
-  
+
     return groupedAddresses;
   };
-  
+
   const groupedAddresses = groupAddressesByCase();
 
   return (
@@ -639,7 +702,10 @@ export function CaseBuilderScreen() {
       </View>
       {caseViewActive === true && (
         <View>
-          <Text>Post Office: {`${selectedOfficeData.office_city}, ${selectedOfficeData.office_state}`}</Text>
+          <Text>
+            Post Office:{" "}
+            {`${selectedOfficeData.office_city}, ${selectedOfficeData.office_state}`}
+          </Text>
           <Text>Route ID: {selectedRouteData.route_number}</Text>
           <View style={styles.caseContainer}>
             <Text style={styles.caseTitle}>
@@ -669,7 +735,21 @@ export function CaseBuilderScreen() {
                 <Text style={styles.navigationText}>➡️</Text>
               </TouchableOpacity>
             </View>
-          <Button title="+" style={styles.buttonText} onPress={handleAddNewCase} />
+            {onLastCase === true && (
+              <Button
+                title="+"
+                style={styles.buttonText}
+                onPress={handleAddNewCase}
+              />
+            )}
+            {/* Add the Delete button here */}
+            {onLastCase === true && (
+              <Button
+                title="Delete Case"
+                color="red"
+                onPress={handleDeleteLastCase}
+              />
+            )}
           </View>
         </View>
       )}
