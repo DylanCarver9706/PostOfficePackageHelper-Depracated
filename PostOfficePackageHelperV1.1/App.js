@@ -14,6 +14,7 @@ import { BarcodeScannerScreen } from "./screens/BarcodeScannerScreen";
 import API_BASE_URL from "./apiConfig";
 import ProfileScreen from "./screens/ProfileScreen";
 import { NewOfficeScreen } from "./screens/NewOfficeScreen";
+import { NewRouteScreen } from "./screens/NewRouteScreen";
 // if(__DEV__) {
 //   import('../ReactotronConfig').then(() => console.log('Reactotron Configured'))
 // }
@@ -71,6 +72,7 @@ export default function App() {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Signup Screen" component={SignUpScreen} />
         <Stack.Screen name="New Office Screen" component={NewOfficeScreen} />
+        <Stack.Screen name="New Route Screen" component={NewRouteScreen} />
         <Stack.Screen name="HaveAccountScreen" component={HaveAccountScreen} />
         <Stack.Screen name="Login Screen">
           {(props) => <LoginScreen {...props} setUser={setUser} />}

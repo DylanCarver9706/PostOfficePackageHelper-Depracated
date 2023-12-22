@@ -70,7 +70,7 @@ export function NewOfficeScreen() {
           // Handle success
           console.log("Post offices created successfully");
           // Optionally, navigate to another screen or perform other actions
-          // navigation.navigate("SelectOfficeRoute");
+          navigation.navigate("New Route Screen");
         } else {
           // Handle errors
           console.error("Failed to create post offices");
