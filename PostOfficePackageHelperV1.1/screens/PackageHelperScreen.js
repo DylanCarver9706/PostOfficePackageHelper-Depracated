@@ -305,8 +305,9 @@ export function PackageHelperScreen() {
       );
       if (response.ok) {
         const data = await response.json();
-        setRouteAddresses(data);
-        setFilteredAddresses(data);
+        const filteredAddresses = data.filter((address) => (address.address1 != "123 Main St" && address.address2 != "Apt 4B" && address.case_row_number != 0 && address.city != "City 1" && address.state != "State 1" && address.zip_code != "12345"))
+        setRouteAddresses(filteredAddresses);
+        setFilteredAddresses(filteredAddresses);
       } else {
         console.error("Error fetching addresses:", response.status);
       }

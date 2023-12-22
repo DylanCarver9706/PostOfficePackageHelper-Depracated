@@ -313,9 +313,12 @@ export function CaseBuilderScreen() {
 
       if (response.ok) {
         const data = await response.json();
+        // console.log(data)
+        // Filter out filler addresses used for case creation
+        const filteredAddresses = data.filter((address) => (address.address1 != "123 Main St" && address.address2 != "Apt 4B" && address.case_row_number != 0 && address.city != "City 1" && address.state != "State 1" && address.zip_code != "12345"))
 
         // Sort the addresses by case_number, case_row_number, and position_number
-        const sortedDeliveries = data.sort((a, b) => {
+        const sortedDeliveries = filteredAddresses.sort((a, b) => {
           // First, sort by 'delivered' status (ascending order)
           if (a.delivered !== b.delivered) {
             return a.delivered ? 1 : -1;
@@ -333,7 +336,7 @@ export function CaseBuilderScreen() {
         setAddresses(sortedDeliveries);
 
         //
-        const sortedAddresses = [...data].sort(
+        const sortedAddresses = [...filteredAddresses].sort(
           (a, b) => a.position_number - b.position_number
         );
 
@@ -692,6 +695,7 @@ export function CaseBuilderScreen() {
 
   return (
     <View style={styles.container}>
+      <ToastManager />
       <View>
         <TouchableOpacity onPress={handleGoToCaseView}>
           <Text>Case View</Text>
@@ -1013,7 +1017,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   navigationText: {
-    fontSize: 16,
+    fontSize: 30,
     fontWeight: "bold",
     color: "blue",
   },
