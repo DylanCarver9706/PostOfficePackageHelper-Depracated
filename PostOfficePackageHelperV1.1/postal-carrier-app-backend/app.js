@@ -1409,6 +1409,34 @@ app.patch("/api/deliveries/:id", (req, res) => {
   });
 });
 
+// Update the 'active_status' of a specific item by ID using PATCH
+app.patch("/api/deliveries/delete/:id", (req, res) => {
+  const deliveryId = req.params.id;
+  const { active_status } = req.body; // Include 'active_status' in the request body
+
+  const sql = "UPDATE deliveries SET active_status = ? WHERE delivery_id = ?";
+
+  db.query(sql, [active_status, deliveryId], (err, result) => {
+    if (err) {
+      console.error("Error updating 'active_status':", err);
+      res.status(500).json({
+        error: "An error occurred while updating the 'active_status'.",
+      });
+    } else {
+      if (result.affectedRows === 0) {
+        res.status(404).json({ error: "Item not found" });
+      } else {
+        // Successfully updated 'active_status', include the updated status in the response
+        res.status(200).json({
+          message: "'Active Status' updated successfully",
+          updatedDeliveryId: deliveryId,
+          active_status: active_status,
+        });
+      }
+    }
+  });
+});
+
 // Delete a specific delivery by ID
 app.delete("/api/deliveries/:id", (req, res) => {
   const deliveryId = req.params.id;

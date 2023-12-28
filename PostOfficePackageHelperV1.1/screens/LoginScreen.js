@@ -6,8 +6,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import API_BASE_URL from "../apiConfig";
 
 export function LoginScreen({ setUser, navigation }) {
-  const [email, setEmail] = useState("kristencarver14@gmail.com");
-  const [password, setPassword] = useState("hashedsecurepassword");
+  const [email, setEmail] = useState("Kristencarver14@gmail.com");
+  const [password, setPassword] = useState("Dtc+Kem2016");
 
   const handleLogin = async () => {
     try {
@@ -45,7 +45,7 @@ export function LoginScreen({ setUser, navigation }) {
         });
 
         // Force a full app reload
-        LogBox.ignoreAllLogs(); // Ignore warnings to prevent errors during reload
+        // LogBox.ignoreAllLogs(); // Ignore warnings to prevent errors during reload
         setTimeout(() => {
           // Reload the app after a delay
           navigation.reset({

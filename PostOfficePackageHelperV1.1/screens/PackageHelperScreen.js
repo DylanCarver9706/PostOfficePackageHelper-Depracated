@@ -260,12 +260,13 @@ export function PackageHelperScreen() {
 
       if (response.ok) {
         const data = await response.json();
-
+        // Filter by only active deliveries
+        deliveryData = data.filter((delivery) => (delivery.active_status != 0))
         // Sort deliveries based on 'delivered' status and then by case_number,
         // case_row_number, and position_number
         // Group deliveries by case_row_number
         const groupedDeliveries = {};
-        data.forEach((delivery) => {
+        deliveryData.forEach((delivery) => {
           const caseRowNumber = delivery.case_row_number;
           if (!groupedDeliveries[caseRowNumber]) {
             groupedDeliveries[caseRowNumber] = [];
@@ -435,7 +436,7 @@ export function PackageHelperScreen() {
     }
   };
 
-  const handleDeleteDelivery = async (deliveryId) => {
+  const handleDeleteDelivery = async (deliveryId, activeStatus) => {
     // Display a confirmation alert to confirm the delete action
     Alert.alert(
       "Confirm Delete",
@@ -450,13 +451,16 @@ export function PackageHelperScreen() {
           text: "Delete",
           onPress: async () => {
             try {
-              // Send a DELETE request to the server to delete the delivery
-              const response = await fetch(
-                `${API_BASE_URL}/deliveries/${deliveryId}`,
-                {
-                  method: "DELETE",
-                }
-              );
+              // console.log(deliveryId)
+              // console.log(activeStatus)
+              // console.log(!activeStatus)
+              const response = await fetch(`${API_BASE_URL}/deliveries/delete/${deliveryId}`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ active_status: !activeStatus }),
+              });
 
               if (response.ok) {
                 // Remove the deleted delivery from the local state (deliveries)
@@ -676,7 +680,7 @@ export function PackageHelperScreen() {
             {/* Delete button */}
             <Button
               title="Delete"
-              onPress={() => handleDeleteDelivery(item.delivery_id)}
+              onPress={() => handleDeleteDelivery(item.delivery_id, item.active_status)}
               color="red"
             />
           </View>
