@@ -24,7 +24,10 @@ export function SelectOfficeRouteScreen() {
   const [newOfficeInfo, setNewOfficeInfo] = useState({
     city: "",
     state: "",
-    phone_number: "",
+    supervisor_name: "",
+    supervisor_phone_number: "",
+    postmaster_name: "",
+    postmaster_phone_number: "",
   });
   const [editingOffice, setEditingOffice] = useState(null);
   const [newRouteInfo, setNewRouteInfo] = useState({
@@ -53,7 +56,9 @@ export function SelectOfficeRouteScreen() {
   // Function to fetch the list of offices
   const fetchOffices = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/officesByUserId?user_id=${userId}`);
+      const response = await fetch(
+        `${API_BASE_URL}/officesByUserId?user_id=${userId}`
+      );
       if (response.ok) {
         const data = await response.json();
         setOffices(data); // Update the state with the fetched offices
@@ -149,7 +154,10 @@ export function SelectOfficeRouteScreen() {
         user_id: userId,
         city: newOfficeInfo.city,
         state: newOfficeInfo.state,
-        phone_number: newOfficeInfo.phone_number,
+        supervisor_name: newOfficeInfo.supervisor_name,
+        supervisor_phone_number: newOfficeInfo.supervisor_phone_number,
+        postmaster_name: newOfficeInfo.postmaster_name,
+        postmaster_phone_number: newOfficeInfo.postmaster_phone_number,
       };
 
       // Send a POST request to create a new office
@@ -170,7 +178,10 @@ export function SelectOfficeRouteScreen() {
         setNewOfficeInfo({
           city: "",
           state: "",
-          phone_number: "",
+          supervisor_name: "",
+          supervisor_phone_number: "",
+          postmaster_name: "",
+          postmaster_phone_number: "",
         });
       } else {
         console.error("Failed to add new office");
@@ -229,7 +240,10 @@ export function SelectOfficeRouteScreen() {
     setNewOfficeInfo({
       city: office.city,
       state: office.state,
-      phone_number: office.phone_number,
+      supervisor_name: office.supervisor_name,
+      supervisor_phone_number: office.supervisor_phone_number,
+      postmaster_name: office.postmaster_name,
+      postmaster_phone_number: office.postmaster_phone_number,
     }); // Populate the input fields with existing office data
     setOfficeModalVisible(true); // Open the modal
   };
@@ -247,7 +261,10 @@ export function SelectOfficeRouteScreen() {
           body: JSON.stringify({
             city: newOfficeInfo.city,
             state: newOfficeInfo.state,
-            phone_number: newOfficeInfo.phone_number,
+            supervisor_name: newOfficeInfo.supervisor_name,
+            supervisor_phone_number: newOfficeInfo.supervisor_phone_number,
+            postmaster_name: newOfficeInfo.postmaster_name,
+            postmaster_phone_number: newOfficeInfo.postmaster_phone_number,
           }),
         }
       );
@@ -261,7 +278,10 @@ export function SelectOfficeRouteScreen() {
         setNewOfficeInfo({
           city: "",
           state: "",
-          phone_number: "",
+          supervisor_name: "",
+          supervisor_phone_number: "",
+          postmaster_name: "",
+          postmaster_phone_number: "",
         });
         setEditingOffice(null);
       } else {
@@ -615,14 +635,53 @@ export function SelectOfficeRouteScreen() {
               }
             />
             <TextInput
-              placeholder="Phone Number"
+              placeholder="Supervisor Name"
               value={
                 editingOffice
-                  ? newOfficeInfo.phone_number
-                  : newOfficeInfo.phone_number
+                  ? newOfficeInfo.supervisor_name
+                  : newOfficeInfo.supervisor_name
               }
               onChangeText={(text) =>
-                setNewOfficeInfo({ ...newOfficeInfo, phone_number: text })
+                setNewOfficeInfo({ ...newOfficeInfo, supervisor_name: text })
+              }
+            />
+            <TextInput
+              placeholder="Supervisor Phone Number"
+              value={
+                editingOffice
+                  ? newOfficeInfo.supervisor_phone_number
+                  : newOfficeInfo.supervisor_phone_number
+              }
+              onChangeText={(text) =>
+                setNewOfficeInfo({
+                  ...newOfficeInfo,
+                  supervisor_phone_number: text,
+                })
+              }
+            />
+            <TextInput
+              placeholder="Postmaster Name"
+              value={
+                editingOffice
+                  ? newOfficeInfo.postmaster_name
+                  : newOfficeInfo.postmaster_name
+              }
+              onChangeText={(text) =>
+                setNewOfficeInfo({ ...newOfficeInfo, postmaster_name: text })
+              }
+            />
+            <TextInput
+              placeholder="Postmaster Phone Number"
+              value={
+                editingOffice
+                  ? newOfficeInfo.postmaster_phone_number
+                  : newOfficeInfo.postmaster_phone_number
+              }
+              onChangeText={(text) =>
+                setNewOfficeInfo({
+                  ...newOfficeInfo,
+                  postmaster_phone_number: text,
+                })
               }
             />
             <Button

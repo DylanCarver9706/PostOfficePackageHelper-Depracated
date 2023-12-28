@@ -621,12 +621,12 @@ app.delete("/api/users/:id", (req, res) => {
 // Create a new office
 app.post("/api/offices", (req, res) => {
   // Extract office data from the request body
-  const { user_id, city, state, phone_number } = req.body;
+  const { user_id, city, state, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number } = req.body;
 
   // Insert the office data into the database
   const sql =
-    "INSERT INTO offices (user_id, city, state, phone_number) VALUES (?, ?, ?, ?)";
-  db.query(sql, [user_id, city, state, phone_number], (err, result) => {
+    "INSERT INTO offices (user_id, city, state, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number) VALUES (?, ?, ?, ?, ?, ?, ?)";
+  db.query(sql, [user_id, city, state, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number], (err, result) => {
     if (err) {
       console.error("Error creating office:", err);
       return res
@@ -646,7 +646,10 @@ app.post("/api/offices", (req, res) => {
         user_id,
         city,
         state,
-        phone_number,
+        supervisor_name,
+        supervisor_phone_number,
+        postmaster_name,
+        postmaster_phone_number
       },
     });
   });
@@ -708,10 +711,10 @@ app.get("/api/officesByUserId", (req, res) => {
 // Update an office by ID
 app.put("/api/offices/:id", (req, res) => {
   const officeId = req.params.id;
-  const { city, state, phone_number } = req.body;
+  const { city, state, phone_number, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number } = req.body;
   const sql =
-    "UPDATE offices SET city=?, state=?, phone_number=? WHERE office_id=?";
-  db.query(sql, [city, state, phone_number, officeId], (err, result) => {
+    "UPDATE offices SET city=?, state=?, supervisor_name=?, supervisor_phone_number=?, postmaster_name=?, postmaster_phone_number=? WHERE office_id=?";
+  db.query(sql, [city, state, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number, officeId], (err, result) => {
     if (err) {
       console.error("Error updating office:", err);
       return res
@@ -726,7 +729,10 @@ app.put("/api/offices/:id", (req, res) => {
         office_id: officeId,
         city,
         state,
-        phone_number,
+        supervisor_name,
+        supervisor_phone_number,
+        postmaster_name,
+        postmaster_phone_number
       };
 
       res.status(200).json({
