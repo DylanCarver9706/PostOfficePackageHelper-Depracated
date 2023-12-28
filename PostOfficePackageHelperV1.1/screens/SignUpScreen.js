@@ -81,7 +81,7 @@ export function SignUpScreen() {
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Sign Up Screen</Text>
+      <Text>Let's start off by getting some basic information...</Text>
       <TextInput
         placeholder="First Name"
         value={firstName}
@@ -123,7 +123,7 @@ export function SignUpScreen() {
         value={password}
         onChangeText={(text) => setPassword(text)}
       />
-      <Button title="Sign Up" onPress={handleSubmit} />
+      <Button title="Next" onPress={handleSubmit} />
     </View>
   );
 }

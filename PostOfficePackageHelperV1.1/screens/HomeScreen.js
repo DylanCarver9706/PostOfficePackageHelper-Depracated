@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, LogBox } from "react-native";
+import { View, Text, Button, LogBox, BackHandler, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import API_BASE_URL from "../apiConfig";
@@ -7,6 +7,45 @@ import API_BASE_URL from "../apiConfig";
 export function HomeScreen({ setUser }) {
   const [user_id, setUserId] = useState([]);
   const navigation = useNavigation();
+
+  // Set navigation options to hide the back button
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: null, // Hide the back button in the header
+    });
+  }, []);
+
+  // Add this in your component
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        // Show an alert or confirmation dialog
+        Alert.alert(
+          "Confirmation",
+          "Do you want to exit the app?",
+          [
+            {
+              text: "Cancel",
+              onPress: () => {},
+              style: "cancel",
+            },
+            {
+              text: "OK",
+              onPress: () => {
+                // Handle the back button action here (e.g., exit the app)
+                BackHandler.exitApp();
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+        return true;
+      }
+    );
+
+    return () => backHandler.remove(); // Cleanup when the component unmounts
+  }, []);
 
   useEffect(() => {
     const getUserInfo = async () => {

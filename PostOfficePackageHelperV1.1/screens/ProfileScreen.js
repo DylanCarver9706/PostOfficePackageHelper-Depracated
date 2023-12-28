@@ -12,7 +12,6 @@ const ProfileScreen = () => {
     last_name: "",
     email: "",
     phone_number: "",
-    home_post_office: "",
     position: "",
   });
 
@@ -47,7 +46,6 @@ const ProfileScreen = () => {
       last_name: userData.last_name,
       email: userData.email,
       phone_number: userData.phone_number,
-      home_post_office: userData.home_post_office,
       position: userData.position,
     });
     setIsEditModalVisible(true);
@@ -138,7 +136,6 @@ const ProfileScreen = () => {
           <Text>Last Name: {userData.last_name}</Text>
           <Text>Email: {userData.email}</Text>
           <Text>Phone Number: {userData.phone_number}</Text>
-          <Text>Home Post Office: {userData.home_post_office}</Text>
           <Text>Position: {userData.position}</Text>
           <Button title="Edit Profile" onPress={handleOpenEditModal} />
           <Button title="Delete Profile" onPress={handleDeleteProfile} />
@@ -183,16 +180,6 @@ const ProfileScreen = () => {
               value={updatedUserInfo.phone_number}
               onChangeText={(text) =>
                 setUpdatedUserInfo({ ...updatedUserInfo, phone_number: text })
-              }
-            />
-            <TextInput
-              placeholder="Home Post Office"
-              value={updatedUserInfo.home_post_office}
-              onChangeText={(text) =>
-                setUpdatedUserInfo({
-                  ...updatedUserInfo,
-                  home_post_office: text,
-                })
               }
             />
             <TextInput

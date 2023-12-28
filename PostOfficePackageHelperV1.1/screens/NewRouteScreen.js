@@ -93,7 +93,7 @@ export function NewRouteScreen() {
           console.error("Failed to create routes");
         }
       }
-      navigation.navigate("Home");
+      navigation.navigate("Account Created Screen");
     } catch (error) {
       console.error("Error creating routes:", error);
     }
