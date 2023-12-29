@@ -3,9 +3,9 @@ import { View, Text, Button, LogBox, BackHandler, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import API_BASE_URL from "../apiConfig";
+import { FIREBASE_AUTH } from "../FirebaseConfig";
 
-export function HomeScreen({ setUser }) {
-  const [user_id, setUserId] = useState([]);
+export function HomeScreen() {
   const navigation = useNavigation();
 
   // Set navigation options to hide the back button
@@ -52,10 +52,6 @@ export function HomeScreen({ setUser }) {
       try {
         const email = await AsyncStorage.getItem("userEmail");
         const id = await AsyncStorage.getItem("userId");
-
-        if (email && id) {
-          setUserId(id);
-        }
       } catch (error) {
         console.error("Error retrieving user information:", error);
       }
@@ -75,7 +71,6 @@ export function HomeScreen({ setUser }) {
       );
 
       if (response.ok) {
-        setUser(null);
         // LogBox.ignoreAllLogs();
         navigation.replace("HaveAccountScreen");
         console.log("Logout successful");
@@ -84,6 +79,15 @@ export function HomeScreen({ setUser }) {
       }
     } catch (error) {
       console.error("Error logging out:", error);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await FIREBASE_AUTH.signOut();
+      navigation.replace("HaveAccountScreen");
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
   };
 
@@ -121,7 +125,7 @@ export function HomeScreen({ setUser }) {
           navigation.navigate("Profile");
         }}
       />
-      <Button title="Logout" onPress={handleLogout} />
+      <Button title="Logout" onPress={signOut} />
     </View>
   );
 }

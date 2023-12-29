@@ -11,13 +11,14 @@ import { LoginScreen } from "./screens/LoginScreen";
 import { SignUpScreen } from "./screens/SignUpScreen";
 import { PackageHelperScreen } from "./screens/PackageHelperScreen";
 import { BarcodeScannerScreen } from "./screens/BarcodeScannerScreen";
-import API_BASE_URL from "./apiConfig";
 import ProfileScreen from "./screens/ProfileScreen";
 import { NewOfficeScreen } from "./screens/NewOfficeScreen";
 import { NewRouteScreen } from "./screens/NewRouteScreen";
 import { TutorialScreen } from "./screens/TutorialScreen";
 import { WelcomeScreen } from "./screens/WelcomeScreen";
 import { AccountCreatedScreen } from "./screens/AccountCreatedScreen";
+import { onAuthStateChanged } from 'firebase/auth'
+import { FIREBASE_AUTH } from "./FirebaseConfig";
 // if(__DEV__) {
 //   import('../ReactotronConfig').then(() => console.log('Reactotron Configured'))
 // }
@@ -29,48 +30,22 @@ const Stack = createStackNavigator();
 export default function App() {
   const [user, setUser] = useState(null);
 
-  // useEffect(() => {
-  // Check if the user session is active (you can make an API call to /api/check-auth)
-  // If the user is authenticated, set user to true
-  // If the user is not authenticated, set user to null
-  // Replace the following logic with your actual authentication check
-  //   const checkUserAuthentication = async () => {
-  //     try {
-  //       const response = await fetch(
-  //         `${API_BASE_URL}/check-auth?user_id=1`
-  //       );
-  //       const data = await response.json();
-  //       if (data.isAuthenticated) {
-  //         setUser(true);
-  //         navigation.navigate("Home");
-  //       } else {
-  //         setUser(null);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error checking authentication:", error);
-  //     }
-  //   };
-
-  //   checkUserAuthentication();
-  // }, []);
+  useEffect(() => {
+    onAuthStateChanged(FIREBASE_AUTH, (user) =>{
+      console.log("user: " + JSON.stringify(user, null, 2))
+      setUser(user)
+    })
+  })
 
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName={user ? "Home" : "HaveAccountScreen"}>
-        <Stack.Screen name="Home">
-          {(props) => <HomeScreen {...props} setUser={setUser} />}
-        </Stack.Screen>
+        <Stack.Screen name="Home" component={HomeScreen}/>
         <Stack.Screen name="Case Builder" component={CaseBuilderScreen} />
         <Stack.Screen name="Package Helper" component={PackageHelperScreen} />
         <Stack.Screen name="Barcode Scanner" component={BarcodeScannerScreen} />
         <Stack.Screen name="Scan Label" component={ScanLabelScreen} />
-        {/* <Stack.Screen name="Sign Up" component={SignupScreen} /> */}
-        <Stack.Screen
-          name="Select Office Route"
-          options={{ title: "Select Office Route" }}
-        >
-          {(props) => <SelectOfficeRouteScreen {...props} user={user} />}
-        </Stack.Screen>
+        <Stack.Screen name="Select Office Route" component={SelectOfficeRouteScreen}/>
         <Stack.Screen name="Addresses" component={AddressesScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Signup Screen" component={SignUpScreen} />
@@ -79,13 +54,8 @@ export default function App() {
         <Stack.Screen name="HaveAccountScreen" component={HaveAccountScreen} />
         <Stack.Screen name="Tutorial Screen" component={TutorialScreen} />
         <Stack.Screen name="Welcome Screen" component={WelcomeScreen} />
-        <Stack.Screen
-          name="Account Created Screen"
-          component={AccountCreatedScreen}
-        />
-        <Stack.Screen name="Login Screen">
-          {(props) => <LoginScreen {...props} setUser={setUser} />}
-        </Stack.Screen>
+        <Stack.Screen name="Account Created Screen" component={AccountCreatedScreen} />
+        <Stack.Screen name="Login Screen" component={LoginScreen}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

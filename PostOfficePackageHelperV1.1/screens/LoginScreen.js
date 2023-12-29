@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet } from "react-native";
 import Toast from "react-native-toast-message";
-import { LogBox } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 import API_BASE_URL from "../apiConfig";
+import { FIREBASE_AUTH } from "../FirebaseConfig";
+import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth'
 
-export function LoginScreen({ setUser, navigation }) {
-  const [email, setEmail] = useState("Kristencarver14@gmail.com");
+export function LoginScreen() {
+  const [email, setEmail] = useState("dylancarver14@gmail.com");
   const [password, setPassword] = useState("Dtc+Kem2016");
+  const auth = FIREBASE_AUTH
+
+  const navigation = useNavigation();
 
   const handleLogin = async () => {
     try {
@@ -31,9 +36,6 @@ export function LoginScreen({ setUser, navigation }) {
         await AsyncStorage.setItem("userEmail", email);
         await AsyncStorage.setItem("userId", user_id.toString());
 
-        // Login successful
-        setUser(true);
-
         // Display user info in console log
         console.log("User Email:", email);
         console.log("User ID:", user_id);
@@ -54,8 +56,6 @@ export function LoginScreen({ setUser, navigation }) {
           });
         }, 1000); // You can adjust the delay as needed
       } else {
-        // Login failed
-        setUser(null);
 
         // Show an error toast
         Toast.show({
@@ -74,6 +74,17 @@ export function LoginScreen({ setUser, navigation }) {
     }
   };
 
+  const signIn = async () => {
+    try {
+      const user = await signInWithEmailAndPassword(auth, email, password);
+      // console.log("user: " + JSON.stringify(user, null, 2));
+    } catch (error) {
+      console.error("Error during sign in:", error);
+    } finally {
+      navigation.navigate("Home")
+    }
+  }
+
   return (
     <View style={styles.container}>
       <Text>Login</Text>
@@ -88,7 +99,7 @@ export function LoginScreen({ setUser, navigation }) {
         onChangeText={(text) => setPassword(text)}
         value={password}
       />
-      <Button title="Login" onPress={handleLogin} />
+      <Button title="Login" onPress={signIn} />
     </View>
   );
 }
