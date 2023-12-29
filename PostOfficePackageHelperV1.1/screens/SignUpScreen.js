@@ -3,6 +3,8 @@ import { View, Text, TextInput, Button } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API_BASE_URL from "../apiConfig";
+import { FIREBASE_AUTH } from "../FirebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 export function SignUpScreen() {
   const [firstName, setFirstName] = useState("");
@@ -11,6 +13,7 @@ export function SignUpScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [position, setPosition] = useState("");
   const [password, setPassword] = useState("");
+  const auth = FIREBASE_AUTH;
 
   const navigation = useNavigation();
 
@@ -79,6 +82,45 @@ export function SignUpScreen() {
     }
   };
 
+  const signUp = async () => {
+    try {
+      // Create an object with the user's data
+      const userData = {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        phone_number: phoneNumber,
+        position: position,
+        password: password,
+      };
+
+      // Send a POST request to the API to create a new user
+      const newUserResponse = await fetch(`${API_BASE_URL}/users/new`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (newUserResponse.status === 201) {
+        // User was successfully created
+        const newUserData = await newUserResponse.json();
+        console.log(newUserData);
+        const user = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        console.log("user: " + JSON.stringify(user, null, 2));
+      }
+    } catch (error) {
+      console.error("Error during sign in:", error);
+    } finally {
+      navigation.navigate("New Office Screen");
+    }
+  };
+
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Text>Let's start off by getting some basic information...</Text>
@@ -102,16 +144,6 @@ export function SignUpScreen() {
         value={phoneNumber}
         onChangeText={(text) => setPhoneNumber(text)}
       />
-      {/* <TextInput
-        placeholder="Home Post Office"
-        value={homePostOffice}
-        onChangeText={(text) => setHomePostOffice(text)}
-      />
-      <TextInput
-        placeholder="Home Route"
-        value={homeRoute}
-        onChangeText={(text) => setHomeRoute(text)}
-      /> */}
       <TextInput
         placeholder="Position"
         value={position}
@@ -123,7 +155,7 @@ export function SignUpScreen() {
         value={password}
         onChangeText={(text) => setPassword(text)}
       />
-      <Button title="Next" onPress={handleSubmit} />
+      <Button title="Next" onPress={signUp} />
     </View>
   );
 }

@@ -437,18 +437,14 @@ app.get("/api/logout", (req, res) => {
 
 app.post("/api/users/new", async (req, res) => {
   try {
-    const { first_name, last_name, email, password, phone_number, position } =
-      req.body;
-
-    // Hash the user's password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { first_name, last_name, email, phone_number, position, firebase_user_uid } = req.body;
 
     // Insert the user's information into the database
     const sql =
-      "INSERT INTO users (first_name, last_name, email, password, phone_number, position) VALUES (?, ?, ?, ?, ?, ?)";
+      "INSERT INTO users (first_name, last_name, email, phone_number, position, firebase_user_uid) VALUES (?, ?, ?, ?, ?, ?)";
     db.query(
       sql,
-      [first_name, last_name, email, hashedPassword, phone_number, position],
+      [first_name, last_name, email, phone_number, position, firebase_user_uid],
       (err, result) => {
         if (err) {
           console.error("Error registering user:", err);
@@ -469,9 +465,9 @@ app.post("/api/users/new", async (req, res) => {
             first_name,
             last_name,
             email,
-            hashedPassword,
             phone_number,
             position,
+            firebase_user_uid
           },
         });
       }
@@ -1298,11 +1294,9 @@ app.patch(
           .json({ error: "An error occurred while updating active_status." });
       }
 
-      res
-        .status(200)
-        .json({
-          message: `Active status for addresses with case ${case_number} on route ${route_id} updated successfully`,
-        });
+      res.status(200).json({
+        message: `Active status for addresses with case ${case_number} on route ${route_id} updated successfully`,
+      });
     });
   }
 );
@@ -1343,11 +1337,9 @@ app.delete("/api/deleteAddressesByCaseAndRoute", (req, res) => {
         .json({ error: "An error occurred while deleting addresses." });
     }
 
-    res
-      .status(200)
-      .json({
-        message: `Addresses for case ${case_number} on route ${route_id} deleted successfully`,
-      });
+    res.status(200).json({
+      message: `Addresses for case ${case_number} on route ${route_id} deleted successfully`,
+    });
   });
 });
 
