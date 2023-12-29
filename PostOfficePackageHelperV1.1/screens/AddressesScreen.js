@@ -77,8 +77,9 @@ export function AddressesScreen() {
 
         if (response.ok) {
           const data = await response.json();
+          filteredAddresses = data.filter((addresses) => (addresses.active_status != 0))
           // Sort addresses by position_number
-          const sortedAddresses = [...data].sort(
+          const sortedAddresses = [...filteredAddresses].sort(
             (a, b) => a.position_number - b.position_number
           );
 
@@ -113,8 +114,12 @@ export function AddressesScreen() {
 
   const handleDeleteAddress = async (addressId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/addresses/${addressId}`, {
-        method: "DELETE",
+      const response = await fetch(`${API_BASE_URL}/addresses/delete/${addressId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ active_status: 0 }),
       });
 
       if (response.ok) {

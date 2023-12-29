@@ -80,7 +80,11 @@ export function CaseBuilderScreen() {
         const data = await response.json();
         const casesData = {};
 
-        data.forEach((address) => {
+        filteredAddresses = data.filter(
+          (addresses) => addresses.active_status != 0
+        );
+
+        filteredAddresses.forEach((address) => {
           const { case_number, case_row_number } = address;
           if (!(case_number in casesData)) {
             casesData[case_number] = [];
@@ -240,9 +244,13 @@ export function CaseBuilderScreen() {
   const deleteLastCase = async (caseNumber) => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/deleteAddressesByCaseAndRoute?case_number=${caseNumber}&route_id=${selectedRoute}`,
+        `${API_BASE_URL}/patchDeleteAddressesByCaseAndRoute?case_number=${caseNumber}&route_id=${selectedRoute}`,
         {
-          method: "DELETE",
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ active_status: 0 }),
         }
       );
 
@@ -314,8 +322,17 @@ export function CaseBuilderScreen() {
       if (response.ok) {
         const data = await response.json();
         // console.log(data)
-        // Filter out filler addresses used for case creation
-        const filteredAddresses = data.filter((address) => (address.address1 != "123 Main St" && address.address2 != "Apt 4B" && address.case_row_number != 0 && address.city != "City 1" && address.state != "State 1" && address.zip_code != "12345"))
+        // Filter out filler addresses used for case creation AND active_status
+        const filteredAddresses = data.filter(
+          (address) =>
+            address.active_status != 0 &&
+            address.address1 != "123 Main St" &&
+            address.address2 != "Apt 4B" &&
+            address.case_row_number != 0 &&
+            address.city != "City 1" &&
+            address.state != "State 1" &&
+            address.zip_code != "12345"
+        );
 
         // Sort the addresses by case_number, case_row_number, and position_number
         const sortedDeliveries = filteredAddresses.sort((a, b) => {
@@ -428,9 +445,16 @@ export function CaseBuilderScreen() {
 
   const handleDeleteAddress = async (addressId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/addresses/${addressId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/addresses/delete/${addressId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ active_status: 0 }),
+        }
+      );
 
       if (response.ok) {
         // Remove the deleted address from the addresses state

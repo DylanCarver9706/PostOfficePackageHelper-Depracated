@@ -21,7 +21,6 @@ const ProfileScreen = () => {
   const fetchUserData = async () => {
     try {
       userId = await AsyncStorage.getItem("userId");
-      // Replace with the actual API endpoint to fetch user data
       const response = await fetch(`${API_BASE_URL}/users/${userId}`);
       if (response.ok) {
         const data = await response.json();
@@ -60,7 +59,6 @@ const ProfileScreen = () => {
   const handleUpdateProfile = async () => {
     try {
       userId = await AsyncStorage.getItem("userId");
-      // Replace with the actual API endpoint to update user data
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: "PUT",
         headers: {
@@ -98,10 +96,16 @@ const ProfileScreen = () => {
           {
             text: "Delete",
             onPress: async () => {
-              // Replace with the actual API endpoint to delete user data
-              const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-                method: "DELETE",
-              });
+              const response = await fetch(
+                `${API_BASE_URL}/users/delete/${userId}`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ active_status: 0 }),
+                }
+              );
 
               if (response.ok) {
                 // Clear user data from AsyncStorage

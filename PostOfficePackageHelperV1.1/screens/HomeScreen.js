@@ -76,7 +76,7 @@ export function HomeScreen({ setUser }) {
 
       if (response.ok) {
         setUser(null);
-        LogBox.ignoreAllLogs();
+        // LogBox.ignoreAllLogs();
         navigation.replace("HaveAccountScreen");
         console.log("Logout successful");
       } else {

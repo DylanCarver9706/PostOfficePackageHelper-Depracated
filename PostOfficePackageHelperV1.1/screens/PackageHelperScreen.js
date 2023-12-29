@@ -260,8 +260,9 @@ export function PackageHelperScreen() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log(data)
         // Filter by only active deliveries
-        deliveryData = data.filter((delivery) => (delivery.active_status != 0))
+        deliveryData = data.filter((delivery) => delivery.active_status != 0);
         // Sort deliveries based on 'delivered' status and then by case_number,
         // case_row_number, and position_number
         // Group deliveries by case_row_number
@@ -306,7 +307,15 @@ export function PackageHelperScreen() {
       );
       if (response.ok) {
         const data = await response.json();
-        const filteredAddresses = data.filter((address) => (address.address1 != "123 Main St" && address.address2 != "Apt 4B" && address.case_row_number != 0 && address.city != "City 1" && address.state != "State 1" && address.zip_code != "12345"))
+        const filteredAddresses = data.filter(
+          (address) =>
+            address.address1 != "123 Main St" &&
+            address.address2 != "Apt 4B" &&
+            address.case_row_number != 0 &&
+            address.city != "City 1" &&
+            address.state != "State 1" &&
+            address.zip_code != "12345"
+        );
         setRouteAddresses(filteredAddresses);
         setFilteredAddresses(filteredAddresses);
       } else {
@@ -454,13 +463,16 @@ export function PackageHelperScreen() {
               // console.log(deliveryId)
               // console.log(activeStatus)
               // console.log(!activeStatus)
-              const response = await fetch(`${API_BASE_URL}/deliveries/delete/${deliveryId}`, {
-                method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ active_status: !activeStatus }),
-              });
+              const response = await fetch(
+                `${API_BASE_URL}/deliveries/delete/${deliveryId}`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ active_status: 0 }),
+                }
+              );
 
               if (response.ok) {
                 // Remove the deleted delivery from the local state (deliveries)
@@ -680,7 +692,9 @@ export function PackageHelperScreen() {
             {/* Delete button */}
             <Button
               title="Delete"
-              onPress={() => handleDeleteDelivery(item.delivery_id, item.active_status)}
+              onPress={() =>
+                handleDeleteDelivery(item.delivery_id, item.active_status)
+              }
               color="red"
             />
           </View>

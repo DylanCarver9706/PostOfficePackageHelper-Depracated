@@ -9,7 +9,7 @@ import {
   Button,
   Alert,
 } from "react-native";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API_BASE_URL from "../apiConfig";
 
@@ -17,8 +17,8 @@ export function SelectOfficeRouteScreen() {
   const [selectedPostOffice, setSelectedPostOffice] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [offices, setOffices] = useState([]);
+  const [routes, setRoutes] = useState([]);
   const [userId, setUserId] = useState(null);
-  const [nextScreen, setNextScreen] = useState(null);
   const [officeModalVisible, setOfficeModalVisible] = useState(false);
   const [routeModalVisible, setRouteModalVisible] = useState(false);
   const [newOfficeInfo, setNewOfficeInfo] = useState({
@@ -61,7 +61,8 @@ export function SelectOfficeRouteScreen() {
       );
       if (response.ok) {
         const data = await response.json();
-        setOffices(data); // Update the state with the fetched offices
+        filteredOffices = data.filter((office) => office.active_status != 0);
+        setOffices(filteredOffices); // Update the state with the fetched offices
       } else {
         console.error("Failed to fetch offices");
       }
@@ -79,34 +80,12 @@ export function SelectOfficeRouteScreen() {
 
   const handlePostOfficeSelection = async (postOffice) => {
     try {
-      // Clear the selected route value to allow for a new selection
       setSelectedRoute(null);
-
       setSelectedPostOffice(postOffice);
-
-      // Save the selected office to AsyncStorage
-      await AsyncStorage.setItem(
-        "selectedOffice",
-        postOffice.office_id.toString()
-      );
-
-      // Fetch the routes for the selected office
-      const response = await fetch(
-        `${API_BASE_URL}/routesByOfficeId?office_id=${postOffice.office_id}`
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        // Update the selectedPostOffice with routes
-        setSelectedPostOffice({ ...postOffice, routes: data });
-
-        // Log the selected office ID from AsyncStorage
-        const selectedOfficeId = await AsyncStorage.getItem("selectedOffice");
-        console.log("Selected office ID: ", selectedOfficeId);
-        // setSelectedPostOffice(null)
-      } else {
-        console.error("Failed to fetch routes");
-      }
+      await AsyncStorage.setItem("selectedOffice", postOffice.office_id.toString());
+      
+      // Call fetchRoutes with the selected office's ID to update the routes state
+      fetchRoutes(postOffice.office_id);
     } catch (error) {
       console.error("Error handling post office selection:", error);
     }
@@ -207,11 +186,16 @@ export function SelectOfficeRouteScreen() {
             text: "Delete",
             onPress: async () => {
               // Send a DELETE request to delete the office
-              requestUrl = `${API_BASE_URL}/offices/${officeId}`;
-              // console.log(requestUrl);
-              const response = await fetch(requestUrl, {
-                method: "DELETE",
-              });
+              const response = await fetch(
+                `${API_BASE_URL}/offices/delete/${officeId}`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ active_status: 0 }),
+                }
+              );
 
               // console.log(response.status);
 
@@ -295,13 +279,13 @@ export function SelectOfficeRouteScreen() {
   // Function to handle adding a new route
   const handleAddNewRoute = async () => {
     try {
-      const officeId = selectedPostOffice.office_id; // Get the current office ID
+      const officeId = selectedPostOffice.office_id;
       const newRoute = {
         office_id: officeId,
         route_number: newRouteInfo.route_number,
         // Add other route fields here
       };
-
+  
       const response = await fetch(`${API_BASE_URL}/routes`, {
         method: "POST",
         headers: {
@@ -309,24 +293,13 @@ export function SelectOfficeRouteScreen() {
         },
         body: JSON.stringify(newRoute),
       });
-
+  
       if (response.ok) {
-        // Refresh the list of routes for the selected office
-        const routesResponse = await fetch(
-          `${API_BASE_URL}/routesByOfficeId?office_id=${officeId}`
-        );
-
-        if (routesResponse.ok) {
-          const data = await routesResponse.json();
-          setSelectedPostOffice({ ...selectedPostOffice, routes: data });
-        } else {
-          console.error("Failed to fetch routes");
-        }
-
-        // Close the modal
+        // Call fetchRoutes with the selected office's ID to update the routes state
+        fetchRoutes(officeId);
+  
+        // Close the modal and clear the new route info
         setRouteModalVisible(false);
-
-        // Clear the new route info
         setNewRouteInfo({
           route_number: "",
           // Clear other route fields here
@@ -355,11 +328,16 @@ export function SelectOfficeRouteScreen() {
             text: "Delete",
             onPress: async () => {
               // Send a DELETE request to delete the route
-              requestUrl = `${API_BASE_URL}/routes/${routeId}`;
-              // console.log(requestUrl)
-              const response = await fetch(requestUrl, {
-                method: "DELETE",
-              });
+              const response = await fetch(
+                `${API_BASE_URL}/routes/delete/${routeId}`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ active_status: 0 }),
+                }
+              );
 
               if (response.ok) {
                 // Refresh the list of routes for the selected office
@@ -369,10 +347,8 @@ export function SelectOfficeRouteScreen() {
 
                 if (routesResponse.ok) {
                   const data = await routesResponse.json();
-                  setSelectedPostOffice({
-                    ...selectedPostOffice,
-                    routes: data,
-                  });
+                  const filteredRoutes = data.filter((route) => route.active_status !== 0);
+                  setRoutes(filteredRoutes)
                 } else {
                   console.error("Failed to fetch routes");
                 }
@@ -425,35 +401,39 @@ export function SelectOfficeRouteScreen() {
           }),
         }
       );
-
+  
       if (response.ok) {
-        // Refresh the list of routes for the selected office
-        const routesResponse = await fetch(
-          `${API_BASE_URL}/routesByOfficeId?office_id=${selectedPostOffice.office_id}`
-        );
-
-        if (routesResponse.ok) {
-          const data = await routesResponse.json();
-          setSelectedPostOffice({ ...selectedPostOffice, routes: data });
-        } else {
-          console.error("Failed to fetch routes");
-        }
-
-        // Close the modal
+        // Call fetchRoutes with the selected office's ID to update the routes state
+        fetchRoutes(selectedPostOffice.office_id);
+  
+        // Close the modal, clear the new route info, and reset the editing route
         setRouteModalVisible(false);
-
-        // Clear the new route info
         setNewRouteInfo({
           route_number: "",
           // Clear other route fields here
         });
-
-        setEditingRoute(null); // Reset the editing route
+        setEditingRoute(null);
       } else {
         console.error("Failed to update route");
       }
     } catch (error) {
       console.error("Error updating route:", error);
+    }
+  };
+
+  const fetchRoutes = async (officeId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/routesByOfficeId?office_id=${officeId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const filteredRoutes = data.filter((route) => route.active_status !== 0);
+        setRoutes(filteredRoutes); // Update the state with the fetched routes
+      } else {
+        console.error("Failed to fetch routes");
+      }
+    } catch (error) {
+      console.error("Error fetching routes:", error);
     }
   };
 
@@ -537,7 +517,7 @@ export function SelectOfficeRouteScreen() {
           <View>
             <Text>Select Route:</Text>
             <FlatList
-              data={selectedPostOffice ? selectedPostOffice.routes : []}
+              data={selectedPostOffice ? routes : []}
               keyExtractor={(item) => item.route_id.toString()}
               renderItem={({ item }) => (
                 <View>

@@ -336,9 +336,9 @@ app.use(
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
-  // Query the database to get the hashed password for the provided email
+  // Query the database to get the hashed password and active_status for the provided email
   const sql =
-    "SELECT user_id, password, first_name, last_name FROM users WHERE email = ?";
+    "SELECT user_id, password, first_name, last_name, active_status FROM users WHERE email = ?";
   db.query(sql, [email], async (err, results) => {
     if (err) {
       console.error("Error querying database:", err);
@@ -349,25 +349,31 @@ app.post("/api/login", async (req, res) => {
       // User not found
       return res.status(401).json({ message: "Invalid credentials" });
     }
-    console.log(results[0]);
+
     const user_id = results[0].user_id;
     const hashedPassword = results[0].password;
     const firstName = results[0].first_name;
     const lastName = results[0].last_name;
+    const activeStatus = results[0].active_status;
 
-    // Compare the provided password with the hashed password
-    const passwordMatch = await bcrypt.compare(password, hashedPassword);
+    if (activeStatus) {
+      // User has an active account, compare the provided password with the hashed password
+      const passwordMatch = await bcrypt.compare(password, hashedPassword);
 
-    if (passwordMatch) {
-      // Passwords match, set user data in the session
-      req.session.user = { email, user_id, firstName, lastName };
-      res.status(200).json({
-        message: "Login successful",
-        user: { email, user_id, firstName, lastName },
-      }); // Return user data in the response
+      if (passwordMatch) {
+        // Passwords match, set user data in the session
+        req.session.user = { email, user_id, firstName, lastName };
+        res.status(200).json({
+          message: "Login successful",
+          user: { email, user_id, firstName, lastName },
+        }); // Return user data in the response
+      } else {
+        // Passwords do not match
+        res.status(401).json({ message: "Invalid credentials" });
+      }
     } else {
-      // Passwords do not match
-      res.status(401).json({ message: "Invalid credentials" });
+      // User account is not active
+      res.status(401).json({ message: "Account is not active" });
     }
   });
 });
@@ -431,14 +437,8 @@ app.get("/api/logout", (req, res) => {
 
 app.post("/api/users/new", async (req, res) => {
   try {
-    const {
-      first_name,
-      last_name,
-      email,
-      password,
-      phone_number,
-      position,
-    } = req.body;
+    const { first_name, last_name, email, password, phone_number, position } =
+      req.body;
 
     // Hash the user's password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -448,14 +448,7 @@ app.post("/api/users/new", async (req, res) => {
       "INSERT INTO users (first_name, last_name, email, password, phone_number, position) VALUES (?, ?, ?, ?, ?, ?)";
     db.query(
       sql,
-      [
-        first_name,
-        last_name,
-        email,
-        hashedPassword,
-        phone_number,
-        position,
-      ],
+      [first_name, last_name, email, hashedPassword, phone_number, position],
       (err, result) => {
         if (err) {
           console.error("Error registering user:", err);
@@ -527,13 +520,7 @@ app.get("/api/users/:id", (req, res) => {
 // ******************************************************************************************************************
 app.put("/api/users/:id", async (req, res) => {
   const userId = req.params.id;
-  const {
-    first_name,
-    last_name,
-    email,
-    phone_number,
-    position,
-  } = req.body;
+  const { first_name, last_name, email, phone_number, position } = req.body;
 
   try {
     // Hash the password here before saving it to the database
@@ -543,14 +530,7 @@ app.put("/api/users/:id", async (req, res) => {
       "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, position=? WHERE user_id=?";
     db.query(
       sql,
-      [
-        first_name,
-        last_name,
-        email,
-        phone_number,
-        position,
-        userId,
-      ],
+      [first_name, last_name, email, phone_number, position, userId],
       async (err, result) => {
         if (err) {
           console.error("Error updating user:", err);
@@ -595,6 +575,31 @@ app.put("/api/users/:id", async (req, res) => {
   }
 });
 
+// Update the 'active_status' of a specific item by ID using PATCH
+app.patch("/api/users/delete/:id", (req, res) => {
+  const userId = req.params.id;
+  const { active_status } = req.body; // Include 'active_status' in the request body
+
+  const sql = "UPDATE users SET active_status = ? WHERE user_id = ?";
+
+  db.query(sql, [active_status, userId], (err, result) => {
+    if (err) {
+      console.error("Error updating 'active_status':", err);
+      res.status(500).json({
+        error: "An error occurred while updating the 'active_status'.",
+      });
+    } else {
+      if (result.affectedRows === 0) {
+        res.status(404).json({ error: "Item not found" });
+      } else {
+        res.status(200).json({
+          message: "'Active Status' updated successfully",
+        });
+      }
+    }
+  });
+});
+
 // ******************************************************************************************************************
 app.delete("/api/users/:id", (req, res) => {
   const userId = req.params.id;
@@ -621,38 +626,58 @@ app.delete("/api/users/:id", (req, res) => {
 // Create a new office
 app.post("/api/offices", (req, res) => {
   // Extract office data from the request body
-  const { user_id, city, state, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number } = req.body;
+  const {
+    user_id,
+    city,
+    state,
+    supervisor_name,
+    supervisor_phone_number,
+    postmaster_name,
+    postmaster_phone_number,
+  } = req.body;
 
   // Insert the office data into the database
   const sql =
     "INSERT INTO offices (user_id, city, state, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number) VALUES (?, ?, ?, ?, ?, ?, ?)";
-  db.query(sql, [user_id, city, state, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number], (err, result) => {
-    if (err) {
-      console.error("Error creating office:", err);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while creating the office." });
+  db.query(
+    sql,
+    [
+      user_id,
+      city,
+      state,
+      supervisor_name,
+      supervisor_phone_number,
+      postmaster_name,
+      postmaster_phone_number,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Error creating office:", err);
+        return res
+          .status(500)
+          .json({ error: "An error occurred while creating the office." });
+      }
+
+      // Successfully created office, get the office ID from the result
+      const officeId = result.insertId;
+
+      console.log("Office created successfully");
+      // Return the office's information in the response
+      res.status(201).json({
+        message: "Office created successfully",
+        office: {
+          id: officeId,
+          user_id,
+          city,
+          state,
+          supervisor_name,
+          supervisor_phone_number,
+          postmaster_name,
+          postmaster_phone_number,
+        },
+      });
     }
-
-    // Successfully created office, get the office ID from the result
-    const officeId = result.insertId;
-
-    console.log("Office created successfully");
-    // Return the office's information in the response
-    res.status(201).json({
-      message: "Office created successfully",
-      office: {
-        id: officeId,
-        user_id,
-        city,
-        state,
-        supervisor_name,
-        supervisor_phone_number,
-        postmaster_name,
-        postmaster_phone_number
-      },
-    });
-  });
+  );
 });
 
 // ******************************************************************************************************************
@@ -697,11 +722,9 @@ app.get("/api/officesByUserId", (req, res) => {
   db.query(sql, [user_id], (err, results) => {
     if (err) {
       console.error("Error retrieving offices by user_id:", err);
-      return res
-        .status(500)
-        .json({
-          error: "An error occurred while retrieving offices by user_id.",
-        });
+      return res.status(500).json({
+        error: "An error occurred while retrieving offices by user_id.",
+      });
     }
     res.status(200).json(results);
   });
@@ -711,37 +734,82 @@ app.get("/api/officesByUserId", (req, res) => {
 // Update an office by ID
 app.put("/api/offices/:id", (req, res) => {
   const officeId = req.params.id;
-  const { city, state, phone_number, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number } = req.body;
+  const {
+    city,
+    state,
+    phone_number,
+    supervisor_name,
+    supervisor_phone_number,
+    postmaster_name,
+    postmaster_phone_number,
+  } = req.body;
   const sql =
     "UPDATE offices SET city=?, state=?, supervisor_name=?, supervisor_phone_number=?, postmaster_name=?, postmaster_phone_number=? WHERE office_id=?";
-  db.query(sql, [city, state, supervisor_name, supervisor_phone_number, postmaster_name, postmaster_phone_number, officeId], (err, result) => {
-    if (err) {
-      console.error("Error updating office:", err);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while updating the office." });
+  db.query(
+    sql,
+    [
+      city,
+      state,
+      supervisor_name,
+      supervisor_phone_number,
+      postmaster_name,
+      postmaster_phone_number,
+      officeId,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Error updating office:", err);
+        return res
+          .status(500)
+          .json({ error: "An error occurred while updating the office." });
+      }
+
+      // Check if any rows were affected by the update
+      if (result.affectedRows > 0) {
+        // Office was updated successfully, retrieve the updated office data
+        const updatedOffice = {
+          office_id: officeId,
+          city,
+          state,
+          supervisor_name,
+          supervisor_phone_number,
+          postmaster_name,
+          postmaster_phone_number,
+        };
+
+        res.status(200).json({
+          message: "Office updated successfully",
+          office: updatedOffice,
+        });
+      } else {
+        // No rows were affected, meaning the office with the specified ID was not found
+        res.status(404).json({ error: "Office not found" });
+      }
     }
+  );
+});
 
-    // Check if any rows were affected by the update
-    if (result.affectedRows > 0) {
-      // Office was updated successfully, retrieve the updated office data
-      const updatedOffice = {
-        office_id: officeId,
-        city,
-        state,
-        supervisor_name,
-        supervisor_phone_number,
-        postmaster_name,
-        postmaster_phone_number
-      };
+app.patch("/api/offices/delete/:id", (req, res) => {
+  const officeId = req.params.id;
+  const { active_status } = req.body; // Include 'active_status' in the request body
 
-      res.status(200).json({
-        message: "Office updated successfully",
-        office: updatedOffice,
+  const sql = "UPDATE offices SET active_status = ? WHERE office_id = ?";
+
+  db.query(sql, [active_status, officeId], (err, result) => {
+    if (err) {
+      console.error("Error updating 'active_status' for office:", err);
+      res.status(500).json({
+        error:
+          "An error occurred while updating the 'active_status' for office.",
       });
     } else {
-      // No rows were affected, meaning the office with the specified ID was not found
-      res.status(404).json({ error: "Office not found" });
+      if (result.affectedRows === 0) {
+        res.status(404).json({ error: "Office not found" });
+      } else {
+        res.status(200).json({
+          message: "'Active Status' for office updated successfully",
+        });
+      }
     }
   });
 });
@@ -877,6 +945,31 @@ app.put("/api/routes/:id", (req, res) => {
         office_id,
       },
     });
+  });
+});
+
+app.patch("/api/routes/delete/:id", (req, res) => {
+  const routeId = req.params.id;
+  const { active_status } = req.body; // Include 'active_status' in the request body
+
+  const sql = "UPDATE routes SET active_status = ? WHERE route_id = ?";
+
+  db.query(sql, [active_status, routeId], (err, result) => {
+    if (err) {
+      console.error("Error updating 'active_status' for route:", err);
+      res.status(500).json({
+        error:
+          "An error occurred while updating the 'active_status' for route.",
+      });
+    } else {
+      if (result.affectedRows === 0) {
+        res.status(404).json({ error: "Route not found" });
+      } else {
+        res.status(200).json({
+          message: "'Active Status' for route updated successfully",
+        });
+      }
+    }
   });
 });
 
@@ -1152,6 +1245,68 @@ app.put("/api/addresses/:id/reorder", (req, res) => {
   });
 });
 
+app.patch("/api/addresses/delete/:id", (req, res) => {
+  const addressId = req.params.id;
+  const { active_status } = req.body; // Include 'active_status' in the request body
+
+  const sql = "UPDATE addresses SET active_status = ? WHERE address_id = ?";
+
+  db.query(sql, [active_status, addressId], (err, result) => {
+    if (err) {
+      console.error("Error updating 'active_status' for address:", err);
+      res.status(500).json({
+        error:
+          "An error occurred while updating the 'active_status' for address.",
+      });
+    } else {
+      if (result.affectedRows === 0) {
+        res.status(404).json({ error: "Address not found" });
+      } else {
+        res.status(200).json({
+          message: "'Active Status' for address updated successfully",
+        });
+      }
+    }
+  });
+});
+
+app.patch(
+  "/api/patchDeleteAddressesByCaseAndRoute/:case_number/:route_id",
+  (req, res) => {
+    const { case_number, route_id } = req.params;
+    const { active_status } = req.body;
+
+    // Ensure that active_status is provided in the request body
+    if (active_status === undefined) {
+      return res
+        .status(400)
+        .json({ error: "active_status is required in the request body." });
+    }
+
+    // Convert active_status to a boolean value (true or false)
+    const isActive = active_status.toLowerCase() === "true";
+
+    // Construct the SQL query to update the active_status for addresses
+    const sql =
+      "UPDATE addresses SET active_status = ? WHERE case_number = ? AND route_id = ?";
+
+    db.query(sql, [isActive, case_number, route_id], (err, result) => {
+      if (err) {
+        console.error("Error updating active_status by case and route:", err);
+        return res
+          .status(500)
+          .json({ error: "An error occurred while updating active_status." });
+      }
+
+      res
+        .status(200)
+        .json({
+          message: `Active status for addresses with case ${case_number} on route ${route_id} updated successfully`,
+        });
+    });
+  }
+);
+
 // Delete an address by ID along with associated deliveries
 app.delete("/api/addresses/:id", (req, res) => {
   const addressId = req.params.id;
@@ -1172,19 +1327,27 @@ app.delete("/api/deleteAddressesByCaseAndRoute", (req, res) => {
 
   // Ensure that case_number and route_id are provided in the query parameters
   if (!case_number || !route_id) {
-    return res.status(400).json({ error: "Both case_number and route_id are required." });
+    return res
+      .status(400)
+      .json({ error: "Both case_number and route_id are required." });
   }
 
   // Construct the SQL query to delete addresses
   const sql = "DELETE FROM addresses WHERE case_number = ? AND route_id = ?";
-  
+
   db.query(sql, [case_number, route_id], (err, result) => {
     if (err) {
       console.error("Error deleting addresses by case and route:", err);
-      return res.status(500).json({ error: "An error occurred while deleting addresses." });
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting addresses." });
     }
-    
-    res.status(200).json({ message: `Addresses for case ${case_number} on route ${route_id} deleted successfully` });
+
+    res
+      .status(200)
+      .json({
+        message: `Addresses for case ${case_number} on route ${route_id} deleted successfully`,
+      });
   });
 });
 
@@ -1300,10 +1463,11 @@ app.get("/api/deliveriesByRouteAndDate", (req, res) => {
   const formattedDeliveryDate = deliveryDate.substring(0, 10);
 
   const sql = `
-    SELECT deliveries.*, addresses.address1, addresses.case_number, addresses.case_row_number, addresses.position_number, addresses.address2, addresses.city, addresses.state, addresses.zip_code
+    SELECT deliveries.*, addresses.address1, addresses.case_number, addresses.case_row_number, addresses.position_number, addresses.address2, addresses.city, addresses.state, addresses.zip_code, addresses.active_status, r.active_status
     FROM deliveries
     LEFT JOIN addresses ON deliveries.address_id = addresses.address_id
-    WHERE deliveries.route_id = ? AND DATE(deliveries.delivery_date) = ?
+    LEFT JOIN routes AS r ON deliveries.route_id = r.route_id
+    WHERE deliveries.route_id = ? AND DATE(deliveries.delivery_date) = ? AND addresses.active_status = 1 AND r.active_status = 1
   `;
 
   db.query(sql, [route_id, formattedDeliveryDate], (err, results) => {
@@ -1407,8 +1571,6 @@ app.patch("/api/deliveries/:id", (req, res) => {
         // Successfully updated 'delivered' status, include the updated status in the response
         res.status(200).json({
           message: "'Delivered' status updated successfully",
-          updatedDeliveryId: deliveryId,
-          delivered: delivered,
         });
       }
     }
