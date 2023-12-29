@@ -7,7 +7,15 @@ import API_BASE_URL from "../apiConfig"; // Import your API base URL
 export function NewOfficeScreen() {
   const [userId, setUserId] = useState(null);
   const [postOffices, setPostOffices] = useState([
-    { user_id: userId, city: "", state: "", phone_number: "" }, // Initial input fields
+    {
+      user_id: userId,
+      city: "",
+      state: "",
+      supervisor_name: "",
+      supervisor_phone_number: "",
+      postmaster_name: "",
+      postmaster_phone_number: "",
+    },
   ]);
 
   const navigation = useNavigation();
@@ -30,7 +38,15 @@ export function NewOfficeScreen() {
     // Add a new empty post office object to the state
     setPostOffices([
       ...postOffices,
-      { user_id: userId, city: "", state: "", phone_number: "" },
+      {
+        user_id: userId,
+        city: "",
+        state: "",
+        supervisor_name: "",
+        supervisor_phone_number: "",
+        postmaster_name: "",
+        postmaster_phone_number: "",
+      },
     ]);
   };
 
@@ -48,8 +64,7 @@ export function NewOfficeScreen() {
       postOffices[i].user_id = userId;
       if (
         postOffices[i].city != "" &&
-        postOffices[i].state != "" &&
-        postOffices[i].phone_number != ""
+        postOffices[i].state != ""
       ) {
         updatedPostOffices.push(postOffices[i]);
       }
@@ -83,34 +98,43 @@ export function NewOfficeScreen() {
 
   return (
     <View>
-    <Text>What are the main offices you work at?</Text>
-    <Text>Tip: You can add more later</Text>
-    <ScrollView>
-      {postOffices.map((office, index) => (
-        <View key={index}>
-          <Text>Post Office {index + 1}</Text>
-          <TextInput
-            placeholder="City"
-            value={office.city}
-            onChangeText={(text) => handleInputChange(text, index, "city")}
-          />
-          <TextInput
-            placeholder="State"
-            value={office.state}
-            onChangeText={(text) => handleInputChange(text, index, "state")}
-          />
-          <TextInput
-            placeholder="Phone Number"
-            value={office.phone_number}
-            onChangeText={(text) =>
-              handleInputChange(text, index, "phone_number")
-            }
-          />
-        </View>
-      ))}
-      <Button title="Add Post Office" onPress={handleAddPostOffice} />
-      <Button title="Create Post Offices" onPress={handleCreatePostOffices} />
-    </ScrollView>
+      <Text>What are the main offices you work at?</Text>
+      <Text>Tip: You can add more later</Text>
+      <ScrollView>
+        {postOffices.map((office, index) => (
+          <View key={index}>
+            <Text>Post Office {index + 1}</Text>
+            <TextInput
+              placeholder="City"
+              onChangeText={(text) => handleInputChange(text, index, "city")}
+            />
+            <TextInput
+              placeholder="State"
+              onChangeText={(text) => handleInputChange(text, index, "state")}
+            />
+
+
+            <TextInput
+              placeholder="Supervisor Name"
+              onChangeText={(text) => handleInputChange(text, index, "supervisor_name")}
+            />
+            <TextInput
+              placeholder="Supervisor Phone Number"
+              onChangeText={(text) => handleInputChange(text, index, "supervisor_phone_number")}
+            />
+            <TextInput
+              placeholder="Postmaster Name"
+              onChangeText={(text) => handleInputChange(text, index, "postmaster_name")}
+            />
+            <TextInput
+              placeholder="Postmaster Phone Number"
+              onChangeText={(text) => handleInputChange(text, index, "postmaster_phone_number")}
+            />
+          </View>
+        ))}
+        <Button title="Add Post Office" onPress={handleAddPostOffice} />
+        <Button title="Create Post Offices" onPress={handleCreatePostOffices} />
+      </ScrollView>
     </View>
   );
 }
