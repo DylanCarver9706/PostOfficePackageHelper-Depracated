@@ -513,6 +513,31 @@ app.get("/api/users/:id", (req, res) => {
   });
 });
 
+// Function to get the user data after a login
+app.get("/api/afterLoginUserData", (req, res) => {
+  const { email, firebase_user_uid } = req.query;
+
+  if (!email || !firebase_user_uid) {
+    return res.status(400).json({ error: "Missing email or firebase_user_uid in query params" });
+  }
+
+  const sql =
+    "SELECT user_id, first_name, last_name, email, phone_number, position, firebase_user_uid FROM users WHERE email = ? AND firebase_user_uid = ?";
+  
+  db.query(sql, [email, firebase_user_uid], (err, results) => {
+    if (err) {
+      console.error("Error retrieving user by email and Firebase user UID:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while retrieving the user." });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json(results[0]);
+  });
+});
+
 // ******************************************************************************************************************
 app.put("/api/users/:id", async (req, res) => {
   const userId = req.params.id;
