@@ -17,68 +17,45 @@ export function SignUpScreen() {
 
   const navigation = useNavigation();
 
-  const handleSubmit = async () => {
+  const signUp = async () => {
     try {
-      // Create an object with the user's data
-      const userData = {
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        phone_number: phoneNumber,
-        position: position,
-        password: password,
-      };
-
-      // Send a POST request to the API to create a new user
-      const newUserResponse = await fetch(`${API_BASE_URL}/users/new`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (newUserResponse.status === 201) {
-        // User was successfully created
-        const newUserData = await newUserResponse.json();
-        console.log(newUserData);
-
-        const loginInfo = {
-          email: email, // Note: Use the email provided in the form, not from the response
-          password: password, // Note: Use the password provided in the form, not stored in client-side storage
+      const user = await createUserWithEmailAndPassword(auth, email, password);
+      if (user) {
+        // User was successfully created in firebase
+        // console.log("user: " + JSON.stringify(user, null, 2));
+        // Create an object with the user's data
+        const userData = {
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          phone_number: phoneNumber,
+          position: position,
+          firebase_user_uid: user.user.uid
         };
 
-        // Send a POST request to log in the newly created user
-        const loginResponse = await fetch(`${API_BASE_URL}/login`, {
+        // Send a POST request to the API to create a new user
+        const newUserResponse = await fetch(`${API_BASE_URL}/users/new`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(loginInfo),
+          body: JSON.stringify(userData),
         });
 
-        if (loginResponse.status === 200) {
-          const data = await loginResponse.json();
-          console.log("User logged in data: " + JSON.stringify(data));
-
+        if (newUserResponse.status === 201) {
+          // User was successfully created
+          const newUserData = await newUserResponse.json();
+          console.log(newUserData);
           // Store user ID securely (e.g., using AsyncStorage)
-          await AsyncStorage.setItem("userId", data.user.user_id.toString());
-          await AsyncStorage.setItem("userEmail", data.user.email);
-
-          // Optionally, navigate to another screen or perform other actions
-          navigation.navigate("New Office Screen");
-        } else {
-          // Handle other status codes (e.g., validation errors, server errors)
-          // You can display an error message or handle them accordingly
-          console.error("Error logging in user:", loginResponse.statusText);
+          await AsyncStorage.setItem("userId", newUserData.user.id.toString());
+          await AsyncStorage.setItem("userEmail", newUserData.user.email);
+          await AsyncStorage.setItem("userFirebaseUid", newUserData.user.firebase_user_uid);
         }
-      } else {
-        // Handle other status codes (e.g., validation errors, server errors)
-        // You can display an error message or handle them accordingly
-        console.error("Error creating user:", newUserResponse.statusText);
       }
     } catch (error) {
-      console.error("Error creating or logging in user:", error);
+      console.error("Error during sign in:", error);
+    } finally {
+      navigation.navigate("New Office Screen");
     }
   };
 
