@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableWithoutFeedback,
   Alert,
+  LogBox,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -209,6 +210,7 @@ export function CaseBuilderScreen() {
           "Failed to add a new case. Response status:",
           response.status
         );
+        LogBox.ignoreAllLogs();
         const responseText = await response.text();
         console.error("Response data:", responseText);
       }
@@ -389,9 +391,10 @@ export function CaseBuilderScreen() {
     const officeResponse = await fetch(
       `${API_BASE_URL}/offices/${selectedPostOffice}`
     );
+
     if (officeResponse.ok) {
       const data = await officeResponse.json();
-      // console.log("Office Data:\n" + data)
+      console.log("Office Data:\n" + JSON.stringify(data, null, 2))
       setSelectedOfficeData({
         office_city: data.city,
         office_state: data.state,
@@ -439,8 +442,11 @@ export function CaseBuilderScreen() {
   }, [selectedRoute]);
 
   useEffect(() => {
-    fetchAddresses();
     fetchOfficeAndRouteData();
+  }, [selectedPostOffice]);
+
+  useEffect(() => {
+    fetchAddresses();
   }, [selectedRoute, selectedCase, selectedRow]);
 
   const handleDeleteAddress = async (addressId) => {
@@ -728,11 +734,10 @@ export function CaseBuilderScreen() {
           <Text>List View</Text>
         </TouchableOpacity>
       </View>
-      {caseViewActive === true && (
+      {caseViewActive === true && cases.length > 0 && selectedOfficeData.office_city != null && selectedOfficeData.office_state != null && (
         <View>
           <Text>
-            Post Office:{" "}
-            {`${selectedOfficeData.office_city}, ${selectedOfficeData.office_state}`}
+            {`Post Office: ${selectedOfficeData.office_city}, ${selectedOfficeData.office_state}`}
           </Text>
           <Text>Route ID: {selectedRouteData.route_number}</Text>
           <View style={styles.caseContainer}>
