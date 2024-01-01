@@ -18,15 +18,15 @@ export function LoginScreen() {
       const user = await signInWithEmailAndPassword(auth, email, password);
       if (user) {
         // User was successfully created in firebase
-        console.log("user: " + JSON.stringify(user, null, 2));
+        // console.log("user: " + JSON.stringify(user, null, 2));
         const response = await fetch(
           `${API_BASE_URL}/afterLoginUserData?email=${email}&firebase_user_uid=${user.user.uid}`
         );
-        console.log(response.status);
+        // console.log(response.status);
         if (response.status === 200) {
           // User was successfully created
           const userData = await response.json();
-          console.log(userData);
+          // console.log(userData);
           // Store user ID securely (e.g., using AsyncStorage)
           await AsyncStorage.setItem("userId", userData.user_id.toString());
           await AsyncStorage.setItem("userEmail", userData.email);

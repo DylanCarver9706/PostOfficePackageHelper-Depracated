@@ -26,7 +26,7 @@ export function CaseBuilderScreen() {
   const navigation = useNavigation();
   const [caseViewActive, setCaseViewActive] = useState(true);
   const [addresses, setAddresses] = useState([]);
-
+  const [groupedAddresses, setGroupedAddresses] = useState([])
   const [selectedCase, setSelectedCase] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
   const [listAddresses, setListAddresses] = useState([]);
@@ -112,7 +112,7 @@ export function CaseBuilderScreen() {
 
   const fillMissingCases = async (casesArray) => {
     if (casesArray.length === 0) {
-      // If there are no cases, create the first case
+      // If there are no cases, create the first cases
       createNewCase("1");
       createNewCase("2");
       createNewCase("3");
@@ -318,7 +318,7 @@ export function CaseBuilderScreen() {
   const fetchAddresses = async () => {
     try {
       // Fetch addresses in delivery order
-      const requestUrl = `${API_BASE_URL}/addresses?route_id=${selectedRoute}`;
+      const requestUrl = `${API_BASE_URL}/addressesByRouteId?route_id=${selectedRoute}`;
       const response = await fetch(requestUrl);
 
       if (response.ok) {
@@ -371,6 +371,7 @@ export function CaseBuilderScreen() {
 
         // Update the state with the corrected position numbers
         setListAddresses(sortedDeliveries);
+        // groupAddressesByCase();
       } else {
         console.error("Failed to fetch addresses");
       }
@@ -394,7 +395,7 @@ export function CaseBuilderScreen() {
 
     if (officeResponse.ok) {
       const data = await officeResponse.json();
-      console.log("Office Data:\n" + JSON.stringify(data, null, 2))
+      // console.log("Office Data:\n" + JSON.stringify(data, null, 2))
       setSelectedOfficeData({
         office_city: data.city,
         office_state: data.state,
@@ -491,7 +492,7 @@ export function CaseBuilderScreen() {
     setModalVisible(true);
   };
 
-  const handleSaveChanges = async () => {
+  const handleSavePositionNumberChanges = async () => {
     // Send a PUT request to update the address on the server
     try {
       const response = await fetch(
@@ -568,6 +569,7 @@ export function CaseBuilderScreen() {
           state: "",
           zip_code: "",
         });
+        setSelectedRoute(selectedRoute)
       } else {
         console.error("Failed to add a new address");
       }
@@ -666,8 +668,9 @@ export function CaseBuilderScreen() {
   }, [updatedAddressOrder]);
 
   // Define a function to group addresses by case number
-  const groupAddressesByCase = () => {
-    const groupedAddresses = [];
+  const groupAddressesByCase = async () => {
+    // await fetchAddresses();
+    const groupedAddressesByCase = addresses;
     let currentCaseNumber = null;
     let currentRowNumber = null;
     let hasAddressesInCurrentRow = false;
@@ -677,7 +680,7 @@ export function CaseBuilderScreen() {
         if (currentCaseNumber !== null) {
           // Add "row start" separator only if there were addresses in the previous row
           if (!hasAddressesInCurrentRow) {
-            groupedAddresses.push({
+            groupedAddressesByCase.push({
               type: "rowStart",
               rowNumber: currentRowNumber,
               caseNumber: currentCaseNumber,
@@ -685,7 +688,7 @@ export function CaseBuilderScreen() {
           }
         }
         currentCaseNumber = address.case_number;
-        groupedAddresses.push({
+        groupedAddressesByCase.push({
           type: "caseStart",
           caseNumber: currentCaseNumber,
         });
@@ -696,14 +699,14 @@ export function CaseBuilderScreen() {
       if (address.case_row_number !== currentRowNumber) {
         currentRowNumber = address.case_row_number;
         hasAddressesInCurrentRow = true; // Mark that there are addresses in this row
-        groupedAddresses.push({
+        groupedAddressesByCase.push({
           type: "rowStart",
           rowNumber: currentRowNumber,
           caseNumber: currentCaseNumber,
         });
       }
 
-      groupedAddresses.push({
+      groupedAddressesByCase.push({
         type: "address",
         addressData: address,
       });
@@ -711,17 +714,21 @@ export function CaseBuilderScreen() {
 
     if (currentCaseNumber !== null && !hasAddressesInCurrentRow) {
       // Add a "row start" separator if there were addresses in the last row
-      groupedAddresses.push({
+      groupedAddressesByCase.push({
         type: "rowStart",
         rowNumber: currentRowNumber,
         caseNumber: currentCaseNumber,
       });
     }
 
-    return groupedAddresses;
+    setGroupedAddresses(groupedAddressesByCase)
   };
 
-  const groupedAddresses = groupAddressesByCase();
+  useEffect(() => {
+    if (!caseViewActive) {
+      groupAddressesByCase();
+    }
+  }, [caseViewActive, listAddresses])
 
   return (
     <View style={styles.container}>
@@ -739,7 +746,8 @@ export function CaseBuilderScreen() {
           <Text>
             {`Post Office: ${selectedOfficeData.office_city}, ${selectedOfficeData.office_state}`}
           </Text>
-          <Text>Route ID: {selectedRouteData.route_number}</Text>
+          <Text>Route Number: {selectedRouteData.route_number}</Text>
+          <Text>Route ID: {selectedRoute}</Text>
           <View style={styles.caseContainer}>
             <Text style={styles.caseTitle}>
               Case: {cases[currentCaseIndex]?.caseNumber}
@@ -932,7 +940,7 @@ export function CaseBuilderScreen() {
                   }
                 />
                 <Button title="Cancel" onPress={() => setModalVisible(false)} />
-                <Button title="Save Changes" onPress={handleSaveChanges} />
+                <Button title="Save Changes" onPress={handleSavePositionNumberChanges} />
               </View>
             </View>
           </Modal>
