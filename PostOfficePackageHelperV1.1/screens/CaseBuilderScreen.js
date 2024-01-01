@@ -26,7 +26,7 @@ export function CaseBuilderScreen() {
   const navigation = useNavigation();
   const [caseViewActive, setCaseViewActive] = useState(true);
   const [addresses, setAddresses] = useState([]);
-  const [groupedAddresses, setGroupedAddresses] = useState([])
+  const [groupedAddresses, setGroupedAddresses] = useState([]);
   const [selectedCase, setSelectedCase] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
   const [listAddresses, setListAddresses] = useState([]);
@@ -569,7 +569,7 @@ export function CaseBuilderScreen() {
           state: "",
           zip_code: "",
         });
-        setSelectedRoute(selectedRoute)
+        setSelectedRoute(selectedRoute);
       } else {
         console.error("Failed to add a new address");
       }
@@ -721,300 +721,314 @@ export function CaseBuilderScreen() {
       });
     }
 
-    setGroupedAddresses(groupedAddressesByCase)
+    setGroupedAddresses(groupedAddressesByCase);
   };
 
   useEffect(() => {
     if (!caseViewActive) {
       groupAddressesByCase();
     }
-  }, [caseViewActive, listAddresses])
+  }, [caseViewActive, listAddresses]);
 
   return (
     <View style={styles.container}>
-      <ToastManager />
+      {cases.length > 0 &&
+          selectedOfficeData.office_city != null &&
+          selectedOfficeData.office_state != null ? (
       <View>
-        <TouchableOpacity onPress={handleGoToCaseView}>
-          <Text>Case View</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleGoToListView}>
-          <Text>List View</Text>
-        </TouchableOpacity>
-      </View>
-      {caseViewActive === true && cases.length > 0 && selectedOfficeData.office_city != null && selectedOfficeData.office_state != null && (
+        <ToastManager />
         <View>
-          <Text>
-            {`Post Office: ${selectedOfficeData.office_city}, ${selectedOfficeData.office_state}`}
-          </Text>
-          <Text>Route Number: {selectedRouteData.route_number}</Text>
-          <Text>Route ID: {selectedRoute}</Text>
-          <View style={styles.caseContainer}>
-            <Text style={styles.caseTitle}>
-              Case: {cases[currentCaseIndex]?.caseNumber}
-            </Text>
-            <TouchableOpacity style={styles.case}>
-              {cases[currentCaseIndex]?.rows.map((rowNumber) => (
-                <TouchableOpacity
-                  key={rowNumber}
-                  style={styles.row}
-                  onPress={() =>
-                    handleRowPress(
-                      cases[currentCaseIndex]?.caseNumber,
-                      rowNumber
-                    )
-                  }
-                >
-                  <Text>Row {rowNumber}</Text>
-                </TouchableOpacity>
-              ))}
-            </TouchableOpacity>
-            <View style={styles.navigationButtons}>
-              <TouchableOpacity onPress={handlePrevCase}>
-                <Text style={styles.navigationText}>⬅️</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleNextCase}>
-                <Text style={styles.navigationText}>➡️</Text>
-              </TouchableOpacity>
-            </View>
-            {onLastCase === true && (
-              <Button
-                title="+"
-                style={styles.buttonText}
-                onPress={handleAddNewCase}
-              />
-            )}
-            {/* Add the Delete button here */}
-            {onLastCase === true && (
-              <Button
-                title="Delete Case"
-                color="red"
-                onPress={handleDeleteLastCase}
-              />
-            )}
-          </View>
+          <TouchableOpacity onPress={handleGoToCaseView}>
+            <Text>Case View</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleGoToListView}>
+            <Text>List View</Text>
+          </TouchableOpacity>
         </View>
-      )}
-      {caseViewActive === false && (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          {groupedAddresses.length > 0 ? (
-            <DraggableFlatList
-              data={groupedAddresses}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item, index, drag }) => {
-                if (item.type === "caseStart") {
-                  return (
-                    <View style={styles.caseSeparator}>
-                      <Text>Case {item.caseNumber}</Text>
-                    </View>
-                  );
-                } else if (item.type === "rowStart") {
-                  return (
-                    <View style={styles.caseRowSeparator}>
-                      <Text>
-                        Case {item.caseNumber}, Row {item.rowNumber}
-                      </Text>
-                    </View>
-                  );
-                } else if (item.type === "address") {
-                  const address = item.addressData;
-                  return (
-                    <TouchableOpacity>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          flex: 1,
-                          padding: 15,
-                          backgroundColor: "white",
-                          borderWidth: 1,
-                          borderColor: "gray",
-                          borderRadius: 25,
-                        }}
-                      >
-                        <TouchableWithoutFeedback onPressIn={drag}>
-                          <Text style={{ color: "blue", marginRight: 10 }}>
-                            ☰
-                          </Text>
-                        </TouchableWithoutFeedback>
-                        <View>
-                          <Text>{formatAddress(address)}</Text>
-                          <Text>
-                            Position Number: {address.position_number}
-                          </Text>
-                          <Text>Case Number: {address.case_number}</Text>
-                          <Text>Row Number: {address.case_row_number}</Text>
-                          <TouchableOpacity
-                            onPress={() => handleEditAddress(address)}
-                          >
-                            <Text style={{ color: "blue", marginTop: 5 }}>
-                              Edit
-                            </Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            onPress={() => {
-                              Alert.alert(
-                                "Confirm Delete",
-                                "Are you sure you want to delete this address?\n\nAny deliveries associated with this address will also be deleted!\n",
-                                [
-                                  {
-                                    text: "Cancel",
-                                    style: "cancel",
-                                  },
-                                  {
-                                    text: "Delete",
-                                    onPress: () =>
-                                      handleDeleteAddress(address.address_id),
-                                  },
-                                ]
-                              );
-                            }}
-                          >
-                            <Text style={{ color: "red", marginTop: 5 }}>
-                              Delete
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
+        {caseViewActive === true && (
+            <View>
+              <Text>
+                {`Post Office: ${selectedOfficeData.office_city}, ${selectedOfficeData.office_state}`}
+              </Text>
+              <Text>Route Number: {selectedRouteData.route_number}</Text>
+              <Text>Route ID: {selectedRoute}</Text>
+              <View style={styles.caseContainer}>
+                <Text style={styles.caseTitle}>
+                  Case: {cases[currentCaseIndex]?.caseNumber}
+                </Text>
+                <TouchableOpacity style={styles.case}>
+                  {cases[currentCaseIndex]?.rows.map((rowNumber) => (
+                    <TouchableOpacity
+                      key={rowNumber}
+                      style={styles.row}
+                      onPress={() =>
+                        handleRowPress(
+                          cases[currentCaseIndex]?.caseNumber,
+                          rowNumber
+                        )
+                      }
+                    >
+                      <Text>Row {rowNumber}</Text>
                     </TouchableOpacity>
-                  );
-                }
-              }}
-              onDragEnd={({ data }) => onDragEnd({ data })}
-            />
-          ) : (
-            <Text>No addresses found</Text>
-          )}
-
-          {/* Edit Address Modal */}
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={() => {
-              setModalVisible(false);
-            }}
-          >
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <View style={{ backgroundColor: "white", padding: 20 }}>
-                <TextInput
-                  placeholder="Address 1"
-                  value={editedAddress.address1}
-                  onChangeText={(text) =>
-                    setEditedAddress({ ...editedAddress, address1: text })
-                  }
-                />
-                <TextInput
-                  placeholder="Address 2"
-                  value={editedAddress.address2}
-                  onChangeText={(text) =>
-                    setEditedAddress({ ...editedAddress, address2: text })
-                  }
-                />
-                <TextInput
-                  placeholder="City"
-                  value={editedAddress.city}
-                  onChangeText={(text) =>
-                    setEditedAddress({ ...editedAddress, city: text })
-                  }
-                />
-                <TextInput
-                  placeholder="State"
-                  value={editedAddress.state}
-                  onChangeText={(text) =>
-                    setEditedAddress({ ...editedAddress, state: text })
-                  }
-                />
-                <TextInput
-                  placeholder="Zip Code"
-                  value={editedAddress.zip_code}
-                  onChangeText={(text) =>
-                    setEditedAddress({ ...editedAddress, zip_code: text })
-                  }
-                />
-                <Button title="Cancel" onPress={() => setModalVisible(false)} />
-                <Button title="Save Changes" onPress={handleSavePositionNumberChanges} />
+                  ))}
+                </TouchableOpacity>
+                <View style={styles.navigationButtons}>
+                  <TouchableOpacity onPress={handlePrevCase}>
+                    <Text style={styles.navigationText}>⬅️</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={handleNextCase}>
+                    <Text style={styles.navigationText}>➡️</Text>
+                  </TouchableOpacity>
+                </View>
+                {onLastCase === true && (
+                  <Button
+                    title="+"
+                    style={styles.buttonText}
+                    onPress={handleAddNewCase}
+                  />
+                )}
+                {/* Add the Delete button here */}
+                {onLastCase === true && (
+                  <Button
+                    title="Delete Case"
+                    color="red"
+                    onPress={handleDeleteLastCase}
+                  />
+                )}
               </View>
             </View>
-          </Modal>
-        </View>
-      )}
-      {/* Floating Button */}
-      <TouchableOpacity
-        style={styles.floatingButton}
-        onPress={handleAddAddress}
-      >
-        <Text style={styles.buttonText}>+</Text>
-      </TouchableOpacity>
+          )}
+        {caseViewActive === false && (
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
+            {groupedAddresses.length > 0 ? (
+              <DraggableFlatList
+                data={groupedAddresses}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item, index, drag }) => {
+                  if (item.type === "caseStart") {
+                    return (
+                      <View style={styles.caseSeparator}>
+                        <Text>Case {item.caseNumber}</Text>
+                      </View>
+                    );
+                  } else if (item.type === "rowStart") {
+                    return (
+                      <View style={styles.caseRowSeparator}>
+                        <Text>
+                          Case {item.caseNumber}, Row {item.rowNumber}
+                        </Text>
+                      </View>
+                    );
+                  } else if (item.type === "address") {
+                    const address = item.addressData;
+                    return (
+                      <TouchableOpacity>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            flex: 1,
+                            padding: 15,
+                            backgroundColor: "white",
+                            borderWidth: 1,
+                            borderColor: "gray",
+                            borderRadius: 25,
+                          }}
+                        >
+                          <TouchableWithoutFeedback onPressIn={drag}>
+                            <Text style={{ color: "blue", marginRight: 10 }}>
+                              ☰
+                            </Text>
+                          </TouchableWithoutFeedback>
+                          <View>
+                            <Text>{formatAddress(address)}</Text>
+                            <Text>
+                              Position Number: {address.position_number}
+                            </Text>
+                            <Text>Case Number: {address.case_number}</Text>
+                            <Text>Row Number: {address.case_row_number}</Text>
+                            <TouchableOpacity
+                              onPress={() => handleEditAddress(address)}
+                            >
+                              <Text style={{ color: "blue", marginTop: 5 }}>
+                                Edit
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              onPress={() => {
+                                Alert.alert(
+                                  "Confirm Delete",
+                                  "Are you sure you want to delete this address?\n\nAny deliveries associated with this address will also be deleted!\n",
+                                  [
+                                    {
+                                      text: "Cancel",
+                                      style: "cancel",
+                                    },
+                                    {
+                                      text: "Delete",
+                                      onPress: () =>
+                                        handleDeleteAddress(address.address_id),
+                                    },
+                                  ]
+                                );
+                              }}
+                            >
+                              <Text style={{ color: "red", marginTop: 5 }}>
+                                Delete
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  }
+                }}
+                onDragEnd={({ data }) => onDragEnd({ data })}
+              />
+            ) : (
+              <Text>No addresses found</Text>
+            )}
 
-      {/* Add Address Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={newAddressModalVisible}
-        onRequestClose={() => {
-          setNewAddressModalVisible(false);
-        }}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <TextInput
-              placeholder="Address 1"
-              onChangeText={(text) =>
-                setNewAddress({ ...newAddress, address1: text })
-              }
-            />
-            <TextInput
-              placeholder="Address 2"
-              onChangeText={(text) =>
-                setNewAddress({ ...newAddress, address2: text })
-              }
-            />
-            <TextInput
-              placeholder="City"
-              onChangeText={(text) =>
-                setNewAddress({ ...newAddress, city: text })
-              }
-            />
-            <TextInput
-              placeholder="State"
-              onChangeText={(text) =>
-                setNewAddress({ ...newAddress, state: text })
-              }
-            />
-            <TextInput
-              placeholder="Zip Code"
-              onChangeText={(text) =>
-                setNewAddress({ ...newAddress, zip_code: text })
-              }
-            />
-            <TextInput
-              placeholder="Case Number"
-              onChangeText={(text) =>
-                setNewAddress({ ...newAddress, case_number: text })
-              }
-            />
-            <TextInput
-              placeholder="Row Number"
-              onChangeText={(text) =>
-                setNewAddress({ ...newAddress, case_row_number: text })
-              }
-            />
-            <Button
-              title="Cancel"
-              onPress={() => setNewAddressModalVisible(false)}
-            />
-            <Button title="Save" onPress={handleSaveNewAddress} />
+            {/* Edit Address Modal */}
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => {
+                setModalVisible(false);
+              }}
+            >
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <View style={{ backgroundColor: "white", padding: 20 }}>
+                  <TextInput
+                    placeholder="Address 1"
+                    value={editedAddress.address1}
+                    onChangeText={(text) =>
+                      setEditedAddress({ ...editedAddress, address1: text })
+                    }
+                  />
+                  <TextInput
+                    placeholder="Address 2"
+                    value={editedAddress.address2}
+                    onChangeText={(text) =>
+                      setEditedAddress({ ...editedAddress, address2: text })
+                    }
+                  />
+                  <TextInput
+                    placeholder="City"
+                    value={editedAddress.city}
+                    onChangeText={(text) =>
+                      setEditedAddress({ ...editedAddress, city: text })
+                    }
+                  />
+                  <TextInput
+                    placeholder="State"
+                    value={editedAddress.state}
+                    onChangeText={(text) =>
+                      setEditedAddress({ ...editedAddress, state: text })
+                    }
+                  />
+                  <TextInput
+                    placeholder="Zip Code"
+                    value={editedAddress.zip_code}
+                    onChangeText={(text) =>
+                      setEditedAddress({ ...editedAddress, zip_code: text })
+                    }
+                  />
+                  <Button
+                    title="Cancel"
+                    onPress={() => setModalVisible(false)}
+                  />
+                  <Button
+                    title="Save Changes"
+                    onPress={handleSavePositionNumberChanges}
+                  />
+                </View>
+              </View>
+            </Modal>
           </View>
-        </View>
-      </Modal>
+        )}
+
+        {/* Add Address Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={newAddressModalVisible}
+          onRequestClose={() => {
+            setNewAddressModalVisible(false);
+          }}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <TextInput
+                placeholder="Address 1"
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, address1: text })
+                }
+              />
+              <TextInput
+                placeholder="Address 2"
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, address2: text })
+                }
+              />
+              <TextInput
+                placeholder="City"
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, city: text })
+                }
+              />
+              <TextInput
+                placeholder="State"
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, state: text })
+                }
+              />
+              <TextInput
+                placeholder="Zip Code"
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, zip_code: text })
+                }
+              />
+              <TextInput
+                placeholder="Case Number"
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, case_number: text })
+                }
+              />
+              <TextInput
+                placeholder="Row Number"
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, case_row_number: text })
+                }
+              />
+              <Button
+                title="Cancel"
+                onPress={() => setNewAddressModalVisible(false)}
+              />
+              <Button title="Save" onPress={handleSaveNewAddress} />
+            </View>
+          </View>
+        </Modal>
+      </View>
+          ) : (
+            <Text>Loading...</Text>
+          )}
+{/* Floating Button */}
+<TouchableOpacity
+  style={styles.floatingButton}
+  onPress={handleAddAddress}
+>
+  <Text style={styles.buttonText}>+</Text>
+</TouchableOpacity>
     </View>
   );
 }

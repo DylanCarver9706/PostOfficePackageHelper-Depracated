@@ -251,6 +251,7 @@ export function PackageHelperScreen() {
 
   const fetchDeliveries = async () => {
     try {
+    setIsLoading(true)
       const selectedRouteId = await AsyncStorage.getItem("selectedRoute");
       setSelectedRoute(selectedRouteId);
 
@@ -289,9 +290,9 @@ export function PackageHelperScreen() {
           }
         }
 
-        console.log(sortedDeliveries);
-
+        // console.log(sortedDeliveries);
         setDeliveries(sortedDeliveries);
+        setIsLoading(false)
       } else {
         console.error("Error fetching deliveries:", response.status);
       }
@@ -660,7 +661,7 @@ export function PackageHelperScreen() {
           />
         </View>
       </Modal>
-
+      {deliveries.length > 0 ? (
       <FlatList
         data={deliveries}
         keyExtractor={(item) => item.delivery_id.toString()}
@@ -677,11 +678,6 @@ export function PackageHelperScreen() {
             <Text>City: {item.city}</Text>
             <Text>State: {item.state}</Text>
             <Text>Zip Code: {item.zip_code}</Text>
-            {/* <Text>Delivery Date: {item.delivery_date}</Text> */}
-            {/* <Text>Scanned: {item.scanned ? "Yes" : "No"}</Text> */}
-            {/* <Text>
-              Out for Delivery: {item.out_for_delivery ? "Yes" : "No"}
-            </Text> */}
             <Text>Delivered: {item.delivered ? "Yes" : "No"}</Text>
             <Button
               title={item.delivered ? "Mark Undelivered" : "Mark Delivered"}
@@ -700,6 +696,9 @@ export function PackageHelperScreen() {
           </View>
         )}
       />
+      ) : (
+        <Text>No deliveries found.</Text>
+      )}
       <Button title="Scan Label" onPress={() => setCameraVisible(true)} />
       <Button title="Add Delivery" onPress={openAddDeliveryModal} />
 
