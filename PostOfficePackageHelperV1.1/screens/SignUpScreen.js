@@ -25,7 +25,7 @@ export function SignUpScreen() {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     // Password validation regex pattern
-    const passwordPattern = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{8,}$/;
+    const passwordPattern = /^(?=.*\d)(?=.*[!@#$%^&+*])(?=.*[a-zA-Z]).{8,}$/;
 
     if (!firstName.trim()) {
       errors.push("First Name is required");
@@ -91,17 +91,22 @@ export function SignUpScreen() {
         if (newUserResponse.status === 201) {
           // User was successfully created
           const newUserData = await newUserResponse.json();
-          console.log(newUserData);
+          // console.log(newUserData);
+
           // Store user ID securely (e.g., using AsyncStorage)
           await AsyncStorage.setItem("userId", newUserData.user.id.toString());
           await AsyncStorage.setItem("userEmail", newUserData.user.email);
           await AsyncStorage.setItem("userFirebaseUid", newUserData.user.firebase_user_uid);
+          // navigation.navigate("New Office Screen");
+          navigation.navigate("New Office and Route Screen");
         }
       }
     } catch (error) {
-      console.error("Error during sign in:", error);
-    } finally {
-      navigation.navigate("New Office Screen");
+      if (error.code === "auth/email-already-in-use") {
+        setValidationErrors(["Email already associated to an account"]);
+      } else {
+        console.error("Error during sign in:", error);
+      }
     }
   };
 
