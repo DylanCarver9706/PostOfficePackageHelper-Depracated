@@ -19,6 +19,7 @@ import { WelcomeScreen } from "./screens/WelcomeScreen";
 import { AccountCreatedScreen } from "./screens/AccountCreatedScreen";
 import { onAuthStateChanged } from 'firebase/auth'
 import { FIREBASE_AUTH } from "./FirebaseConfig";
+import { NewOfficeAndRouteScreen } from "./screens/NewOfficeAndRouteScreen";
 // if(__DEV__) {
 //   import('../ReactotronConfig').then(() => console.log('Reactotron Configured'))
 // }
@@ -51,6 +52,7 @@ export default function App() {
         <Stack.Screen name="Signup Screen" component={SignUpScreen} />
         <Stack.Screen name="New Office Screen" component={NewOfficeScreen} />
         <Stack.Screen name="New Route Screen" component={NewRouteScreen} />
+        <Stack.Screen name="New Office and Route Screen" component={NewOfficeAndRouteScreen}/>
         <Stack.Screen name="HaveAccountScreen" component={HaveAccountScreen} />
         <Stack.Screen name="Tutorial Screen" component={TutorialScreen} />
         <Stack.Screen name="Welcome Screen" component={WelcomeScreen} />
