@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { View, Text, TextInput, Button, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 import API_BASE_URL from "../apiConfig";
 import { FIREBASE_AUTH } from "../FirebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -13,11 +13,57 @@ export function SignUpScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [position, setPosition] = useState("");
   const [password, setPassword] = useState("");
-  const auth = FIREBASE_AUTH;
+  const [validationErrors, setValidationErrors] = useState([]);
 
+  const auth = FIREBASE_AUTH;
   const navigation = useNavigation();
 
+  const validateForm = () => {
+    const errors = [];
+
+    // Email validation regex pattern
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Password validation regex pattern
+    const passwordPattern = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{8,}$/;
+
+    if (!firstName.trim()) {
+      errors.push("First Name is required");
+    }
+
+    if (!lastName.trim()) {
+      errors.push("Last Name is required");
+    }
+
+    if (!email.trim()) {
+      errors.push("Email is required");
+    } else if (!emailPattern.test(email)) {
+      errors.push("Email is not valid");
+    }
+
+    // if (!phoneNumber.trim()) {
+    //   errors.push("Phone Number is required");
+    // }
+
+    // if (!position.trim()) {
+    //   errors.push("Position is required");
+    // }
+
+    if (!password.trim()) {
+      errors.push("Password is required");
+    } else if (!passwordPattern.test(password)) {
+      errors.push("Password must be at least 8 characters long + contain at least one number and one special character");
+    }
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
   const signUp = async () => {
+    if (!validateForm()) {
+      return; // Don't proceed if the form is not valid
+    }
+
     try {
       const user = await createUserWithEmailAndPassword(auth, email, password);
       if (user) {
@@ -65,35 +111,56 @@ export function SignUpScreen() {
       <TextInput
         placeholder="First Name"
         value={firstName}
-        onChangeText={(text) => setFirstName(text)}
+        onChangeText={(text) => setFirstName(text.trim())}
       />
       <TextInput
         placeholder="Last Name"
         value={lastName}
-        onChangeText={(text) => setLastName(text)}
+        onChangeText={(text) => setLastName(text.trim())}
       />
       <TextInput
         placeholder="Email"
         value={email}
-        onChangeText={(text) => setEmail(text)}
+        onChangeText={(text) => setEmail(text.trim())}
       />
       <TextInput
         placeholder="Phone Number"
         value={phoneNumber}
-        onChangeText={(text) => setPhoneNumber(text)}
+        onChangeText={(text) => setPhoneNumber(text.trim())}
       />
       <TextInput
         placeholder="Position"
         value={position}
-        onChangeText={(text) => setPosition(text)}
+        onChangeText={(text) => setPosition(text.trim())}
       />
       <TextInput
         placeholder="Password"
         secureTextEntry={true}
         value={password}
-        onChangeText={(text) => setPassword(text)}
+        onChangeText={(text) => setPassword(text.trim())}
       />
+      {validationErrors.length > 0 && (
+        <View>
+          {validationErrors.map((error, index) => (
+            <Text key={index} style={styles.errorText}>
+              {error}
+            </Text>
+          ))}
+        </View>
+      )}
       <Button title="Next" onPress={signUp} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 10,
+  },
+});
