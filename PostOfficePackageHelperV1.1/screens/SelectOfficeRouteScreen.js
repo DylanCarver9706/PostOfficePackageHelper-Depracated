@@ -8,6 +8,7 @@ import {
   TextInput,
   Button,
   Alert,
+  StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,8 +20,13 @@ export function SelectOfficeRouteScreen() {
   const [offices, setOffices] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [userId, setUserId] = useState(null);
-  const [officeModalVisible, setOfficeModalVisible] = useState(false);
-  const [routeModalVisible, setRouteModalVisible] = useState(false);
+  const [newOfficeModalVisible, setOfficeModalVisible] = useState(false);
+  const [existingOfficeModalVisible, setExistingOfficeModalVisible] =
+    useState(false);
+  const [newRouteModalVisible, setNewRouteModalVisible] = useState(false);
+  const [existingOfficeRouteVisible, setExistingRouteModalVisible] =
+    useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
   const [newOfficeInfo, setNewOfficeInfo] = useState({
     city: "",
     state: "",
@@ -82,8 +88,11 @@ export function SelectOfficeRouteScreen() {
     try {
       setSelectedRoute(null);
       setSelectedPostOffice(postOffice);
-      await AsyncStorage.setItem("selectedOffice", postOffice.office_id.toString());
-      
+      await AsyncStorage.setItem(
+        "selectedOffice",
+        postOffice.office_id.toString()
+      );
+
       // Call fetchRoutes with the selected office's ID to update the routes state
       fetchRoutes(postOffice.office_id);
     } catch (error) {
@@ -117,13 +126,24 @@ export function SelectOfficeRouteScreen() {
     setOfficeModalVisible(true);
   };
 
+  // Function to handle opening the existing office modal
+  const handleOpenExistingOfficeModal = () => {
+    setExistingOfficeModalVisible(true);
+  };
+
   // Function to handle opening the route modal
   const handleOpenRouteModal = () => {
-    setRouteModalVisible(true);
+    setNewRouteModalVisible(true);
   };
 
   // Function to handle the submission of the new office form
   const handleAddNewOffice = async () => {
+    let forOfficeInputs = true;
+    if (!validateForm(forOfficeInputs)) {
+      return; // Don't proceed if the form is not valid
+    }
+    // Close the modal
+    setOfficeModalVisible(false);
     try {
       // Get user ID from AsyncStorage
       const userId = await AsyncStorage.getItem("userId");
@@ -151,8 +171,6 @@ export function SelectOfficeRouteScreen() {
       if (response.ok) {
         // Refresh the list of offices
         fetchOffices();
-        // Close the modal
-        setOfficeModalVisible(false);
         // Clear the new office info
         setNewOfficeInfo({
           city: "",
@@ -229,11 +247,17 @@ export function SelectOfficeRouteScreen() {
       postmaster_name: office.postmaster_name,
       postmaster_phone_number: office.postmaster_phone_number,
     }); // Populate the input fields with existing office data
-    setOfficeModalVisible(true); // Open the modal
+    handleOpenExistingOfficeModal(true); // Open the modal
   };
 
   // Function to update an existing office
   const handleUpdateOffice = async () => {
+    let forOfficeInputs = true;
+    if (!validateForm(forOfficeInputs)) {
+      return; // Don't proceed if the form is not valid
+    }
+    // Close the modal
+    setOfficeModalVisible(false);
     try {
       const response = await fetch(
         `${API_BASE_URL}/offices/${editingOffice.office_id}`,
@@ -256,8 +280,6 @@ export function SelectOfficeRouteScreen() {
       if (response.ok) {
         // Refresh the list of offices
         fetchOffices();
-        // Close the modal
-        setOfficeModalVisible(false);
         // Clear the new office info
         setNewOfficeInfo({
           city: "",
@@ -278,6 +300,11 @@ export function SelectOfficeRouteScreen() {
 
   // Function to handle adding a new route
   const handleAddNewRoute = async () => {
+    let forOfficeInputs = false;
+    if (!validateForm(forOfficeInputs)) {
+      return; // Don't proceed if the form is not valid
+    }
+    setNewRouteModalVisible(false);
     try {
       const officeId = selectedPostOffice.office_id;
       const newRoute = {
@@ -285,7 +312,7 @@ export function SelectOfficeRouteScreen() {
         route_number: newRouteInfo.route_number,
         // Add other route fields here
       };
-  
+
       const response = await fetch(`${API_BASE_URL}/routes`, {
         method: "POST",
         headers: {
@@ -293,13 +320,12 @@ export function SelectOfficeRouteScreen() {
         },
         body: JSON.stringify(newRoute),
       });
-  
+
       if (response.ok) {
         // Call fetchRoutes with the selected office's ID to update the routes state
         fetchRoutes(officeId);
-  
+
         // Close the modal and clear the new route info
-        setRouteModalVisible(false);
         setNewRouteInfo({
           route_number: "",
           // Clear other route fields here
@@ -347,14 +373,13 @@ export function SelectOfficeRouteScreen() {
 
                 if (routesResponse.ok) {
                   const data = await routesResponse.json();
-                  const filteredRoutes = data.filter((route) => route.active_status !== 0);
-                  setRoutes(filteredRoutes)
+                  const filteredRoutes = data.filter(
+                    (route) => route.active_status !== 0
+                  );
+                  setRoutes(filteredRoutes);
                 } else {
                   console.error("Failed to fetch routes");
                 }
-
-                // Close the modal
-                setRouteModalVisible(false);
 
                 // Clear the new route info
                 setNewRouteInfo({
@@ -382,10 +407,15 @@ export function SelectOfficeRouteScreen() {
       route_number: route.route_number,
       // Populate other route fields here for editing
     });
-    setRouteModalVisible(true); // Open the modal
+    setExistingRouteModalVisible(true); // Open the modal
   };
 
   const handleUpdateRoute = async () => {
+    let forOfficeInputs = false;
+    if (!validateForm(forOfficeInputs)) {
+      return; // Don't proceed if the form is not valid
+    }
+    setExistingRouteModalVisible(false);
     try {
       const response = await fetch(
         `${API_BASE_URL}/routes/${editingRoute.route_id}`,
@@ -401,13 +431,12 @@ export function SelectOfficeRouteScreen() {
           }),
         }
       );
-  
+
       if (response.ok) {
         // Call fetchRoutes with the selected office's ID to update the routes state
         fetchRoutes(selectedPostOffice.office_id);
-  
+
         // Close the modal, clear the new route info, and reset the editing route
-        setRouteModalVisible(false);
         setNewRouteInfo({
           route_number: "",
           // Clear other route fields here
@@ -423,11 +452,15 @@ export function SelectOfficeRouteScreen() {
 
   const fetchRoutes = async (officeId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/routesByOfficeId?office_id=${officeId}`);
-      
+      const response = await fetch(
+        `${API_BASE_URL}/routesByOfficeId?office_id=${officeId}`
+      );
+
       if (response.ok) {
         const data = await response.json();
-        const filteredRoutes = data.filter((route) => route.active_status !== 0);
+        const filteredRoutes = data.filter(
+          (route) => route.active_status !== 0
+        );
         setRoutes(filteredRoutes); // Update the state with the fetched routes
       } else {
         console.error("Failed to fetch routes");
@@ -435,6 +468,30 @@ export function SelectOfficeRouteScreen() {
     } catch (error) {
       console.error("Error fetching routes:", error);
     }
+  };
+
+  const validateForm = (forOfficeInputs) => {
+    const errors = [];
+
+    if (forOfficeInputs) {
+      // Add validation rules for the "Add New Post Office" form here
+      if (!newOfficeInfo.city.trim()) {
+        errors.push("City is required");
+      }
+      if (!newOfficeInfo.state.trim()) {
+        errors.push("State is required");
+      }
+    } else {
+      // Add validation rules for the "Add New Route" form here
+      if (!newRouteInfo.route_number.trim()) {
+        errors.push("Route Number is required");
+      }
+    }
+
+    // Add more validation rules as needed for other fields
+
+    setValidationErrors(errors);
+    return errors.length === 0;
   };
 
   return (
@@ -586,11 +643,11 @@ export function SelectOfficeRouteScreen() {
         )}
       </View>
 
-      {/* Modal for adding a new office or editing an existing office */}
+      {/* Modal for adding a new office */}
       <Modal
         animationType="slide"
         transparent={true}
-        visible={officeModalVisible}
+        visible={newOfficeModalVisible}
         onRequestClose={() => {
           setOfficeModalVisible(false);
         }}
@@ -599,39 +656,34 @@ export function SelectOfficeRouteScreen() {
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
           <View style={{ backgroundColor: "white", padding: 20 }}>
-            <Text>{editingOffice ? "Edit Office" : "Add New Office"}</Text>
+            <View>
+              {validationErrors.map((error, index) => (
+                <Text key={index} style={styles.errorText}>
+                  {error}
+                </Text>
+              ))}
+            </View>
+            <Text>Add New Office</Text>
             <TextInput
               placeholder="City"
-              value={editingOffice ? newOfficeInfo.city : newOfficeInfo.city}
               onChangeText={(text) =>
                 setNewOfficeInfo({ ...newOfficeInfo, city: text })
               }
             />
             <TextInput
               placeholder="State"
-              value={editingOffice ? newOfficeInfo.state : newOfficeInfo.state}
               onChangeText={(text) =>
                 setNewOfficeInfo({ ...newOfficeInfo, state: text })
               }
             />
             <TextInput
               placeholder="Supervisor Name"
-              value={
-                editingOffice
-                  ? newOfficeInfo.supervisor_name
-                  : newOfficeInfo.supervisor_name
-              }
               onChangeText={(text) =>
                 setNewOfficeInfo({ ...newOfficeInfo, supervisor_name: text })
               }
             />
             <TextInput
               placeholder="Supervisor Phone Number"
-              value={
-                editingOffice
-                  ? newOfficeInfo.supervisor_phone_number
-                  : newOfficeInfo.supervisor_phone_number
-              }
               onChangeText={(text) =>
                 setNewOfficeInfo({
                   ...newOfficeInfo,
@@ -641,22 +693,12 @@ export function SelectOfficeRouteScreen() {
             />
             <TextInput
               placeholder="Postmaster Name"
-              value={
-                editingOffice
-                  ? newOfficeInfo.postmaster_name
-                  : newOfficeInfo.postmaster_name
-              }
               onChangeText={(text) =>
                 setNewOfficeInfo({ ...newOfficeInfo, postmaster_name: text })
               }
             />
             <TextInput
               placeholder="Postmaster Phone Number"
-              value={
-                editingOffice
-                  ? newOfficeInfo.postmaster_phone_number
-                  : newOfficeInfo.postmaster_phone_number
-              }
               onChangeText={(text) =>
                 setNewOfficeInfo({
                   ...newOfficeInfo,
@@ -666,30 +708,119 @@ export function SelectOfficeRouteScreen() {
             />
             <Button
               title="Cancel"
-              onPress={() => setOfficeModalVisible(false)}
+              onPress={() => {
+                setOfficeModalVisible(false);
+                setValidationErrors([]);
+              }}
             />
-            <Button
-              title="Save"
-              onPress={editingOffice ? handleUpdateOffice : handleAddNewOffice}
-            />
+            <Button title="Save" onPress={handleAddNewOffice} />
           </View>
         </View>
       </Modal>
 
-      {/* Modal for adding a new route or editing an existing route */}
+      {/* Modal for editing an existing office */}
       <Modal
         animationType="slide"
         transparent={true}
-        visible={routeModalVisible}
+        visible={existingOfficeModalVisible && !!editingOffice}
         onRequestClose={() => {
-          setRouteModalVisible(false);
+          handleOpenExistingOfficeModal(false);
         }}
       >
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
           <View style={{ backgroundColor: "white", padding: 20 }}>
-            <Text>{editingRoute ? "Edit Route" : "Add New Route"}</Text>
+            <View>
+              {validationErrors.map((error, index) => (
+                <Text key={index} style={styles.errorText}>
+                  {error}
+                </Text>
+              ))}
+            </View>
+            <Text>Edit Office</Text>
+            <TextInput
+              placeholder="City"
+              value={newOfficeInfo.city}
+              onChangeText={(text) =>
+                setNewOfficeInfo({ ...newOfficeInfo, city: text })
+              }
+            />
+            <TextInput
+              placeholder="State"
+              value={newOfficeInfo.state}
+              onChangeText={(text) =>
+                setNewOfficeInfo({ ...newOfficeInfo, state: text })
+              }
+            />
+            <TextInput
+              placeholder="Supervisor Name"
+              value={newOfficeInfo.supervisor_name}
+              onChangeText={(text) =>
+                setNewOfficeInfo({ ...newOfficeInfo, supervisor_name: text })
+              }
+            />
+            <TextInput
+              placeholder="Supervisor Phone Number"
+              value={newOfficeInfo.supervisor_phone_number}
+              onChangeText={(text) =>
+                setNewOfficeInfo({
+                  ...newOfficeInfo,
+                  supervisor_phone_number: text,
+                })
+              }
+            />
+            <TextInput
+              placeholder="Postmaster Name"
+              value={newOfficeInfo.postmaster_name}
+              onChangeText={(text) =>
+                setNewOfficeInfo({ ...newOfficeInfo, postmaster_name: text })
+              }
+            />
+            <TextInput
+              placeholder="Postmaster Phone Number"
+              value={newOfficeInfo.postmaster_phone_number}
+              onChangeText={(text) =>
+                setNewOfficeInfo({
+                  ...newOfficeInfo,
+                  postmaster_phone_number: text,
+                })
+              }
+            />
+            <Button
+              title="Cancel"
+              onPress={() => {
+                setEditingOffice(null);
+                setOfficeModalVisible(false);
+                setValidationErrors([]);
+              }}
+            />
+            <Button title="Save" onPress={handleUpdateOffice} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal for adding a new route */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={newRouteModalVisible}
+        onRequestClose={() => {
+          setNewRouteModalVisible(false);
+        }}
+      >
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <View style={{ backgroundColor: "white", padding: 20 }}>
+            <View>
+              {validationErrors.map((error, index) => (
+                <Text key={index} style={styles.errorText}>
+                  {error}
+                </Text>
+              ))}
+            </View>
+            <Text>Add New Route</Text>
             <TextInput
               placeholder="Route Number"
               value={newRouteInfo.route_number}
@@ -700,15 +831,65 @@ export function SelectOfficeRouteScreen() {
             {/* Add other input fields for route information here */}
             <Button
               title="Cancel"
-              onPress={() => setRouteModalVisible(false)}
+              onPress={() => {
+                setNewRouteModalVisible(false);
+                setValidationErrors([]);
+              }}
             />
+            <Button title="Save" onPress={handleAddNewRoute} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal for editing an existing route */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={existingOfficeRouteVisible && !!editingRoute}
+        onRequestClose={() => {
+          setExistingRouteModalVisible(false);
+        }}
+      >
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <View style={{ backgroundColor: "white", padding: 20 }}>
+            <View>
+              {validationErrors.map((error, index) => (
+                <Text key={index} style={styles.errorText}>
+                  {error}
+                </Text>
+              ))}
+            </View>
+            <Text>Edit Route</Text>
+            <TextInput
+              placeholder="Route Number"
+              value={newRouteInfo.route_number}
+              onChangeText={(text) =>
+                setNewRouteInfo({ ...newRouteInfo, route_number: text })
+              }
+            />
+            {/* Add other input fields for route information here */}
             <Button
-              title="Save"
-              onPress={editingRoute ? handleUpdateRoute : handleAddNewRoute}
+              title="Cancel"
+              onPress={() => {
+                setEditingRoute(null);
+                setExistingRouteModalVisible(false);
+                setValidationErrors([]);
+              }}
             />
+            <Button title="Save" onPress={handleUpdateRoute} />
           </View>
         </View>
       </Modal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  errorText: {
+    color: "red",
+    marginBottom: 10,
+  },
+  // ... other styles ...
+});

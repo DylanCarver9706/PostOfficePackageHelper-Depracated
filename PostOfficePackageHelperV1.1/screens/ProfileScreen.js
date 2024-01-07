@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Text, View, Button, Modal, TextInput, Alert } from "react-native";
+import {
+  Text,
+  View,
+  Button,
+  Modal,
+  TextInput,
+  Alert,
+  StyleSheet,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import API_BASE_URL from "../apiConfig";
@@ -7,6 +15,7 @@ import API_BASE_URL from "../apiConfig";
 const ProfileScreen = () => {
   const [userData, setUserData] = useState(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
   const [updatedUserInfo, setUpdatedUserInfo] = useState({
     first_name: "",
     last_name: "",
@@ -57,6 +66,10 @@ const ProfileScreen = () => {
 
   // Function to handle updating user information
   const handleUpdateProfile = async () => {
+    if (!validateForm()) {
+      return; // Don't proceed if the form is not valid
+    }
+
     try {
       userId = await AsyncStorage.getItem("userId");
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
@@ -126,6 +139,38 @@ const ProfileScreen = () => {
     }
   };
 
+  const validateForm = () => {
+    const errors = [];
+
+    // Email validation regex pattern
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!updatedUserInfo.first_name.trim()) {
+      errors.push("First Name is required");
+    }
+
+    if (!updatedUserInfo.last_name.trim()) {
+      errors.push("Last Name is required");
+    }
+
+    if (!updatedUserInfo.email.trim()) {
+      errors.push("Email is required");
+    } else if (!emailPattern.test(updatedUserInfo.email)) {
+      errors.push("Email is not valid");
+    }
+
+    if (!updatedUserInfo.phone_number.trim()) {
+      errors.push("Phone Number is required");
+    } else if (!/^\d{10}$/.test(updatedUserInfo.phone_number)) {
+      errors.push("Phone Number must be exactly 10 digits");
+    }
+
+    // Add more validation rules as needed for other fields
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
   return (
     <View
       style={{
@@ -158,6 +203,13 @@ const ProfileScreen = () => {
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
           <View style={{ backgroundColor: "white", padding: 20 }}>
+            <View>
+              {validationErrors.map((error, index) => (
+                <Text key={index} style={styles.errorText}>
+                  {error}
+                </Text>
+              ))}
+            </View>
             <TextInput
               placeholder="First Name"
               value={updatedUserInfo.first_name}
@@ -203,3 +255,11 @@ const ProfileScreen = () => {
 };
 
 export default ProfileScreen;
+
+const styles = StyleSheet.create({
+  errorText: {
+    color: "red",
+    marginBottom: 10,
+  },
+  // ... other styles ...
+});
